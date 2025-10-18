@@ -2,7 +2,7 @@
 # Copy this text to your .gitignore file to your android project prior to your initial commit. 
 
 # Google Services (e.g. APIs or Firebase)
-#GoogleService-Info.plist
+google-services.json
 
 # Built application files
 *.apk
