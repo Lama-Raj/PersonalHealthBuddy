@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Personal Health Buddy</string>
+    <string name="user_name">Enter your name</string>
+    <string name="email">Enter your email</string>
+    <string name="password">Enter your password</string>
+    <string name="button_sign_up">Sign Up</string>"
 </resources>
