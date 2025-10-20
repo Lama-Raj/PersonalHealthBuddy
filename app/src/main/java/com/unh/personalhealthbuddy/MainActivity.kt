@@ -5,27 +5,39 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
-import com.unh.personalhealthbuddy.screen.MainWelcomeScreen
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.google.firebase.FirebaseApp
+import com.unh.personalhealthbuddy.account.SignUpScreen
 import com.unh.personalhealthbuddy.ui.theme.PersonalHealthBuddyTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // 🔹 Initialize Firebase here
+        FirebaseApp.initializeApp(this)
+
         enableEdgeToEdge()
         setContent {
-            // Your MainWelcomeScreen will be launched immediately here
-            // FIX: Use the corrected theme name without underscores
             PersonalHealthBuddyTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    // This is your main starting screen:
-                    MainWelcomeScreen()
+                val navController = rememberNavController()
+
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    NavHost(
+                        navController = navController,
+                        startDestination = "signup",
+                        modifier = Modifier.padding(innerPadding)
+                    ) {
+                        composable("signup") {
+                            SignUpScreen(navController = navController)
+                        }
+
+                    }
                 }
             }
         }

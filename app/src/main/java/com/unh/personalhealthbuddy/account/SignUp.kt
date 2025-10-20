@@ -1,6 +1,5 @@
 package com.unh.personalhealthbuddy.account
 
-
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -9,15 +8,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
@@ -36,155 +35,196 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
+import com.google.firebase.auth.FirebaseAuth
 import com.unh.personalhealthbuddy.R
 
-// The '@Composable' annotation marks this function as a building block for UI.
-// It describes a piece of the screen's appearance and logic.
+/**
+ * A composable function that defines the UI for the user registration screen.
+ * It includes input fields for username, email, and password, along with
+ * Firebase authentication logic.
+ *
+ * @param navController The controller used to handle navigation events.
+ */
 @Composable
-fun SignUp(navController: NavHostController? = null) {
-    // State variables hold data that can change and trigger UI updates.
-    // 'remember' ensures the state survives recomposition (UI redraws).
+fun SignUpScreen(navController: NavHostController) {
+    // State variables to hold the current value of the input fields and UI states.
+    // 'remember' ensures that the state is preserved across recompositions (UI redraws).
     val username = remember { mutableStateOf("") }
     val email = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
-    // The 'by' keyword delegates the getter and setter, simplifying access to the value.
+    val emailErrorState = remember { mutableStateOf(false) }
+    val passwordErrorState = remember { mutableStateOf(false) }
     var isChecked by remember { mutableStateOf(false) }
+    var passwordVisible by remember { mutableStateOf(false) }
 
+    // State to hold and display the result of the registration attempt.
+    val registrationMessage = remember { mutableStateOf("") }
 
-    // A Column arranges its children in a vertical sequence.
+    // The main layout composable, arranging elements vertically.
     Column(
-        // The modifier configures the composable's size, padding, and behavior.
-        modifier = Modifier.fillMaxSize() // Makes the Column take up the entire screen.
+        modifier = Modifier
+            .fillMaxSize() // Occupies the entire available screen space.
             .padding(top = 50.dp),
-        verticalArrangement = Arrangement.Top, // Aligns children to the top of the Column.
+        verticalArrangement = Arrangement.Top, // Aligns children to the top.
         horizontalAlignment = Alignment.CenterHorizontally // Centers children horizontally.
     ) {
-
-        // A Box is a layout composable that places its children on top of one another.
+        // A container for the back navigation icon, aligned to the top-start.
         Box(
-            modifier = Modifier.fillMaxWidth() // Makes the Box take the full width of its parent.
-                .padding(top = 10.dp, start = 24.dp, end = 24.dp),
-            contentAlignment = Alignment.TopStart // Aligns content to the top-left corner.
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp),
+            contentAlignment = Alignment.TopStart
         ) {
-            // An IconButton provides a clickable area around an Icon.
-            IconButton(onClick = { navController?.navigate("welcome") }) { // The action to perform on click.
+            // A clickable icon that navigates to the "welcome" screen when pressed.
+            IconButton(onClick = { navController.navigate("welcome") }) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack, // The visual asset for the icon.
-                    contentDescription = "Back to Welcome" // Text for accessibility services.
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back to Welcome"
                 )
             }
         }
 
-        // A Text composable displays a string of text.
+        // The title of the screen.
         Text(
             text = "Sign Up",
-            modifier = Modifier.padding(bottom = 30.dp, start = 24.dp, end = 24.dp, top = 8.dp),
+            modifier = Modifier.padding(bottom = 30.dp, top = 16.dp)
         )
 
-        // An OutlinedTextField is a text input field with a border.
+        // Text field for username input.
         OutlinedTextField(
-            modifier = Modifier.padding(bottom = 30.dp, start = 24.dp, end = 24.dp, top = 8.dp),
-            label = { Text(stringResource(R.string.user_name)) }, // A label that floats when the field is focused.
-            leadingIcon = { Icon(Icons.Default.Person, contentDescription = "User Icon") }, // An icon at the start of the field.
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text), // Configures the keyboard type.
-            value = username.value, // The displayed text, bound to the state variable.
-            onValueChange = { username.value = it } // A callback that updates the state when the text changes.
+            value = username.value,
+            onValueChange = { username.value = it },
+            label = { Text(stringResource(R.string.user_name)) },
+            leadingIcon = { Icon(Icons.Default.Person, contentDescription = "User Icon") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+            modifier = Modifier
+                .padding(bottom = 16.dp)
+                .fillMaxWidth(0.9f) // Sets the width to 90% of the parent.
         )
 
+        // Text field for email input. The value is trimmed to remove leading/trailing whitespace.
         OutlinedTextField(
-            modifier = Modifier.padding(bottom = 30.dp)
-                .padding(start = 24.dp, end = 24.dp, top = 8.dp),
+            value = email.value.trim(),
+            onValueChange = { email.value = it },
+            // The 'isError' parameter visually indicates a validation error if true.
+            isError = emailErrorState.value,
             label = { Text(stringResource(R.string.email)) },
             leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email Icon") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email), // Keyboard optimized for email entry.
-            value = email.value,
-            onValueChange = { email.value = it }
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            modifier = Modifier
+                .padding(bottom = 16.dp)
+                .fillMaxWidth(0.9f)
         )
 
+        // Text field for password input.
         OutlinedTextField(
-            modifier = Modifier.padding(bottom = 30.dp, start = 24.dp, end = 24.dp, top = 8.dp),
+            value = password.value.trim(),
+            onValueChange = { password.value = it },
+            isError = passwordErrorState.value,
             label = { Text(stringResource(R.string.password)) },
             leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password Icon") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), // Hides the input for security.
-            value = password.value,
-            onValueChange = { password.value = it }
+            // A trailing icon that toggles the password's visibility.
+            trailingIcon = {
+                val image = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(imageVector = image, contentDescription = "Toggle Password Visibility")
+                }
+            },
+            // Transforms the input visually, hiding or showing the password based on state.
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            modifier = Modifier
+                .padding(bottom = 16.dp)
+                .fillMaxWidth(0.9f)
         )
 
-        // A Row arranges its children in a horizontal sequence.
+        // A horizontal container for the checkbox and its associated text.
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 30.dp,start = 24.dp, end = 24.dp, top = 8.dp)
-                .height(56.dp),
-            verticalAlignment = Alignment.CenterVertically // Centers children vertically within the Row.
+                .fillMaxWidth(0.9f)
+                .padding(bottom = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // A Checkbox is a UI element that can be toggled on or off.
-            Checkbox(
-                modifier = Modifier.padding(start = 30.dp, bottom = 30.dp),
-                checked = isChecked, // The current checked state, bound to the state variable.
-                onCheckedChange = { isChecked = it } // Callback that updates the state on toggle.
-            )
-
+            Checkbox(checked = isChecked, onCheckedChange = { isChecked = it })
             Text(
-                text = "I agree to the health terms of services and privacy policy",
-                modifier = Modifier
-                    .padding(start = 8.dp, end = 24.dp, bottom = 24.dp)
-                    .weight(1f), // Takes up the remaining horizontal space in the Row.
+                text = "I agree to the terms and privacy policy",
+                modifier = Modifier.padding(start = 8.dp),
                 textAlign = TextAlign.Start
             )
         }
 
-        // A Button is a clickable element that triggers an action.
+        // The primary action button to initiate the sign-up process.
         Button(
-            onClick = { /* handle sign-up */ }, // Logic to execute on click goes here.
+            onClick = {
+                val auth = FirebaseAuth.getInstance()
+
+                // Performs simple client-side validation before contacting Firebase.
+                emailErrorState.value = email.value.isBlank()
+                passwordErrorState.value = password.value.length < 6
+                if (emailErrorState.value || passwordErrorState.value) return@Button
+
+                // Calls Firebase Authentication to create a new user. This is an asynchronous operation.
+                auth.createUserWithEmailAndPassword(email.value, password.value)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            // On success, updates the message and clears all input fields.
+                            registrationMessage.value = "Registration successful! Welcome ${email.value}"
+                            username.value = ""
+                            email.value = ""
+                            password.value = ""
+                            isChecked = false
+                            passwordVisible = false
+                        } else {
+                            // On failure, captures the error message to display to the user.
+                            registrationMessage.value =
+                                "Registration failed: ${task.exception?.localizedMessage}"
+                        }
+                    }
+            },
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 24.dp, end = 24.dp, top = 8.dp)
-                .width(50.dp),
-            border = BorderStroke(1.dp, colorResource(id = R.color.purple_500)), // Defines the button's border.
+                .fillMaxWidth(0.9f)
+                .padding(top = 8.dp),
+            border = BorderStroke(1.dp, colorResource(id = R.color.purple_500)),
             colors = ButtonDefaults.buttonColors(
-                containerColor = colorResource(id = R.color.purple_500), // Sets the background color.
-                contentColor = Color.White // Sets the color of the text/icon inside.
+                containerColor = colorResource(id = R.color.purple_500),
+                contentColor = Color.White
             )
         ) {
+            Text(text = stringResource(id = R.string.button_sign_up))
+        }
+
+        // Conditionally displays the registration status message if it's not empty.
+        if (registrationMessage.value.isNotEmpty()) {
             Text(
-                text = stringResource(id = R.string.button_sign_up),
-                color = Color.White
+                text = registrationMessage.value,
+                // Changes the text color to green for success and red for failure.
+                color = if (registrationMessage.value.contains("successful")) Color.Green else Color.Red,
+                modifier = Modifier
+                    .padding(top = 16.dp)
+                    .fillMaxWidth(0.9f),
+                textAlign = TextAlign.Start
             )
         }
 
+        // Provides a link to the sign-in screen for users who already have an account.
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 16.dp, start = 24.dp, end = 24.dp),
-            horizontalArrangement = Arrangement.Center // Centers children horizontally in the Row.
+                .padding(top = 16.dp),
+            horizontalArrangement = Arrangement.Center
         ) {
-            Text(text = "Don't have an account? ")
-
+            Text(text = "Already have an account? ")
             Text(
                 text = "Sign in",
                 color = colorResource(id = R.color.teal_700),
-                // The clickable modifier makes any composable interactive.
-                modifier = Modifier.clickable {
-                    navController?.navigate("sign-in") // Navigates to a different screen.
-                }
+                // Makes the text clickable to trigger navigation.
+                modifier = Modifier.clickable { navController.navigate("sign-in") }
             )
         }
     }
-}
-
-
-// The '@Preview' annotation allows Android Studio to display this composable in the design pane.
-// It is not included in the final application build.
-@Preview(showBackground = true)
-@Composable
-fun SignUpPreview() {
-    // Call the composable that needs to be previewed.
-    // A NavController is created here for the preview to work without errors.
-    SignUp(rememberNavController())
 }

@@ -5,7 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.unh.personalhealthbuddy.account.SignUp
+import com.unh.personalhealthbuddy.account.SignUpScreen
 
 // This composable function sets up the application's navigation graph.
 @Composable
@@ -25,7 +25,7 @@ fun navigation() {
         composable("signup") {
             // This is the composable UI that will be displayed for the "signup" route.
             // The navController is passed to the SignUp screen, allowing it to trigger navigation events.
-            SignUp(navController)
+            SignUpScreen(navController)
         }
     }
 }
