@@ -72,8 +72,8 @@ fun BottomNavBarPreview() {
     com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme {
         // Here, we call the 'BottomNavBar' we want to preview.
         BottomNavBar(
-            currentRoute = "home_route", // We pretend the "Home" item is selected.
-            onItemClick = {} // We pass an empty function because clicking does nothing in a preview.
+            currentRoute = "home_route",
+            onItemClick = {}
         )
     }
 }
