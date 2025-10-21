@@ -4,6 +4,7 @@ import android.util.Log
 import android.util.Patterns
 import androidx.compose.runtime.MutableState
 import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.google.firebase.auth.FirebaseAuth
 
 fun performSignUp(
@@ -24,7 +25,12 @@ fun performSignUp(
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     Log.d("SignUp", "createUserWithEmail:success")
-                    navController.navigate("home")
+                    navController.navigate("home") {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
                 } else {
                     Log.w("SignUp", "createUserWithEmail:failure", task.exception)
                 }
@@ -50,7 +56,12 @@ fun performSignIn(
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     Log.d("SignIn", "signInWithEmail:success")
-                    navController.navigate("home")
+                    navController.navigate("home_route") {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
                 } else {
                     Log.w("SignIn", "signInWithEmail:failure", task.exception)
                 }

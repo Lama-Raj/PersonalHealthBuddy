@@ -4,9 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Scaffold
-import androidx.compose.ui.Modifier
 import com.google.firebase.FirebaseApp
 import com.unh.personal_health_buddy.navigations.AppNavigation
 import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
@@ -32,12 +29,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             // Applies the custom theme (colors, typography, etc.) to the entire application.
             PersonalHealthBuddyTheme {
-                // Scaffold is a top-level Material Design layout component.
-                // It provides slots for various UI elements and handles insets like the status bar.
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    // AppNavigation is the composable that sets up the navigation graph for the app.
-                    AppNavigation()
-                }
+                // AppNavigation now contains the Scaffold and manages the entire app layout.
+                AppNavigation()
             }
         }
     }
