@@ -1,4 +1,4 @@
-package com.unh.personalhealthbuddy.account
+package com.unh.personal_health_buddy.account
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable

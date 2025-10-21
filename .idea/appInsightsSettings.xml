@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.unh.personalhealthbuddy" />
+                  <option name="mobileSdkAppId" value="1:72921513891:android:98e567c95dab6a976ca416" />
+                  <option name="projectId" value="chimezie-phb-fall2025" />
+                  <option name="projectNumber" value="72921513891" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

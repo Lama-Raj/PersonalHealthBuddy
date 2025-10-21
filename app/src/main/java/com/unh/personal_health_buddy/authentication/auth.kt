@@ -1,4 +1,4 @@
-package com.unh.personalhealthbuddy.authentication
+package com.unh.personal_health_buddy.authentication
 
 import android.util.Log
 import android.util.Patterns

@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.unh.personalhealthbuddy"
+    namespace = "com.unh.personal_health_buddy"
     compileSdk = 36
 
     defaultConfig {

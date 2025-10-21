@@ -1,4 +1,4 @@
-package com.unh.personalhealthbuddy
+package com.unh.personal_health_buddy
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -12,8 +12,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.FirebaseApp
-import com.unh.personalhealthbuddy.account.SignUpScreen
-import com.unh.personalhealthbuddy.ui.theme.PersonalHealthBuddyTheme
+import com.unh.personal_health_buddy.account.SignUpScreen
+import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -1,6 +1,5 @@
-package com.unh.personalhealthbuddy.ui.theme
+package com.unh.personal_health_buddy.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme

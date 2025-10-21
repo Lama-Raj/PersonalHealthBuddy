@@ -1,4 +1,4 @@
-package com.unh.personalhealthbuddy.ui.theme
+package com.unh.personal_health_buddy.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

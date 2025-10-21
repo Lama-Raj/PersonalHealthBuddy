@@ -1,4 +1,4 @@
-package com.unh.personalhealthbuddy.navigations
+package com.unh.personal_health_buddy.navigations
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -17,8 +17,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.unh.personalhealthbuddy.ui.theme.ButtonBlue
-import com.unh.personalhealthbuddy.ui.theme.MediumGray
+import com.unh.personal_health_buddy.ui.theme.ButtonBlue
+import com.unh.personal_health_buddy.ui.theme.MediumGray
 
 // This is a data class. It's like a blueprint for an object.
 // It holds the information needed for each item in the bottom navigation bar.
@@ -69,7 +69,7 @@ fun BottomNavBar(
 // It helps you see your UI without running the whole app.
 fun BottomNavBarPreview() {
     // We wrap our component in our app's theme to make the preview look correct.
-    com.unh.personalhealthbuddy.ui.theme.PersonalHealthBuddyTheme {
+    com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme {
         // Here, we call the 'BottomNavBar' we want to preview.
         BottomNavBar(
             currentRoute = "home_route", // We pretend the "Home" item is selected.

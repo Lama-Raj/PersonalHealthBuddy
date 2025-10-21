@@ -1,4 +1,4 @@
-package com.unh.personalhealthbuddy.screen
+package com.unh.personal_health_buddy.screen
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -27,10 +27,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
-import com.unh.personalhealthbuddy.R
-import com.unh.personalhealthbuddy.ui.theme.ButtonBlue
-import com.unh.personalhealthbuddy.ui.theme.PersonalHealthBuddyTheme
-import com.unh.personalhealthbuddy.ui.theme.PrimaryDarkBlue
+import com.unh.personal_health_buddy.R
+import com.unh.personal_health_buddy.ui.theme.ButtonBlue
+import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
+import com.unh.personal_health_buddy.ui.theme.PrimaryDarkBlue
 
 @Composable
 fun MainWelcomeScreen() {

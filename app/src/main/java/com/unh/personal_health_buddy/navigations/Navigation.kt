@@ -1,11 +1,11 @@
-package com.unh.personalhealthbuddy.navigations
+package com.unh.personal_health_buddy.navigations
 
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.unh.personalhealthbuddy.account.SignUpScreen
+import com.unh.personal_health_buddy.account.SignUpScreen
 
 // This composable function sets up the application's navigation graph.
 @Composable
