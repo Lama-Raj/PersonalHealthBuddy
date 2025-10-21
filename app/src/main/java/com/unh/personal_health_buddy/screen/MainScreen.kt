@@ -27,13 +27,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.R
 import com.unh.personal_health_buddy.ui.theme.ButtonBlue
 import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
 import com.unh.personal_health_buddy.ui.theme.PrimaryDarkBlue
 
 @Composable
-fun MainWelcomeScreen() {
+fun MainWelcomeScreen(navController: NavController) {
 // This arranges things up and down.
     Column(
         // This changes how the screen looks.
@@ -92,7 +94,7 @@ fun MainWelcomeScreen() {
         )
         // Use style help from Gemini.
         Button(
-            onClick = { /* This button does navigation to Login Screen. */ },
+            onClick = { navController.navigate("sign-in") },
             colors = ButtonDefaults.buttonColors(containerColor = ButtonBlue), // Solid blue background.
             modifier = Modifier
                 .fillMaxWidth(0.80f) // Set button width.
@@ -111,7 +113,7 @@ fun MainWelcomeScreen() {
         // Use style help from Gemini.
         // 2. Sign Up Button (Outlined)
         OutlinedButton(
-            onClick = { /* This button does navigation to Sign Up Screen. */ },
+            onClick = { navController.navigate("signup") },
             modifier = Modifier
                 .fillMaxWidth(fraction = 0.80f) // Set button width.
                 .height(60.dp),
@@ -135,6 +137,6 @@ fun MainWelcomeScreen() {
 @Composable
 fun MainScreenPreview() {
     PersonalHealthBuddyTheme {
-        MainWelcomeScreen()
+        MainWelcomeScreen(navController = rememberNavController())
     }
 }
