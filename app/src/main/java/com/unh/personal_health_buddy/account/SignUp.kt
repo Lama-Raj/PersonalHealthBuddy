@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -22,65 +23,68 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
-import com.unh.personalhealthbuddy.R
+import com.unh.personal_health_buddy.R
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
-/**
- * A composable function that defines the UI for the user registration screen.
- * It includes input fields for username, email, and password, along with
- * Firebase authentication logic.
- *
- * @param navController The controller used to handle navigation events.
- */
 @Composable
 fun SignUpScreen(navController: NavHostController) {
-    // State variables to hold the current value of the input fields and UI states.
-    // 'remember' ensures that the state is preserved across recompositions (UI redraws).
     val username = remember { mutableStateOf("") }
     val email = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
+
     val emailErrorState = remember { mutableStateOf(false) }
     val passwordErrorState = remember { mutableStateOf(false) }
+
     var isChecked by remember { mutableStateOf(false) }
     var passwordVisible by remember { mutableStateOf(false) }
 
-    // State to hold and display the result of the registration attempt.
+
     val registrationMessage = remember { mutableStateOf("") }
 
-    // The main layout composable, arranging elements vertically.
+    val coroutineScope = rememberCoroutineScope()
+    val auth = FirebaseAuth.getInstance()
+    val focusManager = LocalFocusManager.current
+
     Column(
         modifier = Modifier
-            .fillMaxSize() // Occupies the entire available screen space.
+            .fillMaxSize()
             .padding(top = 50.dp),
-        verticalArrangement = Arrangement.Top, // Aligns children to the top.
-        horizontalAlignment = Alignment.CenterHorizontally // Centers children horizontally.
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // A container for the back navigation icon, aligned to the top-start.
+        // Back button
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 16.dp),
             contentAlignment = Alignment.TopStart
         ) {
-            // A clickable icon that navigates to the "welcome" screen when pressed.
             IconButton(onClick = { navController.navigate("welcome") }) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -89,65 +93,80 @@ fun SignUpScreen(navController: NavHostController) {
             }
         }
 
-        // The title of the screen.
         Text(
             text = "Sign Up",
+            style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(bottom = 30.dp, top = 16.dp)
         )
 
-        // Text field for username input.
+        // Username
         OutlinedTextField(
             value = username.value,
             onValueChange = { username.value = it },
             label = { Text(stringResource(R.string.user_name)) },
             leadingIcon = { Icon(Icons.Default.Person, contentDescription = "User Icon") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-            modifier = Modifier
-                .padding(bottom = 16.dp)
-                .fillMaxWidth(0.9f) // Sets the width to 90% of the parent.
-        )
-
-        // Text field for email input. The value is trimmed to remove leading/trailing whitespace.
-        OutlinedTextField(
-            value = email.value.trim(),
-            onValueChange = { email.value = it },
-            // The 'isError' parameter visually indicates a validation error if true.
-            isError = emailErrorState.value,
-            label = { Text(stringResource(R.string.email)) },
-            leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email Icon") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(
+                onNext = { focusManager.moveFocus(androidx.compose.ui.focus.FocusDirection.Next) }
+            ),
             modifier = Modifier
                 .padding(bottom = 16.dp)
                 .fillMaxWidth(0.9f)
         )
 
-        // Text field for password input.
+        // Email
         OutlinedTextField(
-            value = password.value.trim(),
+            value = email.value,
+            onValueChange = { email.value = it },
+            isError = emailErrorState.value,
+            label = { Text(stringResource(R.string.email)) },
+            leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email Icon") },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Email,
+                imeAction = ImeAction.Next
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = { focusManager.moveFocus(androidx.compose.ui.focus.FocusDirection.Next) }
+            ),
+            modifier = Modifier
+                .padding(bottom = 16.dp)
+                .fillMaxWidth(0.9f)
+        )
+
+        // Password
+        OutlinedTextField(
+            value = password.value,
             onValueChange = { password.value = it },
             isError = passwordErrorState.value,
             label = { Text(stringResource(R.string.password)) },
             leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password Icon") },
-            // A trailing icon that toggles the password's visibility.
             trailingIcon = {
                 val image = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Icon(imageVector = image, contentDescription = "Toggle Password Visibility")
                 }
             },
-            // Transforms the input visually, hiding or showing the password based on state.
+            singleLine = true,
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Done
+            ),
+            keyboardActions = KeyboardActions(
+                onDone = { focusManager.clearFocus() }
+            ),
             modifier = Modifier
                 .padding(bottom = 16.dp)
                 .fillMaxWidth(0.9f)
         )
 
-        // A horizontal container for the checkbox and its associated text.
+        // Terms checkbox
         Row(
             modifier = Modifier
                 .fillMaxWidth(0.9f)
-                .padding(bottom = 16.dp),
+                .padding(bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Checkbox(checked = isChecked, onCheckedChange = { isChecked = it })
@@ -158,37 +177,55 @@ fun SignUpScreen(navController: NavHostController) {
             )
         }
 
-        // The primary action button to initiate the sign-up process.
+        // Registration message
+        if (registrationMessage.value.isNotEmpty()) {
+            Text(
+                text = registrationMessage.value,
+                color = if (registrationMessage.value.contains("successful")) Color.Green else Color.Red,
+                modifier = Modifier
+                    .padding(start = 32.dp, top = 12.dp, bottom = 4.dp)
+                    .fillMaxWidth(0.9f),
+                textAlign = TextAlign.Start
+            )
+        }
+        // Sign Up button
         Button(
             onClick = {
-                val auth = FirebaseAuth.getInstance()
 
-                // Performs simple client-side validation before contacting Firebase.
+
+
                 emailErrorState.value = email.value.isBlank()
                 passwordErrorState.value = password.value.length < 6
-                if (emailErrorState.value || passwordErrorState.value) return@Button
+                if (emailErrorState.value || passwordErrorState.value || !isChecked) {
+                    registrationMessage.value = "Please fill all fields correctly and accept terms."
+                    return@Button
+                }
 
-                // Calls Firebase Authentication to create a new user. This is an asynchronous operation.
-                auth.createUserWithEmailAndPassword(email.value, password.value)
-                    .addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            // On success, updates the message and clears all input fields.
+                coroutineScope.launch {
+                    try {
+                        val result = auth.fetchSignInMethodsForEmail(email.value).await()
+                        val signInMethods = result.signInMethods
+                        if (!signInMethods.isNullOrEmpty()) {
+                            registrationMessage.value = "Account already exists. Please sign in."
+                        } else {
+                            auth.createUserWithEmailAndPassword(email.value, password.value).await()
                             registrationMessage.value = "Registration successful! Welcome ${email.value}"
+
+
                             username.value = ""
                             email.value = ""
                             password.value = ""
                             isChecked = false
                             passwordVisible = false
-                        } else {
-                            // On failure, captures the error message to display to the user.
-                            registrationMessage.value =
-                                "Registration failed: ${task.exception?.localizedMessage}"
                         }
+                    } catch (e: Exception) {
+                        registrationMessage.value = "Registration failed: ${e.localizedMessage}"
                     }
+                }
             },
             modifier = Modifier
                 .fillMaxWidth(0.9f)
-                .padding(top = 8.dp),
+                .padding( top = 8.dp),
             border = BorderStroke(1.dp, colorResource(id = R.color.purple_500)),
             colors = ButtonDefaults.buttonColors(
                 containerColor = colorResource(id = R.color.purple_500),
@@ -197,21 +234,7 @@ fun SignUpScreen(navController: NavHostController) {
         ) {
             Text(text = stringResource(id = R.string.button_sign_up))
         }
-
-        // Conditionally displays the registration status message if it's not empty.
-        if (registrationMessage.value.isNotEmpty()) {
-            Text(
-                text = registrationMessage.value,
-                // Changes the text color to green for success and red for failure.
-                color = if (registrationMessage.value.contains("successful")) Color.Green else Color.Red,
-                modifier = Modifier
-                    .padding(top = 16.dp)
-                    .fillMaxWidth(0.9f),
-                textAlign = TextAlign.Start
-            )
-        }
-
-        // Provides a link to the sign-in screen for users who already have an account.
+        // Already have account
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -222,9 +245,15 @@ fun SignUpScreen(navController: NavHostController) {
             Text(
                 text = "Sign in",
                 color = colorResource(id = R.color.teal_700),
-                // Makes the text clickable to trigger navigation.
                 modifier = Modifier.clickable { navController.navigate("sign-in") }
             )
         }
     }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun SignUpScreenPreview() {
+    val navController = rememberNavController()
+    SignUpScreen(navController = navController)
 }

@@ -10,7 +10,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.unh.personalhealthbuddy"
+        applicationId = "com.unh.personal_health_buddy"
         minSdk = 33
         targetSdk = 36
         versionCode = 1
