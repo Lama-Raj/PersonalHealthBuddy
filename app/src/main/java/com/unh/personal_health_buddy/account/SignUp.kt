@@ -85,7 +85,7 @@ fun SignUpScreen(navController: NavHostController) {
                 .padding(start = 16.dp),
             contentAlignment = Alignment.TopStart
         ) {
-            IconButton(onClick = { navController.navigate("welcome") }) {
+            IconButton(onClick = { navController.popBackStack() }) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back to Welcome"
