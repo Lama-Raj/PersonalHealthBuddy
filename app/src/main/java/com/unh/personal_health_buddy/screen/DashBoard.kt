@@ -1,6 +1,7 @@
 package com.unh.personal_health_buddy.screen
 
 // IMPORTS for layout, images, and text
+// import androidx.compose.foundation.border // No longer needed
 // NEW IMPORTS for Card
 // IMPORTS for project resources and theme
 import androidx.annotation.DrawableRes
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -48,6 +50,12 @@ import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
 import com.unh.personal_health_buddy.ui.theme.ReportsCyan
 
 
+/**
+ * A simple data class to hold info for our feature cards.
+ *
+ * IMPORTANT: Replace 'R.drawable.profile' with your actual icon resource IDs.
+ * (e.g., R.drawable.bmi_icon, R.drawable.blood_icon, etc.)
+ */
 data class Feature(
     val text: String,
     @DrawableRes val imageId: Int // This ensures we provide a valid drawable resource ID.
@@ -56,13 +64,13 @@ data class Feature(
 @OptIn(ExperimentalMaterial3Api::class) // We need this to use the Material 3 Card.
 @Composable // This annotation marks the function as a piece of UI.
 fun DashboardScreen(){
-    // !! IMPORTANT: Replace R.drawable.profile with your own drawable resources!
-    // I am using \n to create line breaks in the text, just like in your image.
-    val feature1 = Feature("BMI\nStatus", R.drawable.bmi) // Pink
+    // !! IMPORTANT: Replace these with your actual drawable resources!
+    val feature1 = Feature("BMI\nStatus", R.drawable.bmical) // Pink
     val feature2 = Feature("Blood Group\nInfo", R.drawable.blood)      // Orange
     val feature3 = Feature("Reports", R.drawable.reports)     // Blue
     val feature4 = Feature("Emergency\nContact", R.drawable.call)    // Red
     val feature5 = Feature("Chat\nWith AI", R.drawable.chatai) // Green
+
 
     // The 'Box' composable allows UI elements to be stacked on top of each other.
     Box(
@@ -90,12 +98,13 @@ fun DashboardScreen(){
                     // - top = 32.dp: Pushes the layout down to avoid overlapping.
                     // - start/end/bottom = 16.dp: Adds space on the sides and bottom.
                     .padding(PaddingValues(start = 16.dp, end = 16.dp, top = 32.dp, bottom = 16.dp)),
-                verticalArrangement = Arrangement.spacedBy(16.dp) // Space between the rows
+                verticalArrangement = Arrangement.spacedBy(12.dp) // Reduced padding
             ) {
                 // This is the TOP row of cards
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp) // Space between the cards
+                    horizontalArrangement = Arrangement.spacedBy(12.dp), // Reduced padding
+                    verticalAlignment = Alignment.CenterVertically // Ensure cards in row align
                 ) {
                     StandardFeatureCard(
                         feature = feature1,
@@ -103,7 +112,7 @@ fun DashboardScreen(){
                         backgroundColor = BmiPink,
                         modifier = Modifier
                             .weight(1f) // Each takes 1/3 of the width
-                            .height(140.dp)
+                            .aspectRatio(1f) // Makes the card square
                     )
                     StandardFeatureCard(
                         feature = feature2,
@@ -111,7 +120,7 @@ fun DashboardScreen(){
                         backgroundColor = BloodOrange,
                         modifier = Modifier
                             .weight(1f) // Each takes 1/3 of the width
-                            .height(140.dp)
+                            .aspectRatio(1f) // Makes the card square
                     )
                     StandardFeatureCard(
                         feature = feature3,
@@ -119,14 +128,15 @@ fun DashboardScreen(){
                         backgroundColor = ReportsCyan,
                         modifier = Modifier
                             .weight(1f) // Each takes 1/3 of the width
-                            .height(140.dp)
+                            .aspectRatio(1f) // Makes the card square
                     )
                 }
 
                 // This is the BOTTOM row of cards
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp) // Space between the cards
+                    horizontalArrangement = Arrangement.spacedBy(12.dp), // Reduced padding
+                    verticalAlignment = Alignment.CenterVertically // Ensure cards in row align
                 ) {
                     StandardFeatureCard(
                         feature = feature4,
@@ -134,16 +144,16 @@ fun DashboardScreen(){
                         backgroundColor = EmergencyRed,
                         modifier = Modifier
                             .weight(1f) // Takes 1/3 of the space
-                            .height(140.dp)
+                            .aspectRatio(1f) // Makes the card square
                     )
                     // We call the 'LargeFeatureCard' for the chat feature
                     LargeFeatureCard(
                         feature = feature5,
-                        onClick = { /* TODO: Handle Chat click */ },
+                        onClick = { { /* TODO: Handle Chat click */ } },
                         backgroundColor = ChatGreen,
                         modifier = Modifier
                             .weight(2f) // Takes 2/3 of the space (twice as wide)
-                            .height(140.dp)
+                            .aspectRatio(2f)  // Makes height 1/2 of width
                     )
                 }
             }
@@ -153,7 +163,7 @@ fun DashboardScreen(){
         // The 'Column' composable arranges items vertically, one below the other.
         Column(
             modifier = Modifier
-                .offset(y = (30).dp)
+                .offset(y = (30.dp))
                 .align(Alignment.TopStart) // This positions the column at the top-left of the parent Box.
                 .padding(40.dp) // This adds 16dp of space around the column's content.
         ) {
@@ -217,7 +227,7 @@ fun StandardFeatureCard(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(12.dp), // A little padding
+                .padding(8.dp), // Padding
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -225,14 +235,16 @@ fun StandardFeatureCard(
             Image(
                 painter = painterResource(id = feature.imageId),
                 contentDescription = "${feature.text} Illustration",
-                modifier = Modifier.size(64.dp), // You can adjust this size
+                modifier = Modifier
+                    .size(56.dp), // Increased from 48.dp
                 contentScale = ContentScale.Fit
             )
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp)) // Increased from 6.dp
             Text(
                 text = feature.text,
                 fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
+                fontSize = 15.sp, // Increased from 14.sp
+                lineHeight = 17.sp, // Increased from 16.sp
                 color = Color.White,
                 textAlign = TextAlign.Center // Center the text
             )
@@ -263,7 +275,7 @@ fun LargeFeatureCard(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 20.dp, vertical = 16.dp), // More horizontal padding
+                .padding(horizontal = 16.dp, vertical = 12.dp), // Padding
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween // Puts space between items
         ) {
@@ -278,7 +290,8 @@ fun LargeFeatureCard(
             Image(
                 painter = painterResource(id = feature.imageId),
                 contentDescription = "${feature.text} Illustration",
-                modifier = Modifier.size(80.dp), // You can adjust this size
+                modifier = Modifier
+                    .size(72.dp), // Increased from 64.dp
                 contentScale = ContentScale.Fit
             )
         }
