@@ -60,7 +60,7 @@ fun AppNavigation() {
             composable("reset-password") { ResetPasswordScreen(navController) }
 
             // Main app destinations with BottomNavBar
-            composable("home") { DashboardScreen() }
+            composable("home") { DashboardScreen(navController) }
             composable("map_route") {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("Map Screen")

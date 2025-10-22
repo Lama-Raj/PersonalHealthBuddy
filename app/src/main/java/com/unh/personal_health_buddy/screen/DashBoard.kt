@@ -1,16 +1,9 @@
 package com.unh.personal_health_buddy.screen
 
-// IMPORTS for layout, images, and text
-
-// NEW IMPORTS for the grid
-
-// IMPORTS for project resources and theme
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,10 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -33,53 +22,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.unh.personal_health_buddy.R
-import com.unh.personal_health_buddy.ui.theme.BloodOrange
-import com.unh.personal_health_buddy.ui.theme.BloodOrangeDark
-import com.unh.personal_health_buddy.ui.theme.BmiPink
-import com.unh.personal_health_buddy.ui.theme.BmiPinkDark
-import com.unh.personal_health_buddy.ui.theme.ChatGreen
-import com.unh.personal_health_buddy.ui.theme.EmergencyRed
-import com.unh.personal_health_buddy.ui.theme.EmergencyRedDark
 import com.unh.personal_health_buddy.ui.theme.LightBlueBackground
 import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
-import com.unh.personal_health_buddy.ui.theme.ReportsCyan
-import com.unh.personal_health_buddy.ui.theme.ReportsCyanDark
-
-/**
- * A sealed class to represent the different features on our dashboard.
- * This makes managing the grid items much cleaner.
- *
- * IMPORTANT: Replace 'R.drawable.profile' with your actual icon resource IDs.
- * (e.g., R.drawable.bmi_icon, R.drawable.blood_icon, etc.)
- */
-sealed class Feature(
-    val title: String,
-    val iconRes: Int, // This is the icon resource ID
-    val backgroundColor: Color,
-    val iconBackgroundColor: Color? = null, // Only for square buttons
-    val span: Int = 1 // How many columns this item should span
-) {
-    // replace R.drawable.profile with your real icons
-    object Bmi : Feature("BMI Status", R.drawable.profile, BmiPink, BmiPinkDark)
-    object BloodGroup : Feature("Blood Group", R.drawable.profile, BloodOrange, BloodOrangeDark)
-    object Reports : Feature("Reports", R.drawable.profile, ReportsCyan, ReportsCyanDark)
-    object Emergency : Feature("Emergency", R.drawable.profile, EmergencyRed, EmergencyRedDark)
-    // The "Chat" object spans 2 columns
-    object Chat : Feature("Chat With AI", R.drawable.profile, ChatGreen, span = 2)
-}
-
-// A list containing all the features we want to display.
-val features = listOf(
-    Feature.Bmi,
-    Feature.BloodGroup,
-    Feature.Reports,
-    Feature.Emergency,
-    Feature.Chat
-)
 
 @Composable // This annotation marks the function as a piece of UI.
 fun DashboardScreen(){
@@ -99,36 +46,7 @@ fun DashboardScreen(){
                 .clip(RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp)) // This rounds only the top corners.
                 .background(Color.White) // This sets the background of this Box to white.
         ) {
-
-            // --- THIS IS THE GRID YOU WERE MISSING ---
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3), // We want 3 columns
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(start = 16.dp, end = 16.dp, top = 32.dp), // Padding inside the white card
-                horizontalArrangement = Arrangement.spacedBy(16.dp), // Space between columns
-                verticalArrangement = Arrangement.spacedBy(16.dp)     // Space between rows
-            ) {
-                // This loops through our 'features' list
-                items(features, span = { feature -> GridItemSpan(feature.span) }) { feature ->
-                    // We use a 'when' statement to decide which button composable to use
-                    when (feature) {
-                        is Feature.Chat -> WideFeatureButton(
-                            title = feature.title,
-                            iconRes = feature.iconRes,
-                            backgroundColor = feature.backgroundColor
-                        )
-                        else -> FeatureButton(
-                            title = feature.title,
-                            iconRes = feature.iconRes,
-                            backgroundColor = feature.backgroundColor,
-                            iconBackgroundColor = feature.iconBackgroundColor ?: Color.White
-                        )
-                    }
-                }
-            }
-            // --- END OF THE GRID ---
-
+            // The feature grid will be added here later.
         }
 
         // The 'Column' composable arranges items vertically, one below the other.
@@ -173,103 +91,6 @@ fun DashboardScreen(){
                 .offset(x = (-20).dp, y = 120.dp) // This moves the image from its aligned position.
                 .size(size = 180.dp) // This sets the size of the image.
         )
-    }
-}
-
-/**
- * A composable function for the square feature buttons (BMI, Reports, etc.)
- */
-@Composable
-fun FeatureButton(
-    title: String,
-    iconRes: Int,
-    backgroundColor: Color,
-    iconBackgroundColor: Color,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .height(110.dp) // Set a fixed height
-            .clip(RoundedCornerShape(20.dp))
-            .background(backgroundColor)
-            .padding(12.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxSize() // Fill the Box
-        ) {
-            // Circle background for icon
-            Box(
-                modifier = Modifier
-                    .size(50.dp)
-                    .clip(CircleShape)
-                    .background(iconBackgroundColor),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painter = painterResource(id = iconRes), // <-- REPLACE THIS ICON
-                    contentDescription = title,
-                    modifier = Modifier.size(30.dp)
-                )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Black.copy(alpha = 0.8f),
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-}
-
-/**
- * A composable function for the wide feature button (Chat with AI)
- */
-@Composable
-fun WideFeatureButton(
-    title: String,
-    iconRes: Int,
-    backgroundColor: Color,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .height(110.dp) // Match the height of the other buttons
-            .clip(RoundedCornerShape(20.dp))
-            .background(backgroundColor)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            // Title text
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                color = Color.Black,
-                modifier = Modifier.weight(1f) // Takes up remaining space
-            )
-
-            // Faded white circle background for icon
-            Box(
-                modifier = Modifier
-                    .size(70.dp)
-                    .clip(CircleShape)
-                    // This creates a semi-transparent white background
-                    .background(Color.White.copy(alpha = 0.5f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painter = painterResource(id = iconRes), // <-- REPLACE THIS ICON
-                    contentDescription = title,
-                    modifier = Modifier.size(50.dp)
-                )
-            }
-        }
     }
 }
 
