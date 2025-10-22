@@ -9,11 +9,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.auth.FirebaseAuth
 import com.unh.personal_health_buddy.account.ResetPasswordScreen
 import com.unh.personal_health_buddy.account.SignInScreen
 import com.unh.personal_health_buddy.account.SignUpScreen
@@ -31,6 +31,10 @@ fun AppNavigation() {
     // Screens that should not have the BottomNavBar
     val screensWithoutNavBar = listOf("main_welcome", "signup", "sign-in", "reset-password")
 
+    // Determine the start destination based on the user's authentication state
+    val currentUser = FirebaseAuth.getInstance().currentUser
+    val startDestination = if (currentUser != null) "home" else "main_welcome"
+
     Scaffold(
         bottomBar = {
             if (currentRoute !in screensWithoutNavBar) {
@@ -38,7 +42,7 @@ fun AppNavigation() {
                     currentRoute = currentRoute ?: "",
                     onItemClick = { route ->
                         navController.navigate(route) {
-                            popUpTo(navController.graph.findStartDestination().id) {
+                            popUpTo("home") {
                                 saveState = true
                             }
                             launchSingleTop = true
@@ -51,7 +55,7 @@ fun AppNavigation() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = "main_welcome",
+            startDestination = startDestination,
             modifier = Modifier.padding(innerPadding)
         ) {
             composable("main_welcome") { MainWelcomeScreen(navController) }
