@@ -9,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -31,18 +30,30 @@ fun AppNavigation() {
     // Screens that should not have the BottomNavBar
     val screensWithoutNavBar = listOf("main_welcome", "signup", "sign-in", "reset-password")
 
+    // Feature screens that are children of the "home" tab
+    val featureScreens = listOf("bmi_screen", "blood_group_screen", "reports_screen", "emergency_screen", "chat_ai_screen")
+
+    // Determine the route to highlight on the nav bar. If we're on a feature screen, highlight "home".
+    val routeForNavBar = if (currentRoute in featureScreens) "home" else currentRoute
+
     Scaffold(
         bottomBar = {
             if (currentRoute !in screensWithoutNavBar) {
                 BottomNavBar(
-                    currentRoute = currentRoute ?: "",
+                    currentRoute = routeForNavBar ?: "home",
                     onItemClick = { route ->
-                        navController.navigate(route) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
+                        if (route == "home") {
+                            // Special handling for the home button to always pop the stack
+                            navController.popBackStack("home", inclusive = false)
+                        } else {
+                            // Standard navigation for other tabs
+                            navController.navigate(route) {
+                                popUpTo("home") {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
                             }
-                            launchSingleTop = true
-                            restoreState = true
                         }
                     }
                 )
@@ -59,8 +70,8 @@ fun AppNavigation() {
             composable("sign-in") { SignInScreen(navController) }
             composable("reset-password") { ResetPasswordScreen(navController) }
 
-            // Main app destinations with BottomNavBar
-            composable("home") { DashboardScreen() }
+            // Main app destinations
+            composable("home") { DashboardScreen(navController) }
             composable("map_route") {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("Map Screen")
@@ -74,6 +85,33 @@ fun AppNavigation() {
             composable("profile_route") {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("Profile Screen")
+                }
+            }
+            
+            // Feature screen destinations
+            composable("bmi_screen") {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("BMI Screen")
+                }
+            }
+            composable("blood_group_screen") {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Blood Group Screen")
+                }
+            }
+            composable("reports_screen") {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Reports Screen")
+                }
+            }
+            composable("emergency_screen") {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Emergency Screen")
+                }
+            }
+            composable("chat_ai_screen") {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Chat With AI Screen")
                 }
             }
         }

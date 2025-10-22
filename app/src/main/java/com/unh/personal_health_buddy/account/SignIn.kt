@@ -185,7 +185,11 @@ fun SignInScreen(navController: NavHostController) {
                         email.value = ""
                         password.value = ""
                         passwordVisible = false
-                        navController.navigate("home")
+                        navController.navigate("home") {
+                            popUpTo(navController.graph.id) {
+                                inclusive = true
+                            }
+                        }
                     } catch (e: Exception) {
                         // If the 'await()' call fails, the exception is caught.
                         // Update the message to show the error.

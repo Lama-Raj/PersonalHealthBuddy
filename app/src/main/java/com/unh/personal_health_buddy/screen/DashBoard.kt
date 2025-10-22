@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -40,6 +39,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.R
 import com.unh.personal_health_buddy.ui.theme.BloodOrange
 import com.unh.personal_health_buddy.ui.theme.BmiPink
@@ -53,7 +54,7 @@ import com.unh.personal_health_buddy.ui.theme.ReportsCyan
 /**
  * A simple data class to hold info for our feature cards.
  *
- * IMPORTANT: Replace 'R.drawable.profile' with your actual icon resource IDs.
+ * IMPORTANT: Replace '''R.drawable.profile''' with your actual icon resource IDs.
  * (e.g., R.drawable.bmi_icon, R.drawable.blood_icon, etc.)
  */
 data class Feature(
@@ -63,145 +64,146 @@ data class Feature(
 
 @OptIn(ExperimentalMaterial3Api::class) // We need this to use the Material 3 Card.
 @Composable // This annotation marks the function as a piece of UI.
-fun DashboardScreen(){
-    // !! IMPORTANT: Replace these with your actual drawable resources!
+fun DashboardScreen(navController: NavController){
+
     val feature1 = Feature("BMI\nStatus", R.drawable.bmical) // Pink
     val feature2 = Feature("Blood Group\nInfo", R.drawable.blood)      // Orange
     val feature3 = Feature("Reports", R.drawable.reports)     // Blue
     val feature4 = Feature("Emergency\nContact", R.drawable.call)    // Red
     val feature5 = Feature("Chat\nWith AI", R.drawable.chatai) // Green
 
-
-    // The 'Box' composable allows UI elements to be stacked on top of each other.
-    Box(
-        // A 'modifier' is used to change the appearance or behavior of a composable.
+    // --- NEW ROBUST LAYOUT ---
+    // This Column is the new root. It divides the screen into two weighted sections,
+    // which is much more stable than calculating offsets from screen height.
+    Column(
         modifier = Modifier
-            .fillMaxSize() // This makes the Box take up the whole screen.
-            .background(LightBlueBackground) // This sets the background color of the Box.
+            .fillMaxSize()
+            .background(LightBlueBackground)
     ) {
-        // This is the second Box, which acts as the white card.
+        // --- TOP BLUE SECTION (35% of screen height) ---
         Box(
             modifier = Modifier
-                .align(Alignment.BottomCenter) // This positions the white card at the bottom of the parent Box.
-                .fillMaxWidth() // This makes the card take the full width of the screen.
-                .fillMaxHeight(0.65f) // This makes the card cover 65% of the screen's height.
-                .clip(RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp)) // This rounds only the top corners.
-                .background(Color.White) // This sets the background of this Box to white.
+                .fillMaxWidth()
+                .weight(0.35f) // This makes the box take up 35% of the parent Column's height.
         ) {
+            // The user info is aligned to the top-start of this Box.
+            Column(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(horizontal = 40.dp, vertical = 24.dp) // Simple padding is more reliable.
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.profile),
+                    contentDescription = "User Profile Picture",
+                    modifier = Modifier
+                        .size(90.dp)
+                        .clip(CircleShape)
+                )
 
-            // --- THIS IS THE MANUAL LAYOUT ---
-            // We use a Column to create the two rows.
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Text(
+                    text = "welcome !",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = "User",
+                    style = MaterialTheme.typography.headlineSmall
+                )
+                Text(
+                    text = "How is it going today?",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
+            // The doctor image is aligned to the BOTTOM of this Box.
+            // This is the key to making its position relative to the white card below.
+            Image(
+                painter = painterResource(id = R.drawable.doctor),
+                contentDescription = "Doctor Illustration",
+                modifier = Modifier
+                    .align(Alignment.BottomEnd) // Align to the bottom-right of the parent Box.
+                    // A positive 'y' offset makes the image "hang over" into the section below.
+                    .offset(x = (-20).dp, y = 10.dp)
+                    .size(180.dp)
+            )
+        }
+
+        // --- BOTTOM WHITE CARD SECTION (65% of screen height) ---
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(0.65f) // This takes the remaining 65% of the height.
+                .clip(RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp))
+                .background(Color.White)
+        ) {
+            // We use a Column to hold the two rows of cards.
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     // This padding is crucial:
-                    // - top = 32.dp: Pushes the layout down to avoid overlapping.
+                    // - top = 60.dp: A larger padding to avoid the overlapping doctor image.
                     // - start/end/bottom = 16.dp: Adds space on the sides and bottom.
-                    .padding(PaddingValues(start = 16.dp, end = 16.dp, top = 32.dp, bottom = 16.dp)),
-                verticalArrangement = Arrangement.spacedBy(12.dp) // Reduced padding
+                    .padding(PaddingValues(start = 16.dp, end = 16.dp, top = 60.dp, bottom = 16.dp)),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // This is the TOP row of cards
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp), // Reduced padding
-                    verticalAlignment = Alignment.CenterVertically // Ensure cards in row align
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     StandardFeatureCard(
                         feature = feature1,
-                        onClick = { /* TODO: Handle BMI click */ },
+                        onClick = { navController.navigate("bmi_screen") },
                         backgroundColor = BmiPink,
                         modifier = Modifier
-                            .weight(1f) // Each takes 1/3 of the width
-                            .aspectRatio(1f) // Makes the card square
+                            .weight(1f)
+                            .aspectRatio(1f)
                     )
                     StandardFeatureCard(
                         feature = feature2,
-                        onClick = { /* TODO: Handle Blood Group click */ },
+                        onClick = { navController.navigate("blood_group_screen") },
                         backgroundColor = BloodOrange,
                         modifier = Modifier
-                            .weight(1f) // Each takes 1/3 of the width
-                            .aspectRatio(1f) // Makes the card square
+                            .weight(1f)
+                            .aspectRatio(1f)
                     )
                     StandardFeatureCard(
                         feature = feature3,
-                        onClick = { /* TODO: Handle Reports click */ },
+                        onClick = { navController.navigate("reports_screen") },
                         backgroundColor = ReportsCyan,
                         modifier = Modifier
-                            .weight(1f) // Each takes 1/3 of the width
-                            .aspectRatio(1f) // Makes the card square
+                            .weight(1f)
+                            .aspectRatio(1f)
                     )
                 }
 
                 // This is the BOTTOM row of cards
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp), // Reduced padding
-                    verticalAlignment = Alignment.CenterVertically // Ensure cards in row align
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     StandardFeatureCard(
                         feature = feature4,
-                        onClick = { /* TODO: Handle Emergency click */ },
+                        onClick = { navController.navigate("emergency_screen") },
                         backgroundColor = EmergencyRed,
                         modifier = Modifier
-                            .weight(1f) // Takes 1/3 of the space
-                            .aspectRatio(1f) // Makes the card square
+                            .weight(1f)
+                            .aspectRatio(1f)
                     )
-                    // We call the 'LargeFeatureCard' for the chat feature
                     LargeFeatureCard(
                         feature = feature5,
-                        onClick = { { /* TODO: Handle Chat click */ } },
+                        onClick = { navController.navigate("chat_ai_screen") },
                         backgroundColor = ChatGreen,
                         modifier = Modifier
-                            .weight(2f) // Takes 2/3 of the space (twice as wide)
-                            .aspectRatio(2f)  // Makes height 1/2 of width
+                            .weight(2f)
+                            .aspectRatio(2f)
                     )
                 }
             }
-            // --- END OF THE MANUAL LAYOUT ---
         }
-
-        // The 'Column' composable arranges items vertically, one below the other.
-        Column(
-            modifier = Modifier
-                .offset(y = (30.dp))
-                .align(Alignment.TopStart) // This positions the column at the top-left of the parent Box.
-                .padding(40.dp) // This adds 16dp of space around the column's content.
-        ) {
-            // The 'Image' composable is used to display a picture.
-            Image(
-                painter = painterResource(id = R.drawable.profile), // This loads the image from the 'drawable' folder.
-                contentDescription = "User Profile Picture", // This is text for screen readers.
-                modifier = Modifier
-                    .size(90.dp) // This sets the size of the image to 90x90 dp.
-                    .clip(CircleShape) // This clips the image into a circular shape.
-            )
-
-            Spacer(modifier = Modifier.height(10.dp)) // This creates an 10dp vertical space.
-
-            // The 'Text' composable displays a string of text.
-            Text(
-                text = "welcome !",
-                style = MaterialTheme.typography.titleMedium // This applies a pre-defined text style.
-            )
-            Text(
-                text = "User",
-                style = MaterialTheme.typography.headlineSmall
-            )
-            Text(
-                text = "How is it going today?",
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
-
-        // This is another 'Image' composable for the doctor illustration.
-        Image(
-            painter = painterResource(id = R.drawable.doctor),
-            contentDescription = "Doctor Illustration",
-            modifier = Modifier
-                .align(Alignment.TopEnd) // This positions the image at the top-right of the parent Box.
-                .offset(x = (-20).dp, y = 120.dp) // This moves the image from its aligned position.
-                .size(size = 180.dp) // This sets the size of the image.
-        )
     }
 }
 
@@ -271,41 +273,40 @@ fun LargeFeatureCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(containerColor = backgroundColor)
     ) {
-        // Use a Row to arrange items side-by-side
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp, vertical = 12.dp), // Padding
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween // Puts space between items
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
                 text = feature.text,
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp, // Slightly larger text
+                fontSize = 15.sp,
+                lineHeight = 17.sp,
                 color = Color.White,
-                textAlign = TextAlign.Start // Align text to the start
+                textAlign = TextAlign.Start,
+                modifier = Modifier.weight(1f)
             )
-            // We use Image instead of Icon
             Image(
                 painter = painterResource(id = feature.imageId),
                 contentDescription = "${feature.text} Illustration",
                 modifier = Modifier
-                    .size(72.dp), // Increased from 64.dp
+                    .size(64.dp), // Consistent size
                 contentScale = ContentScale.Fit
             )
         }
     }
 }
 
-
-@Preview(showBackground = true) // This annotation tells Android Studio to show a preview of this UI.
-@Composable // This marks the function as a piece of UI.
+@Preview(showBackground = true)
+@Composable
 fun DashboardScreenPreview() {
-    // This provides the app's theme to the preview so it looks correct.
     PersonalHealthBuddyTheme {
-        // This calls the main screen function to render it in the preview panel.
-        DashboardScreen()
+        // Since DashboardScreen now needs a NavController,
+        // we can use a placeholder for the preview.
+        val navController = rememberNavController()
+        DashboardScreen(navController = navController)
     }
 }
-
