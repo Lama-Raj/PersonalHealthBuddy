@@ -30,7 +30,7 @@ data class BottomNavItem(
 
 // This is a list. It holds all the 'BottomNavItem' objects we want to show.
 val items = listOf(
-    BottomNavItem("Home", Icons.Filled.Home, "home_route"),
+    BottomNavItem("Home", Icons.Filled.Home, "home"),
     BottomNavItem("Map", Icons.Filled.Place, "map_route"),
     BottomNavItem("Notification", Icons.Filled.Notifications, "notification_route"),
     BottomNavItem("Profile", Icons.Filled.Person, "profile_route")
@@ -72,7 +72,7 @@ fun BottomNavBarPreview() {
     com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme {
         // Here, we call the 'BottomNavBar' we want to preview.
         BottomNavBar(
-            currentRoute = "home_route",
+            currentRoute = "home",
             onItemClick = {}
         )
     }
