@@ -16,6 +16,7 @@ import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.account.ResetPasswordScreen
 import com.unh.personal_health_buddy.account.SignInScreen
 import com.unh.personal_health_buddy.account.SignUpScreen
+import com.unh.personal_health_buddy.features.BmiScreen
 import com.unh.personal_health_buddy.screen.DashboardScreen
 import com.unh.personal_health_buddy.screen.MainWelcomeScreen
 
@@ -89,10 +90,7 @@ fun AppNavigation() {
             }
             
             // Feature screen destinations
-            composable("bmi_screen") {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("BMI Screen")
-                }
+            composable("bmi_screen") {BmiScreen(navController)
             }
             composable("blood_group_screen") {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
