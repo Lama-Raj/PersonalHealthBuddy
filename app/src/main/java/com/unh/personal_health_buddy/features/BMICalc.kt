@@ -29,6 +29,8 @@ enum class Gender { MALE, FEMALE }
 @Composable
 fun BmiScreen(navController: NavController) {
     var selectedGender by remember { mutableStateOf(Gender.MALE) }
+    var heightInches by remember { mutableStateOf(65f) }
+    var weightLbs by remember { mutableStateOf(150f) }
 
     val gradient = Brush.verticalGradient(listOf(Color.White, Color(0xFFE3F2FD)))
     val activeColor = Color(0xFF0277BD)
@@ -61,10 +63,67 @@ fun BmiScreen(navController: NavController) {
         ) {
             Text("Select Gender", color = activeColor)
             GenderSelector(selectedGender, { selectedGender = it }, activeColor)
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            SliderInput(
+                label = "Height (ft / in)",
+                value = heightInches,
+                onValueChange = { heightInches = it },
+                range = 48f..84f,
+                displayValue = formatInchesToFtIn(heightInches),
+                activeColor = activeColor
+            )
+
+            SliderInput(
+                label = "Weight (lbs)",
+                value = weightLbs,
+                onValueChange = { weightLbs = it },
+                range = 80f..350f,
+                displayValue = "${weightLbs.toInt()} lbs",
+                activeColor = activeColor
+            )
         }
     }
 }
 
+@Composable
+fun SliderInput(
+    label: String,
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    range: ClosedFloatingPointRange<Float>,
+    displayValue: String,
+    activeColor: Color
+) {
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(label, color = Color.Gray)
+            Text(displayValue, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+        }
+        Slider(
+            value = value,
+            onValueChange = onValueChange,
+            valueRange = range,
+            colors = SliderDefaults.colors(
+                thumbColor = activeColor,
+                activeTrackColor = activeColor.copy(alpha = 0.7f),
+                inactiveTrackColor = Color.White.copy(alpha = 0.7f)
+            )
+        )
+    }
+}
+
+private fun formatInchesToFtIn(totalInches: Float): String {
+    val feet = (totalInches / 12).toInt()
+    val inches = (totalInches % 12).toInt()
+    return "$feet ft / $inches in"
+}
+
+// Gender selector remains same as Commit 2
 @Composable
 fun GenderSelector(
     selectedGender: Gender,
