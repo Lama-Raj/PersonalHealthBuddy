@@ -220,7 +220,7 @@ fun SignInScreen(navController: NavHostController) {
             Text(
                 text = "Sign up",
                 color = colorResource(id = R.color.teal_700),
-                modifier = Modifier.clickable { navController.navigate("sign-up") }
+                modifier = Modifier.clickable { navController.navigate("signup") }
             )
         }
     }
