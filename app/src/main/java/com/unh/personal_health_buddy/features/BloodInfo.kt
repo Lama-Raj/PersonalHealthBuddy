@@ -2,16 +2,23 @@ package com.unh.personal_health_buddy.features
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,13 +41,30 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
 
+// Added static data for now le
+private val bloodFacts = listOf(
+    "There are eight different common blood types (A+, A-, B+, B-, AB+, AB-, O+, O-).",
+    "Blood type O- is the 'universal donor' and can be given to any blood type.",
+    "Blood type AB+ is the 'universal recipient' and can receive blood from any type.",
+    "Your blood type is inherited from your parents.",
+    "A single blood donation can save up to three lives."
+)
+// --- END STATIC DATA ---
 
-@OptIn(ExperimentalMaterial3Api::class)
+
+@OptIn(ExperimentalMaterial3Api::class) // Got from auto import
 @Composable
 fun BloodGroupScreen(navController: NavController){
-    val userBloodType = "AB+" // This Need to be change as per user data entry for now it is static
-    val newGradientStart = Color(0xFFFFFFFF) // White
-    val newGradientEnd = Color(0xFFE3F2FD)   // Shining (Light) Blue
+
+    // --- ADD STATE ---
+    // Hardcoded as for reference image. This will later be changed and fetched from the database.
+    val userBloodType = "AB+"
+    // --- END ---
+
+    // --- STYLING AND LAYOUT SHELL ---
+    // Using the new maroon color theme
+    val newGradientStart = Color(0xFFFFF0F0) // Very Light Maroon/Pink
+    val newGradientEnd = Color(0xFFFFFFFF)   // White
     val vibrantGradient = Brush.verticalGradient(colors = listOf(newGradientStart, newGradientEnd))
     val activeColor = Color(0xFF800000) // Maroon
     val activeColorDark = Color(0xFF6B0000) // Darker Maroon
@@ -49,8 +73,7 @@ fun BloodGroupScreen(navController: NavController){
         modifier = Modifier
             .fillMaxSize()
             .background(vibrantGradient)
-    )
-    {
+    ) {
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -75,8 +98,8 @@ fun BloodGroupScreen(navController: NavController){
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Color.Transparent,
-                        titleContentColor = activeColor,
-                        navigationIconContentColor = activeColor
+                        titleContentColor = activeColorDark,
+                        navigationIconContentColor = activeColorDark
                     )
                 )
             },
@@ -86,23 +109,32 @@ fun BloodGroupScreen(navController: NavController){
                 modifier = Modifier
                     .padding(paddingValues)
                     .fillMaxSize()
+                    // --- MODIFIERS FOR COLUMN ---
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(24.dp)
+                // --- END MODIFIERS ---
             ) {
+                // --- ADD CONTENT ---
                 BloodTypeIcon(bloodType = userBloodType, color = activeColor)
 
+                // --- Blood Facts Card ---
+                BloodFactsCard(facts = bloodFacts, color = activeColor)
+
+                // --- Blood Chart Button ---
+             /*   InfoCard(
+                    text = "Blood Chart Information",
+                    onClick = { /* TODO: Show Blood Chart */ },
+                    isPlaceholder = true
+                )
+               */ // --- END CONTENT ---
             }
-            InfoCard(
-                text = "Blood Facts",
-                onClick = { /* TODO: Show Blood Facts */ }
-            )
         }
     }
-
+    // --- END ---
 }
 
-@Composable
-private fun InfoCard(text: String, onClick: () -> Unit) {
-    
-}
 
 @Composable
 private fun BloodTypeIcon(bloodType: String, color: Color) {
@@ -132,6 +164,55 @@ private fun BloodTypeIcon(bloodType: String, color: Color) {
         )
     }
 }
+
+@Composable
+private fun BloodFactsCard(facts: List<String>, color: Color) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.7f)),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "Blood Facts",
+                color = color, // Use the maroon color
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
+            )
+            facts.forEach { fact ->
+                FactRow(fact = fact, color = color)
+            }
+        }
+    }
+}
+
+@Composable
+private fun FactRow(fact: String, color: Color) {
+    Row(
+        verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Default.WaterDrop, // Use the blood drop icon
+            contentDescription = null,
+            tint = color.copy(alpha = 0.7f),
+            modifier = Modifier
+                .size(16.dp)
+                .padding(top = 4.dp) // Align icon with first line of text
+        )
+        Text(
+            text = fact,
+            color = Color.Black.copy(alpha = 0.7f),
+            fontSize = 14.sp,
+            lineHeight = 20.sp
+        )
+    }
+}
+// --- END COMPOSABLE ---
 
 @Preview(showBackground = true)
 @Composable
