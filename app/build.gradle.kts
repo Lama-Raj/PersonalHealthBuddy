@@ -37,6 +37,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -66,4 +67,6 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth-ktx:23.2.1")
     implementation("androidx.compose.material:material-icons-extended:1.6.0")
+    implementation("com.google.firebase:firebase-ai:0.6.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.3")
 }
