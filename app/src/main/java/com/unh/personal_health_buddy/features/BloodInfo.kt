@@ -116,23 +116,15 @@ fun BloodGroupScreen(navController: NavController){
                 verticalArrangement = Arrangement.spacedBy(24.dp)
                 // --- END MODIFIERS ---
             ) {
-                // --- ADD CONTENT ---
+
                 BloodTypeIcon(bloodType = userBloodType, color = activeColor)
 
                 // --- Blood Facts Card ---
                 BloodFactsCard(facts = bloodFacts, color = activeColor)
 
-                // --- Blood Chart Button ---
-             /*   InfoCard(
-                    text = "Blood Chart Information",
-                    onClick = { /* TODO: Show Blood Chart */ },
-                    isPlaceholder = true
-                )
-               */ // --- END CONTENT ---
             }
         }
     }
-    // --- END ---
 }
 
 
@@ -141,7 +133,7 @@ private fun BloodTypeIcon(bloodType: String, color: Color) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
-            .size(180.dp)
+            .size(150.dp)
             .clip(CircleShape)
             .background(color.copy(alpha = 0.1f))
             .border(4.dp, color.copy(alpha = 0.2f), CircleShape)
