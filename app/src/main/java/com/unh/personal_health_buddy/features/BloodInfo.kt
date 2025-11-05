@@ -119,6 +119,10 @@ fun BloodGroupScreen(navController: NavController){
 
                 BloodTypeIcon(bloodType = userBloodType, color = activeColor)
 
+                // -- Blood Group Table --
+                BloodGroupTable()
+
+
                 // --- Blood Facts Card ---
                 BloodFactsCard(facts = bloodFacts, color = activeColor)
 
@@ -126,7 +130,10 @@ fun BloodGroupScreen(navController: NavController){
         }
     }
 }
-
+@Composable
+private fun BloodGroupTable(){
+    
+}
 
 @Composable
 private fun BloodTypeIcon(bloodType: String, color: Color) {
@@ -163,7 +170,7 @@ private fun BloodFactsCard(facts: List<String>, color: Color) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         // --- CHANGED ---
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF3A6EF)),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFD9D9D9)),
         elevation = CardDefaults.cardElevation(2.dp) // Added a subtle shadow
         // --- END CHANGED ---
     ) {
