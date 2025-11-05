@@ -90,9 +90,18 @@ fun BloodGroupScreen(navController: NavController){
                 BloodTypeIcon(bloodType = userBloodType, color = activeColor)
 
             }
+            InfoCard(
+                text = "Blood Facts",
+                onClick = { /* TODO: Show Blood Facts */ }
+            )
         }
     }
 
+}
+
+@Composable
+private fun InfoCard(text: String, onClick: () -> Unit) {
+    
 }
 
 @Composable
