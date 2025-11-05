@@ -86,7 +86,8 @@ fun BloodGroupScreen(navController: NavController){
                     .padding(paddingValues)
                     .fillMaxSize()
             ) {
-                // Content will go here in the next step
+                BloodTypeIcon(bloodType = userBloodType, color = activeColor)
+
             }
         }
     }
