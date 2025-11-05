@@ -162,18 +162,20 @@ private fun BloodFactsCard(facts: List<String>, color: Color) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.7f)),
-        elevation = CardDefaults.cardElevation(0.dp)
+        // --- CHANGED ---
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF3A6EF)),
+        elevation = CardDefaults.cardElevation(2.dp) // Added a subtle shadow
+        // --- END CHANGED ---
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier.padding(vertical = 20.dp, horizontal = 16.dp), // Added more padding
+            verticalArrangement = Arrangement.spacedBy(16.dp) // Added more spacing
         ) {
             Text(
                 text = "Blood Facts",
-                color = color, // Use the maroon color
+                color = Color.Black.copy(alpha = 0.9f),
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
+                fontSize = 20.sp
             )
             facts.forEach { fact ->
                 FactRow(fact = fact, color = color)
@@ -186,7 +188,7 @@ private fun BloodFactsCard(facts: List<String>, color: Color) {
 private fun FactRow(fact: String, color: Color) {
     Row(
         verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp) // Added more spacing
     ) {
         Icon(
             imageVector = Icons.Default.WaterDrop, // Use the blood drop icon
