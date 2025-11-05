@@ -42,7 +42,8 @@ fun BloodGroupScreen(navController: NavController){
     val newGradientStart = Color(0xFFFFFFFF) // White
     val newGradientEnd = Color(0xFFE3F2FD)   // Shining (Light) Blue
     val vibrantGradient = Brush.verticalGradient(colors = listOf(newGradientStart, newGradientEnd))
-    val activeColor = Color(0xFF0277BD) // The strong blue from BmiScreen
+    val activeColor = Color(0xFF800000) // Maroon
+    val activeColorDark = Color(0xFF6B0000) // Darker Maroon
 
     Box(
         modifier = Modifier
