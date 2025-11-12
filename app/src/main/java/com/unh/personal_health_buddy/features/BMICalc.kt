@@ -78,10 +78,14 @@ fun BmiScreen(navController: NavController) {
     var bmiCategory by remember { mutableStateOf("") }
     var suggestedWeight by remember { mutableStateOf("") }
 
-    // --- New Vibrant Color Scheme ---
-    val newGradientStart = Color(0xFFE0F7FA) // Light Cyan
-    val newGradientEnd = Color(0xFFB2DFDB)   // Light Teal
-    val newActiveColor = Color(0xFF00796B) // Darker Teal for buttons/sliders
+    // --- Dynamic Vibrant Color Scheme based on Gender ---
+    val (newActiveColor, newGradientStart, newGradientEnd) = if (selectedGender == Gender.MALE) {
+        // Blue theme for Male
+        Triple(Color(0xFF0288D1), Color(0xFFB3E5FC), Color(0xFF81D4FA))
+    } else {
+        // Pink theme for Female
+        Triple(Color(0xFFC2185B), Color(0xFFF8BBD0), Color(0xFFF48FB1))
+    }
 
     // Define a vibrant gradient
     val vibrantGradient = Brush.verticalGradient(
@@ -473,4 +477,3 @@ fun BmiScreenPreview() {
         BmiScreen(navController = rememberNavController())
     }
 }
-
