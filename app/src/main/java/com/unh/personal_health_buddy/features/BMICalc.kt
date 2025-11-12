@@ -25,8 +25,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -405,11 +406,23 @@ fun BmiCategoryTable() {
                 textAlign = TextAlign.Center
             )
             CategoryRow("Underweight", "Below 18.5")
-            Divider(color = Color.White.copy(alpha = 0.2f))
+            HorizontalDivider(
+                Modifier,
+                DividerDefaults.Thickness,
+                color = Color.White.copy(alpha = 0.2f)
+            )
             CategoryRow("Healthy", "18.5 - 24.9")
-            Divider(color = Color.White.copy(alpha = 0.2f))
+            HorizontalDivider(
+                Modifier,
+                DividerDefaults.Thickness,
+                color = Color.White.copy(alpha = 0.2f)
+            )
             CategoryRow("Overweight", "25.0 - 29.9")
-            Divider(color = Color.White.copy(alpha = 0.2f))
+            HorizontalDivider(
+                Modifier,
+                DividerDefaults.Thickness,
+                color = Color.White.copy(alpha = 0.2f)
+            )
             CategoryRow("Obesity", "30.0 or above")
         }
     }
@@ -450,7 +463,7 @@ private fun getCategoryColor(category: String): Color {
     return when (category) {
         "Underweight" -> Color(0xFF03A9F4) // Light Blue
         "Healthy" -> Color(0xFF4CAF50) // Green
-        "Overweight" -> Color(0xFFFF9800) // Orange
+        "Overweight" -> Color(0xFF0800FF) // Orange
         "Obese" -> Color(0xFFF44336) // Red
         else -> Color.Gray
     }
