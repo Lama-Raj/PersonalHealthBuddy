@@ -2,9 +2,12 @@ package com.unh.personal_health_buddy.features
 
 // --- NEW IMPORTS ---
 // --- NEW IMPORTS ---
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -12,13 +15,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -29,13 +37,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.ui.theme.LightBlueBackground
@@ -56,6 +67,11 @@ fun MedicateScreen(navController: NavController){
     // --- STATE FOR SEARCH ---
     var searchQuery by remember { mutableStateOf("") }
 
+    // For Floating Action Button
+    var isMenuExpanded by remember { mutableStateOf(false) }
+
+    // --- MAIN LAYOUT ---
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -68,6 +84,7 @@ fun MedicateScreen(navController: NavController){
                     title = {
                         Text(
                             text = "Medication",
+                            fontSize = 30.sp,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth()
@@ -91,13 +108,37 @@ fun MedicateScreen(navController: NavController){
                     )
                 )
             },
+            floatingActionButton = {
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Animated menu options
+                    AnimatedVisibility(visible = isMenuExpanded) {
+
+                    }
+
+                    // Main FAB
+                    FloatingActionButton(
+                        onClick = { isMenuExpanded = !isMenuExpanded },
+                        containerColor = activeColor,
+                        contentColor = Color.White
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add Medication"
+                        )
+                    }
+                }
+            },
             containerColor = Color.Transparent
         ) { paddingValues ->
             Column(
                 modifier = Modifier
                     .padding(paddingValues)
                     .fillMaxSize()
-                    .padding(horizontal = 16.dp) // Add horizontal padding for content
+                    .padding(horizontal = 16.dp), // Add horizontal padding for content
+                    horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // --- ADD SEARCH BAR ---
                 SearchBar(
@@ -117,11 +158,11 @@ private fun SearchBar(
 ) {
     Card(
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxWidth(0.9f)
             .padding(top = 10.dp),
         shape = RoundedCornerShape(50), // Fully rounded corners
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        
+
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         TextField(
@@ -157,6 +198,38 @@ private fun SearchBar(
         )
     }
 }
+@Composable
+private fun MiniFabWithText(
+    icon: ImageVector,
+    text: String,
+    onClick: () -> Unit
+) {
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // Text Label
+        Text(
+            text = text,
+            fontWeight = FontWeight.Bold,
+            color = PrimaryDarkBlue,
+            modifier = Modifier
+                .background(Color.White.copy(alpha = 0.8f), RoundedCornerShape(8.dp))
+                .padding(horizontal = 12.dp, vertical = 6.dp)
+        )
+
+        // Mini FAB
+        SmallFloatingActionButton(
+            onClick = onClick,
+            containerColor = Color.White,
+            contentColor = PrimaryDarkBlue
+        ) {
+            Icon(imageVector = icon, contentDescription = text)
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun NotificationScreenPreview() {
