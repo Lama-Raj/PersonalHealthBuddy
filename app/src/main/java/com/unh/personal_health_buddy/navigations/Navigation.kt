@@ -96,7 +96,7 @@ fun AppNavigation() {
             //blood_group_screen
             composable("blood_group_screen") {BloodGroupScreen(navController)
             }
-
+            // Medicates Screen
             composable("medicates_screen") {
                 MedicateScreen(navController)
             }

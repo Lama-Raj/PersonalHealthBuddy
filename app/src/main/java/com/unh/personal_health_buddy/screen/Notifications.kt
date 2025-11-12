@@ -54,6 +54,7 @@ fun NotificationScreen(navController: NavController) {
         Scaffold(
             topBar = {
                 TopAppBar(
+                    modifier = Modifier.padding(top = 20.dp),
                     title = {
                         Text(
                             text = "Notifications",
