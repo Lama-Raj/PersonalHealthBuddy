@@ -20,6 +20,7 @@ import com.unh.personal_health_buddy.features.BloodGroupScreen
 import com.unh.personal_health_buddy.features.BmiScreen
 import com.unh.personal_health_buddy.screen.DashboardScreen
 import com.unh.personal_health_buddy.screen.MainWelcomeScreen
+import com.unh.personal_health_buddy.screen.NotificationScreen
 
 // This composable function sets up the application's navigation graph.
 
@@ -79,10 +80,8 @@ fun AppNavigation() {
                     Text("Map Screen")
                 }
             }
-            composable("notification_route") {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Notification Screen")
-                }
+            composable("notification_route") { NotificationScreen(navController)
+
             }
             composable("profile_route") {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -99,7 +98,7 @@ fun AppNavigation() {
 
             composable("medicates_screen") {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Reports Screen")
+                    Text("medicates Screen")
                 }
             }
             composable("emergency_screen") {
