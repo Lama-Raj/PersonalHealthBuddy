@@ -204,16 +204,20 @@ fun BmiScreen(navController: NavController) {
                     )
 
 
-                    // Right Side: Silhouette Image (Placeholder)
+                    // Right Side: Silhouette Image
                     Box(
                         modifier = Modifier
                             .weight(1f)
                             .padding(start = 8.dp),
                         contentAlignment = Alignment.TopCenter
                     ) {
+                        val imageRes = if (selectedGender == Gender.FEMALE) {
+                            R.drawable.ladyicon
+                        } else {
+                            R.drawable.profile
+                        }
                         Image(
-                            // !! REPLACE R.drawable.profile with your silhouette image !!
-                            painter = painterResource(id = R.drawable.profile),
+                            painter = painterResource(id = imageRes),
                             contentDescription = "Body Silhouette",
                             modifier = Modifier
                                 .fillMaxHeight(0.5f)
