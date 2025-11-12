@@ -68,7 +68,7 @@ fun DashboardScreen(navController: NavController){
 
     val feature1 = Feature("BMI\nStatus", R.drawable.bmical) // Pink
     val feature2 = Feature("Blood Group\nInfo", R.drawable.blood)      // Orange
-    val feature3 = Feature("Reports", R.drawable.reports)     // Blue
+    val feature3 = Feature("Medicates", R.drawable.med)     // Blue
     val feature4 = Feature("Emergency\nContact", R.drawable.call)    // Red
     val feature5 = Feature("Chat\nWith AI", R.drawable.chatai) // Green
 
@@ -171,7 +171,7 @@ fun DashboardScreen(navController: NavController){
                     )
                     StandardFeatureCard(
                         feature = feature3,
-                        onClick = { navController.navigate("reports_screen") },
+                        onClick = { navController.navigate("medicates_screen") },
                         backgroundColor = ReportsCyan,
                         modifier = Modifier
                             .weight(1f)

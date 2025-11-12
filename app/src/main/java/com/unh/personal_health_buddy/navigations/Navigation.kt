@@ -97,7 +97,7 @@ fun AppNavigation() {
             composable("blood_group_screen") {BloodGroupScreen(navController)
             }
 
-            composable("reports_screen") {
+            composable("medicates_screen") {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("Reports Screen")
                 }
