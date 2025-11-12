@@ -85,7 +85,10 @@ fun NotificationScreen(navController: NavController) {
             Column(
                 modifier = Modifier
                     .padding(paddingValues)
-                    .fillMaxSize()
+                    .fillMaxSize(),
+                // Center the content on the screen
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
                 EmptyState(color = activeColor)
             }
