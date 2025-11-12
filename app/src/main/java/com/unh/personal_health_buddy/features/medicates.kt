@@ -1,15 +1,15 @@
 package com.unh.personal_health_buddy.features
 
-// --- NEW IMPORTS ---
-// --- NEW IMPORTS ---
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -38,12 +39,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -52,6 +57,10 @@ import com.unh.personal_health_buddy.ui.theme.LightBlueBackground
 import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
 import com.unh.personal_health_buddy.ui.theme.PrimaryDarkBlue
 
+
+// --- NEW DATA CLASS ---
+// A simple data class for our medication list
+private data class Medication(val name: String)
 
 @OptIn(ExperimentalMaterial3Api::class) // Got it from auto import
 @Composable
@@ -69,7 +78,7 @@ fun MedicateScreen(navController: NavController){
     // For Floating Action Button
     var isMenuExpanded by remember { mutableStateOf(false) }
 
-    // --- MAIN LAYOUT ---
+    var medications by remember { mutableStateOf(emptyList<Medication>()) }
 
     Box(
         modifier = Modifier
@@ -155,6 +164,13 @@ fun MedicateScreen(navController: NavController){
                     onQueryChange = { searchQuery = it }
                 )
                 // --- END SEARCH BAR ---
+                Spacer(modifier = Modifier.height(32.dp))
+                if (medications.isEmpty() && searchQuery.isEmpty()) {
+                    EmptyMedicationState(activeColor = activeColor)
+                } else {
+                    // TODO: Show medication list (LazyColumn)
+                    Text("Medication list would appear here...")
+                }
             }
         }
     }
@@ -238,6 +254,60 @@ private fun MiniFabWithText(
         }
     }
 }
+@Composable
+private fun EmptyMedicationState(activeColor: Color) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 40.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Default.Medication, // Using a standard icon
+            contentDescription = "Medication",
+            tint = activeColor.copy(alpha = 0.7f),
+            modifier = Modifier.size(80.dp)
+        )
+
+        // Dotted border box
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(0.8f)
+                .dashedBorder(color = activeColor.copy(alpha = 0.5f), cornerRadius = 16.dp)
+                .padding(vertical = 24.dp, horizontal = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "No Prescriptions Found",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = activeColor
+            )
+            Text(
+                text = "Your medications will appear here once prescribed by a doctor.",
+                fontSize = 15.sp,
+                color = Color.Gray,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+// Helper modifier for the dotted border
+fun Modifier.dashedBorder(color: Color, cornerRadius: Dp, strokeWidth: Dp = 1.dp, dashWidth: Dp = 8.dp, gapWidth: Dp = 4.dp) = this.drawBehind {
+    val stroke = Stroke(
+        width = strokeWidth.toPx(),
+        pathEffect = PathEffect.dashPathEffect(floatArrayOf(dashWidth.toPx(), gapWidth.toPx()), 0f)
+    )
+    drawRoundRect(
+        color = color,
+        style = stroke,
+        cornerRadius = androidx.compose.ui.geometry.CornerRadius(cornerRadius.toPx())
+    )
+}
+
 
 @Preview(showBackground = true)
 @Composable
