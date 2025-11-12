@@ -17,7 +17,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -115,7 +114,17 @@ fun MedicateScreen(navController: NavController){
                 ) {
                     // Animated menu options
                     AnimatedVisibility(visible = isMenuExpanded) {
+                        Column(
+                            horizontalAlignment = Alignment.End,
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            MiniFabWithText(
+                                icon = Icons.Default.Description,
+                                text = "Add Prescription",
+                                onClick = { /* TODO: Handle prescription add */ }
+                            )
 
+                        }
                     }
 
                     // Main FAB
