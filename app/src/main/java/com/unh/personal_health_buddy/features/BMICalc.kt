@@ -176,7 +176,13 @@ fun BmiScreen(navController: NavController) {
                         GenderSelector(
                             selectedGender = selectedGender, // Passes the currently remembered gender.
                             // Provides a lambda to update the gender when selected.
-                            onGenderSelect = { selectedGender = it },
+                            onGenderSelect = { newGender ->
+                                selectedGender = newGender
+                                // Resets the results when gender is changed to prevent showing stale data.
+                                bmiResult = null
+                                bmiCategory = ""
+                                suggestedWeight = ""
+                            },
                             activeColor = newActiveColor // Passes the dynamic color for highlighting.
                         )
 
