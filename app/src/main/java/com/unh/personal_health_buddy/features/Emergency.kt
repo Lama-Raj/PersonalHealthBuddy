@@ -1,4 +1,24 @@
 package com.unh.personal_health_buddy.features
 
-class Emergency {
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
+
+
+@Composable
+fun EmergencyContactScreen(navController: NavController) {
+
+    Text (text = "Test Text By Raj")
+
+}
+
+@Preview(showBackground = true)
+@Composable
+fun EmergencyContactScreenPreview() {
+    PersonalHealthBuddyTheme {
+        EmergencyContactScreen(navController = rememberNavController())
+    }
 }
