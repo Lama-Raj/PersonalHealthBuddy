@@ -35,7 +35,7 @@ fun AppNavigation() {
     val screensWithoutNavBar = listOf("main_welcome", "signup", "sign-in", "reset-password")
 
     // Feature screens that are children of the "home" tab
-    val featureScreens = listOf("bmi_screen", "blood_group_screen", "reports_screen", "emergency_screen", "chat_ai_screen")
+    val featureScreens = listOf("bmi_screen", "blood_group_screen", "medicates_screen", "emergency_screen", "chat_ai_screen")
 
     // Determine the route to highlight on the nav bar. If we're on a feature screen, highlight "home".
     val routeForNavBar = if (currentRoute in featureScreens) "home" else currentRoute
@@ -97,8 +97,7 @@ fun AppNavigation() {
             composable("blood_group_screen") {BloodGroupScreen(navController)
             }
             // Medicates Screen
-            composable("medicates_screen") {
-                MedicateScreen(navController)
+            composable("medicates_screen") {MedicateScreen(navController)
             }
             composable("emergency_screen") {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
