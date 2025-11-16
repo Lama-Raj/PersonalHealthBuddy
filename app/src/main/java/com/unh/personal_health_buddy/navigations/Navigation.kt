@@ -18,6 +18,7 @@ import com.unh.personal_health_buddy.account.SignInScreen
 import com.unh.personal_health_buddy.account.SignUpScreen
 import com.unh.personal_health_buddy.features.BloodGroupScreen
 import com.unh.personal_health_buddy.features.BmiScreen
+import com.unh.personal_health_buddy.features.EmergencyContactScreen
 import com.unh.personal_health_buddy.features.MedicateScreen
 import com.unh.personal_health_buddy.screen.DashboardScreen
 import com.unh.personal_health_buddy.screen.MainWelcomeScreen
@@ -99,10 +100,8 @@ fun AppNavigation() {
             // Medicates Screen
             composable("medicates_screen") {MedicateScreen(navController)
             }
-            composable("emergency_screen") {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Emergency Screen")
-                }
+            // Emergency Contact Screen
+            composable("emergency_screen") {EmergencyContactScreen(navController)
             }
             composable("chat_ai_screen") {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
