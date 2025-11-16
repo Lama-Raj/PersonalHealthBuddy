@@ -6,21 +6,31 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -34,14 +44,17 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.ui.theme.EmergencyRed
 import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,10 +67,12 @@ fun EmergencyContactScreen(navController: NavController) {
     val vibrantGradient = Brush.verticalGradient(colors = listOf(newGradientStart, newGradientEnd))
     val activeColor = EmergencyRed // Keep using the theme's red for text/icons
 
-
     // --- STATE FOR FAB ---
     var isMenuExpanded by remember { mutableStateOf(false) }
-    // --- END STATE ---
+
+    // --- NEW STATE for Dialog ---
+    var showAddContactDialog by remember { mutableStateOf(false) }
+
 
     Box(
         modifier = Modifier
@@ -67,13 +82,13 @@ fun EmergencyContactScreen(navController: NavController) {
         Scaffold(
             topBar = {
                 TopAppBar(
-                    modifier = Modifier.padding(top = 40.dp),
+                    modifier = Modifier.padding(top = 20.dp),
                     title = {
                         Text(
                             text = "Emergency Contact",
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center,
-                            fontSize = 33.sp,
+                            fontSize = 30.sp,
                             modifier = Modifier.fillMaxWidth(),
                         )
                     },
@@ -110,7 +125,10 @@ fun EmergencyContactScreen(navController: NavController) {
                             MiniFabWithText(
                                 icon = Icons.Default.Add,
                                 text = "Add Contact",
-                                onClick = { /* TODO: Handle add */ },
+                                onClick = {
+                                    showAddContactDialog = true // Open the dialog
+                                    isMenuExpanded = false // Close the FAB menu
+                                },
                                 activeColor = activeColor,
                             )
                             MiniFabWithText(
@@ -149,6 +167,19 @@ fun EmergencyContactScreen(navController: NavController) {
                 // Content
             }
         }
+
+        // --- ADD DIALOG ---
+        if (showAddContactDialog) {
+            AddContactDialog(
+                onDismiss = { showAddContactDialog = false },
+                onSave = { name, phone, relationship ->
+                    // TODO: DB logic here by team // For Teammate
+                    showAddContactDialog = false
+                },
+                activeColor = activeColor
+            )
+        }
+        // --- END DIALOG ---
     }
 }
 
@@ -184,6 +215,82 @@ private fun MiniFabWithText(
         }
     }
 }
+// --- NEW COMPOSABLE FOR DIALOG ---
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AddContactDialog(
+    onDismiss: () -> Unit,
+    onSave: (String, String, String) -> Unit,
+    activeColor: Color
+) {
+    var name by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("") }
+    var relationship by remember { mutableStateOf("") }
+    val isFormValid = name.isNotBlank() && phone.isNotBlank() && relationship.isNotBlank()
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(8.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Add New Contact",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    color = activeColor
+                )
+
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Name") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = phone,
+                    onValueChange = { phone = it },
+                    label = { Text("Phone Number") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = relationship,
+                    onValueChange = { relationship = it },
+                    label = { Text("Relationship (e.g., Father, Doctor)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Cancel", color = Color.Gray)
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = { onSave(name, phone, relationship) },
+                        enabled = isFormValid,
+                        colors = ButtonDefaults.buttonColors(containerColor = activeColor)
+                    ) {
+                        Text("Save")
+                    }
+                }
+            }
+        }
+    }
+}
+// --- END COMPOSABLE ---
 
 @Preview(showBackground = true)
 @Composable
