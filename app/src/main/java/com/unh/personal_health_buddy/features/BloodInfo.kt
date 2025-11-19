@@ -17,13 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bloodtype
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,7 +33,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
 
-// ---- Facts ----
+// Fact list shown in UI
 private val bloodFacts = listOf(
     "There are eight major human blood types.",
     "O- is the universal donor type.",
@@ -52,44 +46,44 @@ private val bloodFacts = listOf(
 @Composable
 fun BloodGroupScreen(navController: NavController) {
 
-    val userBloodType = "O+"
+    val userBloodType = "O+"                  // Temporary user value
+    val primaryTeal = Color(0xFF00796B)       // Main accent color
 
+    // Background gradient for page
     val backgroundGradient = Brush.verticalGradient(
-        listOf(
-            Color(0xFFE0F7FA),
-            Color.White
-        )
+        listOf(Color(0xFFE0F7FA), Color.White)
     )
-
-    val primaryTeal = Color(0xFF00796B)
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(backgroundGradient)
+            .background(backgroundGradient)     // Apply gradient
     ) {
+
         Scaffold(
             topBar = {
                 TopAppBar(
                     title = {
                         Text(
-                            text = "Blood Group Details",
+                            "Blood Group Details",
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 20.sp,
                             modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center             // Center title
                         )
                     },
                     navigationIcon = {
                         IconButton(onClick = { navController.popBackStack() }) {
                             Icon(
                                 Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
+                                contentDescription = "Back",        // Back button
                                 tint = primaryTeal
                             )
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent          // No appbar background
+                    )
                 )
             },
             containerColor = Color.Transparent
@@ -98,31 +92,34 @@ fun BloodGroupScreen(navController: NavController) {
             Column(
                 modifier = Modifier
                     .padding(paddingValues)
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(rememberScrollState())          // Enable scrolling
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(22.dp)
             ) {
 
-                SimpleWhiteCircleLogo(bloodType = userBloodType, color = primaryTeal)
+                // Show main blood icon & type
+                SimpleWhiteCircleLogoWithBorder(
+                    bloodType = userBloodType,
+                    color = primaryTeal
+                )
 
-                FormStyleFactsSection(primaryTeal)
+                // Show list of facts
+                FactsFormView(primaryTeal)
             }
         }
     }
 }
 
-
-// ---------------- NEW SIMPLE LOGO ----------------
 @Composable
-fun SimpleWhiteCircleLogo(bloodType: String, color: Color) {
+fun SimpleWhiteCircleLogoWithBorder(bloodType: String, color: Color) {
 
     Box(
         modifier = Modifier
-            .size(140.dp)
-            .clip(CircleShape)
-            .background(Color.White)
-            .border(3.dp, color.copy(alpha = 0.25f), CircleShape),
+            .size(140.dp)                             // Size of circle
+            .clip(CircleShape)                        // Apply circle shape
+            .background(Color.White)                  // Circle background
+            .border(4.dp, color.copy(alpha = 0.45f), CircleShape), // Circle border
         contentAlignment = Alignment.Center
     ) {
 
@@ -133,66 +130,76 @@ fun SimpleWhiteCircleLogo(bloodType: String, color: Color) {
 
             Icon(
                 imageVector = Icons.Default.Bloodtype,
-                contentDescription = "Blood Icon",
-                tint = color,
-                modifier = Modifier.size(45.dp)
+                contentDescription = null,
+                tint = color,                         // Icon color
+                modifier = Modifier.size(45.dp)       // Icon size
             )
 
             Text(
                 text = bloodType,
                 fontWeight = FontWeight.Bold,
-                fontSize = 28.sp,
+                fontSize = 28.sp,                     // Blood type size
                 color = color
             )
         }
     }
 }
 
-
-// ---- FORM STYLE FACTS ----
 @Composable
-fun FormStyleFactsSection(primaryTeal: Color) {
+fun FactsFormView(primaryTeal: Color) {
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(
-                color = Color(0xFFE0F2F1),
-                shape = RoundedCornerShape(18.dp)
-            )
-            .border(
-                width = 1.dp,
-                color = primaryTeal.copy(alpha = 0.4f),
-                shape = RoundedCornerShape(18.dp)
-            )
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+            .padding(horizontal = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
 
         Text(
             text = "Blood Facts",
-            fontSize = 19.sp,
-            fontWeight = FontWeight.Bold,
-            color = primaryTeal
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 18.sp,
+            color = primaryTeal,                     // Section title color
+            modifier = Modifier.padding(bottom = 4.dp)
         )
 
-        bloodFacts.forEach { fact ->
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Bloodtype,
-                    contentDescription = null,
-                    tint = primaryTeal.copy(alpha = 0.7f),
-                    modifier = Modifier.size(18.dp)
-                )
+        bloodFacts.forEachIndexed { index, fact ->
 
-                Text(
-                    text = fact,
-                    fontSize = 15.sp,
-                    lineHeight = 21.sp,
-                    color = Color(0xFF004D40)
-                )
+            Column(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 10.dp),   // Row spacing
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+
+                    Icon(
+                        imageVector = Icons.Default.Bloodtype,
+                        contentDescription = null,
+                        tint = primaryTeal.copy(alpha = 0.85f), // Icon tint
+                        modifier = Modifier.size(20.dp)
+                    )
+
+                    Text(
+                        text = fact,
+                        fontSize = 15.sp,
+                        color = Color(0xFF00332B),     // Readable text color
+                        lineHeight = 20.sp
+                    )
+                }
+
+                if (index != bloodFacts.lastIndex) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(1.dp)
+                            .background(primaryTeal.copy(alpha = 0.15f)) // Divider line
+                    )
+                }
             }
         }
     }
