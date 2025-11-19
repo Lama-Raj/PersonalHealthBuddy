@@ -11,8 +11,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -157,57 +159,98 @@ fun SimpleWhiteCircleLogoWithBorder(bloodType: String, color: Color) {
 @Composable
 fun DonationReceiveTable(primaryTeal: Color) {
 
-    // Table container
-    Column(
+    // table container
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 4.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .background(Color.White, shape = RoundedCornerShape(12.dp))   // rounded card
+            .border(1.dp, primaryTeal.copy(alpha = 0.25f), RoundedCornerShape(12.dp)) // soft border
+            .padding(16.dp)
     ) {
 
-        Text(
-            text = "Blood Donation Info",
-            fontWeight = FontWeight.SemiBold,
-            color = primaryTeal,
-            fontSize = 18.sp
-        )
+        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
 
-        // Side-by-side table layout
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
+            // Section title
+            Text(
+                text = "Blood Donation Info",
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 18.sp,
+                color = primaryTeal
+            )
 
-            // Left column
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "Can Donate To",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = primaryTeal
-                )
-                Text(
-                    text = "Placeholder",
-                    fontSize = 14.sp,
-                    color = Color(0xFF00332B),
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-            }
+            // Divider
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(primaryTeal.copy(alpha = 0.15f))
+            )
 
-            // Right column
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "Can Receive From",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = primaryTeal
+            // Table: side-by-side layout
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+
+                // Left column
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+
+                    Text(
+                        text = "Can Donate To",
+                        fontSize = 15.sp,
+                        color = primaryTeal,
+                        fontWeight = FontWeight.Medium
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xFFF1FDFC), RoundedCornerShape(8.dp))
+                            .padding(10.dp)
+                    ) {
+                        Text(
+                            text = "Placeholder",
+                            color = Color(0xFF004D40),
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+                Box(
+                    modifier = Modifier
+                        .width(1.dp)
+                        .height(70.dp)
+                        .background(primaryTeal.copy(alpha = 0.25f))
                 )
-                Text(
-                    text = "Placeholder",
-                    fontSize = 14.sp,
-                    color = Color(0xFF00332B),
-                    modifier = Modifier.padding(top = 4.dp)
-                )
+
+                // Right column
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+
+                    Text(
+                        text = "Can Receive From",
+                        fontSize = 15.sp,
+                        color = primaryTeal,
+                        fontWeight = FontWeight.Medium
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xFFF1FDFC), RoundedCornerShape(8.dp))
+                            .padding(10.dp)
+                    ) {
+                        Text(
+                            text = "Placeholder",
+                            color = Color(0xFF004D40),
+                            fontSize = 14.sp
+                        )
+                    }
+                }
             }
         }
     }
