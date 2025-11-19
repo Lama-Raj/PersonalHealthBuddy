@@ -41,7 +41,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
 
-// Fact list shown in UI
+// fact list for bottom view
 private val bloodFacts = listOf(
     "There are eight major human blood types.",
     "O- is the universal donor type.",
@@ -50,14 +50,58 @@ private val bloodFacts = listOf(
     "One blood donation can save up to three lives."
 )
 
+// data for compatibility matching
+data class BloodInfo(
+    val donateTo: List<String>,
+    val receiveFrom: List<String>
+)
+
+// match table for each blood type
+private val bloodCompatibility = mapOf(
+    "O-" to BloodInfo(
+        donateTo = listOf("Everyone"),
+        receiveFrom = listOf("O-")
+    ),
+    "O+" to BloodInfo(
+        donateTo = listOf("O+", "A+", "B+", "AB+"),
+        receiveFrom = listOf("O+", "O-")
+    ),
+    "A-" to BloodInfo(
+        donateTo = listOf("A-", "A+", "AB-", "AB+"),
+        receiveFrom = listOf("A-", "O-")
+    ),
+    "A+" to BloodInfo(
+        donateTo = listOf("A+", "AB+"),
+        receiveFrom = listOf("A+", "A-", "O+", "O-")
+    ),
+    "B-" to BloodInfo(
+        donateTo = listOf("B-", "B+", "AB-", "AB+"),
+        receiveFrom = listOf("B-", "O-")
+    ),
+    "B+" to BloodInfo(
+        donateTo = listOf("B+", "AB+"),
+        receiveFrom = listOf("B+", "B-", "O+", "O-")
+    ),
+    "AB-" to BloodInfo(
+        donateTo = listOf("AB-", "AB+"),
+        receiveFrom = listOf("AB-", "A-", "B-", "O-")
+    ),
+    "AB+" to BloodInfo(
+        donateTo = listOf("AB+"),
+        receiveFrom = listOf("Everyone")
+    )
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BloodGroupScreen(navController: NavController) {
 
-    val userBloodType = "O+"                  // Temporary user value
-    val primaryTeal = Color(0xFF00796B)       // Main accent color
+    val primaryTeal = Color(0xFF00796B)
 
-    // Background gradient for page
+    // user blood type (for now, hardcoded)
+    val userBloodType = "O+"   // change later when Firestore is ready
+
+    // soft gradient background
     val backgroundGradient = Brush.verticalGradient(
         listOf(Color(0xFFE0F7FA), Color.White)
     )
@@ -65,7 +109,7 @@ fun BloodGroupScreen(navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(backgroundGradient)     // Apply gradient
+            .background(backgroundGradient) // blend screen background
     ) {
 
         Scaffold(
@@ -77,21 +121,19 @@ fun BloodGroupScreen(navController: NavController) {
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 20.sp,
                             modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center             // Center title
+                            textAlign = TextAlign.Center // center title text
                         )
                     },
                     navigationIcon = {
                         IconButton(onClick = { navController.popBackStack() }) {
                             Icon(
                                 Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",        // Back button
-                                tint = primaryTeal
+                                contentDescription = "Back",
+                                tint = primaryTeal // match color theme
                             )
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent          // No appbar background
-                    )
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
                 )
             },
             containerColor = Color.Transparent
@@ -100,37 +142,41 @@ fun BloodGroupScreen(navController: NavController) {
             Column(
                 modifier = Modifier
                     .padding(paddingValues)
-                    .verticalScroll(rememberScrollState())          // Enable scrolling
+                    .verticalScroll(rememberScrollState()) // allow scroll on small screens
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(22.dp)
             ) {
 
-                // Show main blood icon & type
+                // show circle logo
                 SimpleWhiteCircleLogoWithBorder(
                     bloodType = userBloodType,
                     color = primaryTeal
                 )
 
-                // Add donation + receive table here
-                DonationReceiveTable(primaryTeal)
+                // show dynamic table for donation info
+                DonationReceiveTable(
+                    primaryTeal = primaryTeal,
+                    userBloodType = userBloodType
+                )
 
-                // Show list of facts
+                // show list of facts
                 FactsFormView(primaryTeal)
             }
         }
     }
 }
 
+// circle logo view
 @Composable
 fun SimpleWhiteCircleLogoWithBorder(bloodType: String, color: Color) {
 
     Box(
         modifier = Modifier
-            .size(140.dp)                             // Size of circle
-            .clip(CircleShape)                        // Apply circle shape
-            .background(Color.White)                  // Circle background
-            .border(4.dp, color.copy(alpha = 0.45f), CircleShape), // Circle border
+            .size(140.dp)             // circle dimensions
+            .clip(CircleShape)        // force circle shape
+            .background(Color.White)  // keep inside area white
+            .border(4.dp, color.copy(alpha = 0.45f), CircleShape), // soft border glow
         contentAlignment = Alignment.Center
     ) {
 
@@ -142,43 +188,45 @@ fun SimpleWhiteCircleLogoWithBorder(bloodType: String, color: Color) {
             Icon(
                 imageVector = Icons.Default.Bloodtype,
                 contentDescription = null,
-                tint = color,                         // Icon color
-                modifier = Modifier.size(45.dp)       // Icon size
+                tint = color,              // icon matches theme
+                modifier = Modifier.size(45.dp)
             )
 
             Text(
                 text = bloodType,
+                fontSize = 28.sp,          // show big type
                 fontWeight = FontWeight.Bold,
-                fontSize = 28.sp,                     // Blood type size
                 color = color
             )
         }
     }
 }
 
+// dynamic table view
 @Composable
-fun DonationReceiveTable(primaryTeal: Color) {
+fun DonationReceiveTable(primaryTeal: Color, userBloodType: String) {
 
-    // table container
+    // read matching entry based on chosen blood type
+    val info = bloodCompatibility[userBloodType]
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White, shape = RoundedCornerShape(12.dp))   // rounded card
-            .border(1.dp, primaryTeal.copy(alpha = 0.25f), RoundedCornerShape(12.dp)) // soft border
+            .background(Color.White, RoundedCornerShape(12.dp)) // soft table box
+            .border(1.dp, primaryTeal.copy(alpha = 0.25f), RoundedCornerShape(12.dp))
             .padding(16.dp)
     ) {
 
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
 
-            // Section title
             Text(
-                text = "Blood Donation Info",
+                "Blood Donation Info",
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 18.sp,
                 color = primaryTeal
             )
 
-            // Divider
+            // thin line under title
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -186,20 +234,20 @@ fun DonationReceiveTable(primaryTeal: Color) {
                     .background(primaryTeal.copy(alpha = 0.15f))
             )
 
-            // Table: side-by-side layout
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
 
-                // Left column
+                // left column: donation list
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
 
                     Text(
-                        text = "Can Donate To",
+                        "Can Donate To",
                         fontSize = 15.sp,
                         color = primaryTeal,
                         fontWeight = FontWeight.Medium
@@ -212,12 +260,14 @@ fun DonationReceiveTable(primaryTeal: Color) {
                             .padding(10.dp)
                     ) {
                         Text(
-                            text = "Placeholder",
-                            color = Color(0xFF004D40),
-                            fontSize = 14.sp
+                            text = info?.donateTo?.joinToString(", ") ?: "Unknown",
+                            fontSize = 14.sp,
+                            color = Color(0xFF004D40)
                         )
                     }
                 }
+
+                // vertical line to separate columns
                 Box(
                     modifier = Modifier
                         .width(1.dp)
@@ -225,14 +275,14 @@ fun DonationReceiveTable(primaryTeal: Color) {
                         .background(primaryTeal.copy(alpha = 0.25f))
                 )
 
-                // Right column
+                // right column: receive list
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
 
                     Text(
-                        text = "Can Receive From",
+                        "Can Receive From",
                         fontSize = 15.sp,
                         color = primaryTeal,
                         fontWeight = FontWeight.Medium
@@ -245,9 +295,9 @@ fun DonationReceiveTable(primaryTeal: Color) {
                             .padding(10.dp)
                     ) {
                         Text(
-                            text = "Placeholder",
-                            color = Color(0xFF004D40),
-                            fontSize = 14.sp
+                            text = info?.receiveFrom?.joinToString(", ") ?: "Unknown",
+                            fontSize = 14.sp,
+                            color = Color(0xFF004D40)
                         )
                     }
                 }
@@ -256,34 +306,31 @@ fun DonationReceiveTable(primaryTeal: Color) {
     }
 }
 
+// fact list below table
 @Composable
 fun FactsFormView(primaryTeal: Color) {
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 4.dp),
+        modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
 
         Text(
-            text = "Blood Facts",
+            "Blood Facts",
             fontWeight = FontWeight.SemiBold,
             fontSize = 18.sp,
-            color = primaryTeal,                     // Section title color
+            color = primaryTeal,
             modifier = Modifier.padding(bottom = 4.dp)
         )
 
         bloodFacts.forEachIndexed { index, fact ->
 
-            Column(
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
 
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 10.dp),   // Row spacing
+                        .padding(vertical = 10.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -291,24 +338,25 @@ fun FactsFormView(primaryTeal: Color) {
                     Icon(
                         imageVector = Icons.Default.Bloodtype,
                         contentDescription = null,
-                        tint = primaryTeal.copy(alpha = 0.85f), // Icon tint
+                        tint = primaryTeal.copy(alpha = 0.85f),
                         modifier = Modifier.size(20.dp)
                     )
 
                     Text(
-                        text = fact,
+                        fact,
                         fontSize = 15.sp,
-                        color = Color(0xFF00332B),     // Readable text color
+                        color = Color(0xFF00332B),
                         lineHeight = 20.sp
                     )
                 }
 
+                // divider line between fact rows
                 if (index != bloodFacts.lastIndex) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(1.dp)
-                            .background(primaryTeal.copy(alpha = 0.15f)) // Divider line
+                            .background(primaryTeal.copy(alpha = 0.15f))
                     )
                 }
             }
