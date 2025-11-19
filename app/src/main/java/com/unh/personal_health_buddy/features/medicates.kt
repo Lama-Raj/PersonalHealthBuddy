@@ -318,7 +318,7 @@ fun Modifier.dashedBorder(color: Color, cornerRadius: Dp, strokeWidth: Dp = 1.dp
 
 @Preview(showBackground = true)
 @Composable
-fun NotificationScreenPreview() {
+fun MedicateScreenPreview() {
     PersonalHealthBuddyTheme {
         MedicateScreen(navController = rememberNavController())
     }
