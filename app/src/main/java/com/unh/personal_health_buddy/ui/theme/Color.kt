@@ -2,6 +2,8 @@ package com.unh.personal_health_buddy.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
+
+// Material Design default colors
 val Purple80 = Color(0xFFD0BCFF)
 val PurpleGrey80 = Color(0xFFCCC2DC)
 val Pink80 = Color(0xFFEFB8C8)
@@ -10,15 +12,19 @@ val Purple40 = Color(0xFF6650a4)
 val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
 
-/* This Color are for my application
-* We are Declaring color names here to use it again and again
-* */
-val PrimaryDarkBlue = Color(0xFF223A6A)
-val ButtonBlue = Color(0xFF4285F4) // A standard blue for buttons
+/* Application Colors
+ * Declaring color names here to use throughout the app
+ * */
+val PrimaryDarkBlue = Color(0xFF6BCBFF)
+val ButtonBlue = Color(0xFF4285F4) // Standard blue for buttons
 val White = Color(0xFFFFFFFF)
 val MediumGray = Color(0xFFB0BEC5)    // For borders, dividers, disabled states
 
 val LightBlueBackground = Color(0xFFC8E4EE) // Dashboard Screen Background
+
+
+val LeaveGreen = Color(0xFF4CAF50)
+
 // Dashboard Accent Colors
 val AccentPink = Color(0xFFF5AAB9)
 val AccentOrange = Color(0xFFFABE9B)

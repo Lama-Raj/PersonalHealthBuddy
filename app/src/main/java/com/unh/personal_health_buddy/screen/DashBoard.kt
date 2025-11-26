@@ -4,6 +4,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -129,10 +130,12 @@ fun DashboardScreen(navController: NavController){
                             painter = painterResource(id = R.drawable.profile),
                             contentDescription = "User Profile Picture",
                             modifier = Modifier
-                                .size(120.dp)        // <-- Bigger profile image
+                                .size(120.dp)        // Bigger profile image
+                                .border(4.dp, PrimaryDarkBlue, CircleShape) // Solid blue border
                                 .clip(CircleShape),
                             contentScale = ContentScale.Crop
                         )
+
 
                         Column(
                             verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -162,13 +165,14 @@ fun DashboardScreen(navController: NavController){
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(50))
-                            .background(PrimaryDarkBlue.copy(alpha = 0.06f))
+                            .background(PrimaryDarkBlue.copy(alpha = 0.09f)) // solid dark blue pill
                             .padding(horizontal = 14.dp, vertical = 6.dp)
                     ) {
                         Text(
                             text = "Daily overview",
                             fontSize = 12.sp,
-                            color = PrimaryDarkBlue
+                            color = PrimaryDarkBlue,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
