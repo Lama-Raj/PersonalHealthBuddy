@@ -123,7 +123,7 @@ fun DashboardScreen(navController: NavController){
                     // BIG profile on the left + greeting texts on the right
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        horizontalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.profile),
@@ -181,7 +181,7 @@ fun DashboardScreen(navController: NavController){
                     modifier = Modifier
                         .align(Alignment.BottomEnd) // Align to the bottom-right of the parent Box.
                         // A positive 'y' offset makes the image "hang over" into the section below.
-                        .offset(x = (-16).dp, y = 8.dp)
+                        .offset(x = (-12).dp, y = 8.dp)
                         .size(150.dp),
                     contentScale = ContentScale.Fit
                 )
@@ -191,7 +191,7 @@ fun DashboardScreen(navController: NavController){
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(0.6f) // This takes the remaining height.
+                    .weight(0.9f) // This takes the remaining height.
                     .clip(RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp))
                     .background(Color.White)
             ) {
