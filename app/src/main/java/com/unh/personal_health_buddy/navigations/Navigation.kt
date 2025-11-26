@@ -67,7 +67,7 @@ fun AppNavigation() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = "main_welcome",
+            startDestination = "home",
             modifier = Modifier.padding(innerPadding)
         ) {
             composable("main_welcome") { MainWelcomeScreen(navController) }

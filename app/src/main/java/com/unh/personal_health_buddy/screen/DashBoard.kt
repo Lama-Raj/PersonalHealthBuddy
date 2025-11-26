@@ -118,41 +118,47 @@ fun DashboardScreen(navController: NavController){
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .padding(horizontal = 24.dp, vertical = 32.dp), // Simple padding is more reliable.
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.profile),
-                        contentDescription = "User Profile Picture",
-                        modifier = Modifier
-                            .size(80.dp)
-                            .clip(CircleShape),
-                        contentScale = ContentScale.Crop
-                    )
+                    // BIG profile on the left + greeting texts on the right
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.profile),
+                            contentDescription = "User Profile Picture",
+                            modifier = Modifier
+                                .size(120.dp)        // <-- Bigger profile image
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            // Time-based greeting
+                            Text(
+                                text = greeting,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = PrimaryDarkBlue
+                            )
+                            Text(
+                                text = "User",
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = PrimaryDarkBlue
+                            )
+                            Text(
+                                text = "How is it going today?",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = PrimaryDarkBlue.copy(alpha = 0.9f)
+                            )
+                        }
+                    }
 
-                    // Time-based greeting
-                    Text(
-                        text = greeting,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = PrimaryDarkBlue
-                    )
-                    Text(
-                        text = "User",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = PrimaryDarkBlue
-                    )
-                    Text(
-                        text = "How is it going today?",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = PrimaryDarkBlue.copy(alpha = 0.9f)
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // A small pill chip showing context
+                    // A small pill chip showing context (placed under the row)
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(50))
