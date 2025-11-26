@@ -72,4 +72,13 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended:1.6.0")
     implementation("com.google.firebase:firebase-ai:0.6.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.3")
+    // Retrofit + Gson
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+// Coil for loading article images
+    implementation("io.coil-kt:coil-compose:2.4.0")
+
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+
 }

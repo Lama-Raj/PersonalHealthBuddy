@@ -293,6 +293,13 @@ fun DashboardScreen(navController: NavController){
                                     .aspectRatio(2f)
                             )
                         }
+                        Text(
+                            text = "Health Articles",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = PrimaryDarkBlue
+                        )
+
                     }
                 }
             }
