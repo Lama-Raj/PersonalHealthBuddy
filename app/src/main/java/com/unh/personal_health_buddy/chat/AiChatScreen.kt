@@ -148,7 +148,6 @@ fun AiChatScreen(navController: NavController) {
                 }
             }
 
-            // row with input field and send button
             // input area card with text field and send button
             Card(
                 modifier = Modifier
@@ -170,16 +169,18 @@ fun AiChatScreen(navController: NavController) {
                         onValueChange = { inputText = it },
                         modifier = Modifier.weight(1f),
                         placeholder = { Text("Type your message...") },
-                        singleLine = true
+                        singleLine = true,
+                        // rounded shape for a softer chat look
+                        shape = RoundedCornerShape(20.dp)
                     )
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    // send icon button on the right side
+                    // send icon button on the right side, enabled only when there is text
                     IconButton(
                         onClick = {
-                            if (inputText.isNotBlank()) {
-                                val trimmed = inputText.trim()
+                            val trimmed = inputText.trim()
+                            if (trimmed.isNotEmpty()) {
                                 val timeLabel = getCurrentTimeLabel()
                                 // calculates next id based on current max id in list
                                 val nextId = (messages.maxOfOrNull { it.id } ?: 0L) + 1L
@@ -210,7 +211,8 @@ fun AiChatScreen(navController: NavController) {
                                     }
                                 }
                             }
-                        }
+                        },
+                        enabled = inputText.isNotBlank()
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Send,
@@ -219,7 +221,6 @@ fun AiChatScreen(navController: NavController) {
                     }
                 }
             }
-
         }
     }
 }
