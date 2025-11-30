@@ -16,6 +16,7 @@ import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.account.ResetPasswordScreen
 import com.unh.personal_health_buddy.account.SignInScreen
 import com.unh.personal_health_buddy.account.SignUpScreen
+import com.unh.personal_health_buddy.chat.AiChatScreen
 import com.unh.personal_health_buddy.features.BloodGroupScreen
 import com.unh.personal_health_buddy.features.BmiScreen
 import com.unh.personal_health_buddy.features.EmergencyContactScreen
@@ -64,7 +65,8 @@ fun AppNavigation() {
                 )
             }
         }
-    ) { innerPadding ->
+    )
+    { innerPadding ->
         NavHost(
             navController = navController,
             startDestination = "home",
@@ -103,10 +105,7 @@ fun AppNavigation() {
             // Emergency Contact Screen
             composable("emergency_screen") {EmergencyContactScreen(navController)
             }
-            composable("chat_ai_screen") {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Chat With AI Screen")
-                }
+            composable("chat_ai_screen") {AiChatScreen(navController)
             }
         }
     }

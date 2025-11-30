@@ -1,4 +1,4 @@
-package com.unh.personal_health_buddy.features
+package com.unh.personal_health_buddy.chat
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -8,7 +8,7 @@ import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
 
 @Composable
-fun CharWithAI(navController: NavController){
+fun AiChatScreen(navController: NavController){
     Text("test")
 
 }
@@ -16,6 +16,6 @@ fun CharWithAI(navController: NavController){
 @Composable
 fun MainScreenPreview() {
     PersonalHealthBuddyTheme {
-        CharWithAI(navController = rememberNavController())
+        AiChatScreen(navController = rememberNavController())
     }
 }
