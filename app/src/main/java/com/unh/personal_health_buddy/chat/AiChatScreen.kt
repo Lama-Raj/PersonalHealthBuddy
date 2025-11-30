@@ -140,7 +140,14 @@ fun AiChatScreen(navController: NavController) {
                                 text = trimmed,
                                 isUser = true
                             )
-                            messages = messages + userMessage
+                            // creates a simple bot reply based on user text
+                            val botMessage = ChatMessage(
+                                id = nextId + 1L,
+                                text = getBotReply(trimmed),
+                                isUser = false
+                            )
+                            // updates the list with user and bot messages
+                            messages = messages + userMessage + botMessage
                             // clears input text after sending
                             inputText = ""
                         }
@@ -207,5 +214,24 @@ fun ChatBubble(message: ChatMessage) {
 fun AiChatScreenPreview() {
     PersonalHealthBuddyTheme {
         AiChatScreen(navController = rememberNavController())
+    }
+}
+
+// returns a simple reply text based on user message
+private fun getBotReply(userText: String): String {
+    val lower = userText.lowercase()
+
+    return when {
+        "hello" in lower || "hi" in lower ->
+            "Hello, how can I help you today?"
+
+        "bmi" in lower ->
+            "You can use the BMI screen to check your body mass index."
+
+        "thank" in lower ->
+            "You are welcome."
+
+        else ->
+            "I read: \"$userText\". I am a simple helper in this app."
     }
 }
