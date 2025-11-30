@@ -42,6 +42,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AiChatScreen(navController: NavController) {
@@ -49,11 +50,18 @@ fun AiChatScreen(navController: NavController) {
     // state for the current text in the input field
     var inputText by remember { mutableStateOf("") }
 
-    // sample static messages shown in the chat list
-    val messages = listOf(
-        ChatMessage(1, "Hi, I am your health assistant.", isUser = false),
-        ChatMessage(2, "Hello!", isUser = true)
-    )
+    // state list for all chat messages in the conversation
+    var messages by remember {
+        mutableStateOf(
+            listOf(
+                ChatMessage(
+                    id = 1L,
+                    text = "Hi, I am your health assistant.",
+                    isUser = false
+                )
+            )
+        )
+    }
 
     // screen scaffold with blue-and-white top app bar
     Scaffold(
@@ -82,7 +90,7 @@ fun AiChatScreen(navController: NavController) {
             )
         }
     ) { innerPadding ->
-        // main content under the top bar
+        // main content column under the top bar
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -123,7 +131,17 @@ fun AiChatScreen(navController: NavController) {
                 IconButton(
                     onClick = {
                         if (inputText.isNotBlank()) {
-                            // clears input text when send is pressed
+                            val trimmed = inputText.trim()
+                            // calculates next id based on current max id in list
+                            val nextId = (messages.maxOfOrNull { it.id } ?: 0L) + 1L
+                            // adds a new user message to the message list
+                            val userMessage = ChatMessage(
+                                id = nextId,
+                                text = trimmed,
+                                isUser = true
+                            )
+                            messages = messages + userMessage
+                            // clears input text after sending
                             inputText = ""
                         }
                     }
@@ -142,24 +160,24 @@ fun AiChatScreen(navController: NavController) {
 @Composable
 fun ChatBubble(message: ChatMessage) {
 
-    // blue for user messages
+    // Blue for user messages
     val userBlue = Color(0xFF0084FF)
 
-    // choose bubble color based on who sent the message
+    // bubble color depends on sender
     val bubbleColor = if (message.isUser) {
         userBlue
     } else {
         MaterialTheme.colorScheme.surfaceVariant
     }
 
-    // choose text color for each bubble type
+    // text color depends on bubble type
     val textColor = if (message.isUser) {
         Color.White
     } else {
         MaterialTheme.colorScheme.onSurfaceVariant
     }
 
-    // align user messages to the right, bot messages to the left
+    // row decides if bubble is aligned left or right
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -183,7 +201,6 @@ fun ChatBubble(message: ChatMessage) {
         }
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable
