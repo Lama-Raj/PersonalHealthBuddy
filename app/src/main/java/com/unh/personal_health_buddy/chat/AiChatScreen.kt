@@ -44,6 +44,11 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
 
+/*
+* Updated the Code using Chat GTP as there was certain errors in the original code.
+* Reference Code: Youtube & Chat GPT, Gemini and Copilot
+*
+* */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AiChatScreen(

@@ -10,7 +10,7 @@ class DefaultChatRepository : ChatRepository {
 
     override suspend fun getBotReply(userText: String): String {
         val lower = userText.lowercase()
-
+/* Text message user eill get based on their message which is static for now*/
         return when {
             "hello" in lower || "hi" in lower ->
                 "Hello, how can I help you today?"
