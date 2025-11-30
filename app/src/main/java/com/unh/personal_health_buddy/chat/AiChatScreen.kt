@@ -129,6 +129,8 @@ fun AiChatScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                // light background for chat area
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.03f))
                 .padding(horizontal = 12.dp, vertical = 8.dp)
         ) {
             // scrollable list of chat messages
@@ -230,6 +232,23 @@ fun ChatBubble(message: ChatMessage) {
         MaterialTheme.colorScheme.onSurfaceVariant
     }
 
+    // bubble corner shape depends on sender
+    val bubbleShape = if (message.isUser) {
+        RoundedCornerShape(
+            topStart = 16.dp,
+            topEnd = 16.dp,
+            bottomEnd = 4.dp,
+            bottomStart = 16.dp
+        )
+    } else {
+        RoundedCornerShape(
+            topStart = 16.dp,
+            topEnd = 16.dp,
+            bottomEnd = 16.dp,
+            bottomStart = 4.dp
+        )
+    }
+
     // row decides if bubble is aligned left or right
     Row(
         modifier = Modifier
@@ -242,7 +261,7 @@ fun ChatBubble(message: ChatMessage) {
                 .widthIn(max = 280.dp)
                 .background(
                     color = bubbleColor,
-                    shape = RoundedCornerShape(16.dp)
+                    shape = bubbleShape
                 )
                 .padding(10.dp)
         ) {
