@@ -54,6 +54,7 @@ fun AiChatScreen(
     // state from the view model
     val messages = viewModel.messages
     val inputText = viewModel.inputText
+    val isBotTyping = viewModel.isBotTyping
 
     // list state for scrolling
     val listState = rememberLazyListState()
@@ -122,6 +123,22 @@ fun AiChatScreen(
                 items(messages, key = { it.id }) { message ->
                     ChatBubble(message = message)
                     Spacer(modifier = Modifier.height(4.dp))
+                }
+            }
+
+            // small row that shows typing indicator when assistant is preparing a reply
+            if (isBotTyping) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    Text(
+                        text = "Assistant is typing...",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.Gray
+                    )
                 }
             }
 

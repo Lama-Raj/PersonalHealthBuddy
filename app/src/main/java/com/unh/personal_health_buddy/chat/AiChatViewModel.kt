@@ -4,6 +4,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -27,6 +30,10 @@ class AiChatViewModel : ViewModel() {
     )
         private set
 
+    // true when assistant is preparing a reply
+    var isBotTyping by mutableStateOf(false)
+        private set
+
     // updates the text in the input field
     fun onInputChange(newText: String) {
         inputText = newText
@@ -43,9 +50,10 @@ class AiChatViewModel : ViewModel() {
             )
         )
         inputText = ""
+        isBotTyping = false
     }
 
-    // creates a user message and bot reply and adds them to the list
+    // creates a user message and then a delayed bot reply
     fun sendMessage() {
         val trimmed = inputText.trim()
         if (trimmed.isEmpty()) return
@@ -60,15 +68,23 @@ class AiChatViewModel : ViewModel() {
             time = timeLabel
         )
 
-        val botMessage = ChatMessage(
-            id = nextId + 1L,
-            text = getBotReply(trimmed),
-            isUser = false,
-            time = timeLabel
-        )
-
-        messages = messages + userMessage + botMessage
+        // add user message and clear input
+        messages = messages + userMessage
         inputText = ""
+        isBotTyping = true
+
+        // add bot reply after a short delay
+        viewModelScope.launch {
+            delay(800L)
+            val botMessage = ChatMessage(
+                id = nextId + 1L,
+                text = getBotReply(trimmed),
+                isUser = false,
+                time = getCurrentTimeLabel()
+            )
+            messages = messages + botMessage
+            isBotTyping = false
+        }
     }
 
     // returns a reply text based on the user message
