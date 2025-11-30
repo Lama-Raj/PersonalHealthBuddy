@@ -11,7 +11,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class AiChatViewModel : ViewModel() {
+class AiChatViewModel(
+    private val chatRepository: ChatRepository = DefaultChatRepository()
+) : ViewModel() {
 
     // text typed by the user in the input field
     var inputText by mutableStateOf("")
@@ -76,36 +78,17 @@ class AiChatViewModel : ViewModel() {
         // add bot reply after a short delay
         viewModelScope.launch {
             delay(800L)
+
+            val replyText = chatRepository.getBotReply(trimmed)
+
             val botMessage = ChatMessage(
                 id = nextId + 1L,
-                text = getBotReply(trimmed),
+                text = replyText,
                 isUser = false,
                 time = getCurrentTimeLabel()
             )
             messages = messages + botMessage
             isBotTyping = false
-        }
-    }
-
-    // returns a reply text based on the user message
-    private fun getBotReply(userText: String): String {
-        val lower = userText.lowercase()
-
-        return when {
-            "hello" in lower || "hi" in lower ->
-                "Hello, how can I help you today?"
-
-            "bmi" in lower ->
-                "You can use the BMI screen to check your body mass index."
-
-            "stress" in lower || "anxious" in lower ->
-                "Try slow breathing and a short walk. If you feel very bad, talk to a professional."
-
-            "thank" in lower ->
-                "You are welcome."
-
-            else ->
-                "I read: \"$userText\". I am a simple helper in this app."
         }
     }
 
