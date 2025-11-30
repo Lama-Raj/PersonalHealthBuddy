@@ -32,51 +32,38 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
-import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AiChatScreen(navController: NavController) {
+fun AiChatScreen(
+    navController: NavController,
+    viewModel: AiChatViewModel = viewModel()
+) {
 
-    // state for the current text in the input field
-    var inputText by remember { mutableStateOf("") }
+    // state from the view model
+    val messages = viewModel.messages
+    val inputText = viewModel.inputText
 
-    // state list for all chat messages in the conversation
-    var messages by remember {
-        mutableStateOf(
-            listOf(
-                ChatMessage(
-                    id = 1L,
-                    text = "Hi, I am your health assistant.",
-                    isUser = false,
-                    time = getCurrentTimeLabel()
-                )
-            )
-        )
-    }
-
-    // list state for controlling scroll position of the message list
+    // list state for scrolling
     val listState = rememberLazyListState()
 
-    // coroutine scope used to run scroll animations
-    val coroutineScope = rememberCoroutineScope()
+    // scrolls to the newest message when the list size changes
+    LaunchedEffect(messages.size) {
+        if (messages.isNotEmpty()) {
+            listState.animateScrollToItem(messages.lastIndex)
+        }
+    }
 
     // screen scaffold with blue-and-white top app bar
     Scaffold(
@@ -100,16 +87,7 @@ fun AiChatScreen(navController: NavController) {
                 actions = {
                     // clear button that resets the chat messages
                     IconButton(
-                        onClick = {
-                            messages = listOf(
-                                ChatMessage(
-                                    id = 1L,
-                                    text = "Hi, I am your health assistant.",
-                                    isUser = false,
-                                    time = getCurrentTimeLabel()
-                                )
-                            )
-                        }
+                        onClick = { viewModel.clearChat() }
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Delete,
@@ -131,7 +109,6 @@ fun AiChatScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                // light background for chat area
                 .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.03f))
                 .padding(horizontal = 12.dp, vertical = 8.dp)
         ) {
@@ -166,11 +143,10 @@ fun AiChatScreen(navController: NavController) {
                     // text field where user types a message
                     OutlinedTextField(
                         value = inputText,
-                        onValueChange = { inputText = it },
+                        onValueChange = { viewModel.onInputChange(it) },
                         modifier = Modifier.weight(1f),
                         placeholder = { Text("Type your message...") },
                         singleLine = true,
-                        // rounded shape for a softer chat look
                         shape = RoundedCornerShape(20.dp)
                     )
 
@@ -178,40 +154,7 @@ fun AiChatScreen(navController: NavController) {
 
                     // send icon button on the right side, enabled only when there is text
                     IconButton(
-                        onClick = {
-                            val trimmed = inputText.trim()
-                            if (trimmed.isNotEmpty()) {
-                                val timeLabel = getCurrentTimeLabel()
-                                // calculates next id based on current max id in list
-                                val nextId = (messages.maxOfOrNull { it.id } ?: 0L) + 1L
-                                // adds a new user message to the message list
-                                val userMessage = ChatMessage(
-                                    id = nextId,
-                                    text = trimmed,
-                                    isUser = true,
-                                    time = timeLabel
-                                )
-                                // creates a simple bot reply based on user text
-                                val botMessage = ChatMessage(
-                                    id = nextId + 1L,
-                                    text = getBotReply(trimmed),
-                                    isUser = false,
-                                    time = timeLabel
-                                )
-                                // updates the list with user and bot messages
-                                messages = messages + userMessage + botMessage
-                                // clears input text after sending
-                                inputText = ""
-
-                                // scrolls to the last message in the list
-                                coroutineScope.launch {
-                                    val lastIndex = messages.lastIndex
-                                    if (lastIndex >= 0) {
-                                        listState.animateScrollToItem(lastIndex)
-                                    }
-                                }
-                            }
-                        },
+                        onClick = { viewModel.sendMessage() },
                         enabled = inputText.isNotBlank()
                     ) {
                         Icon(
@@ -224,6 +167,7 @@ fun AiChatScreen(navController: NavController) {
         }
     }
 }
+
 // draws one chat bubble for a message
 @Composable
 fun ChatBubble(message: ChatMessage) {
@@ -318,32 +262,4 @@ fun AiChatScreenPreview() {
     PersonalHealthBuddyTheme {
         AiChatScreen(navController = rememberNavController())
     }
-}
-
-// returns a simple reply text based on user message
-private fun getBotReply(userText: String): String {
-    val lower = userText.lowercase()
-
-    return when {
-        "hello" in lower || "hi" in lower ->
-            "Hello, how can I help you today?"
-
-        "bmi" in lower ->
-            "You can use the BMI screen to check your body mass index."
-
-        "stress" in lower || "anxious" in lower ->
-            "Try slow breathing and a short walk. If you feel very bad, talk to a professional."
-
-        "thank" in lower ->
-            "You are welcome."
-
-        else ->
-            "I read: \"$userText\". I am a simple helper in this app."
-    }
-}
-
-// builds a label like "10:35 PM" for the current time
-private fun getCurrentTimeLabel(): String {
-    val formatter = SimpleDateFormat("hh:mm a", Locale.getDefault())
-    return formatter.format(Date())
 }
