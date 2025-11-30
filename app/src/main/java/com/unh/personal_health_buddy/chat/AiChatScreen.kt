@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -32,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,7 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
-
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,6 +65,12 @@ fun AiChatScreen(navController: NavController) {
             )
         )
     }
+
+    // list state for controlling scroll position of the message list
+    val listState = rememberLazyListState()
+
+    // coroutine scope used to run scroll animations
+    val coroutineScope = rememberCoroutineScope()
 
     // screen scaffold with blue-and-white top app bar
     Scaffold(
@@ -122,7 +130,8 @@ fun AiChatScreen(navController: NavController) {
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxWidth()
+                    .fillMaxWidth(),
+                state = listState
             ) {
                 items(messages, key = { it.id }) { message ->
                     ChatBubble(message = message)
@@ -171,6 +180,14 @@ fun AiChatScreen(navController: NavController) {
                             messages = messages + userMessage + botMessage
                             // clears input text after sending
                             inputText = ""
+
+                            // scrolls to the last message in the list
+                            coroutineScope.launch {
+                                val lastIndex = messages.lastIndex
+                                if (lastIndex >= 0) {
+                                    listState.animateScrollToItem(lastIndex)
+                                }
+                            }
                         }
                     }
                 ) {
