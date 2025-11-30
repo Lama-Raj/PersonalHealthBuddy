@@ -223,7 +223,6 @@ fun AiChatScreen(navController: NavController) {
         }
     }
 }
-
 // draws one chat bubble for a message
 @Composable
 fun ChatBubble(message: ChatMessage) {
@@ -262,6 +261,9 @@ fun ChatBubble(message: ChatMessage) {
         )
     }
 
+    // small label text for who sent the message
+    val senderLabel = if (message.isUser) "You" else "Assistant"
+
     // row decides if bubble is aligned left or right
     Row(
         modifier = Modifier
@@ -269,29 +271,41 @@ fun ChatBubble(message: ChatMessage) {
             .padding(horizontal = 4.dp),
         horizontalArrangement = if (message.isUser) Arrangement.End else Arrangement.Start
     ) {
-        Box(
-            modifier = Modifier
-                .widthIn(max = 280.dp)
-                .background(
-                    color = bubbleColor,
-                    shape = bubbleShape
-                )
-                .padding(10.dp)
+        Column(
+            horizontalAlignment = if (message.isUser) Alignment.End else Alignment.Start
         ) {
-            Column {
-                // main message text
-                Text(
-                    text = message.text,
-                    color = textColor,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                // small time label under the message
-                Text(
-                    text = message.time,
-                    color = Color.White.copy(alpha = if (message.isUser) 0.7f else 0.6f),
-                    style = MaterialTheme.typography.labelSmall
-                )
+            // small sender label above the bubble
+            Text(
+                text = senderLabel,
+                style = MaterialTheme.typography.labelSmall,
+                color = Color.Gray
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+
+            Box(
+                modifier = Modifier
+                    .widthIn(max = 280.dp)
+                    .background(
+                        color = bubbleColor,
+                        shape = bubbleShape
+                    )
+                    .padding(10.dp)
+            ) {
+                Column {
+                    // main message text
+                    Text(
+                        text = message.text,
+                        color = textColor,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    // small time label under the message
+                    Text(
+                        text = message.time,
+                        color = Color.White.copy(alpha = if (message.isUser) 0.7f else 0.6f),
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
             }
         }
     }
