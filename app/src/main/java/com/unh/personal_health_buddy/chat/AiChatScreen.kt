@@ -20,6 +20,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -147,66 +149,77 @@ fun AiChatScreen(navController: NavController) {
             }
 
             // row with input field and send button
-            Row(
+            // input area card with text field and send button
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                shape = RoundedCornerShape(24.dp)
             ) {
-                // text field where user types a message
-                OutlinedTextField(
-                    value = inputText,
-                    onValueChange = { inputText = it },
-                    modifier = Modifier.weight(1f),
-                    placeholder = { Text("Type your message...") },
-                    singleLine = true
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // text field where user types a message
+                    OutlinedTextField(
+                        value = inputText,
+                        onValueChange = { inputText = it },
+                        modifier = Modifier.weight(1f),
+                        placeholder = { Text("Type your message...") },
+                        singleLine = true
+                    )
 
-                Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
 
-                // send icon button on the right side
-                IconButton(
-                    onClick = {
-                        if (inputText.isNotBlank()) {
-                            val trimmed = inputText.trim()
-                            val timeLabel = getCurrentTimeLabel()
-                            // calculates next id based on current max id in list
-                            val nextId = (messages.maxOfOrNull { it.id } ?: 0L) + 1L
-                            // adds a new user message to the message list
-                            val userMessage = ChatMessage(
-                                id = nextId,
-                                text = trimmed,
-                                isUser = true,
-                                time = timeLabel
-                            )
-                            // creates a simple bot reply based on user text
-                            val botMessage = ChatMessage(
-                                id = nextId + 1L,
-                                text = getBotReply(trimmed),
-                                isUser = false,
-                                time = timeLabel
-                            )
-                            // updates the list with user and bot messages
-                            messages = messages + userMessage + botMessage
-                            // clears input text after sending
-                            inputText = ""
+                    // send icon button on the right side
+                    IconButton(
+                        onClick = {
+                            if (inputText.isNotBlank()) {
+                                val trimmed = inputText.trim()
+                                val timeLabel = getCurrentTimeLabel()
+                                // calculates next id based on current max id in list
+                                val nextId = (messages.maxOfOrNull { it.id } ?: 0L) + 1L
+                                // adds a new user message to the message list
+                                val userMessage = ChatMessage(
+                                    id = nextId,
+                                    text = trimmed,
+                                    isUser = true,
+                                    time = timeLabel
+                                )
+                                // creates a simple bot reply based on user text
+                                val botMessage = ChatMessage(
+                                    id = nextId + 1L,
+                                    text = getBotReply(trimmed),
+                                    isUser = false,
+                                    time = timeLabel
+                                )
+                                // updates the list with user and bot messages
+                                messages = messages + userMessage + botMessage
+                                // clears input text after sending
+                                inputText = ""
 
-                            // scrolls to the last message in the list
-                            coroutineScope.launch {
-                                val lastIndex = messages.lastIndex
-                                if (lastIndex >= 0) {
-                                    listState.animateScrollToItem(lastIndex)
+                                // scrolls to the last message in the list
+                                coroutineScope.launch {
+                                    val lastIndex = messages.lastIndex
+                                    if (lastIndex >= 0) {
+                                        listState.animateScrollToItem(lastIndex)
+                                    }
                                 }
                             }
                         }
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Send,
+                            contentDescription = "Send"
+                        )
                     }
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Send,
-                        contentDescription = "Send"
-                    )
                 }
             }
+
         }
     }
 }
