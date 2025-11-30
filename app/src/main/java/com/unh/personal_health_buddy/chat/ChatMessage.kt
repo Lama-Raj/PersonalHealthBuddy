@@ -10,5 +10,6 @@ isUser = true if user send it, false if bot send it
 data class ChatMessage(
     val id: Long,
     val text: String,
-    val isUser: Boolean
+    val isUser: Boolean,
+    val time: String // Added time property / time stamp
 )

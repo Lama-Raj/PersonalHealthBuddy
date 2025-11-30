@@ -45,6 +45,9 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,7 +63,8 @@ fun AiChatScreen(navController: NavController) {
                 ChatMessage(
                     id = 1L,
                     text = "Hi, I am your health assistant.",
-                    isUser = false
+                    isUser = false,
+                    time = getCurrentTimeLabel()
                 )
             )
         )
@@ -99,7 +103,8 @@ fun AiChatScreen(navController: NavController) {
                                 ChatMessage(
                                     id = 1L,
                                     text = "Hi, I am your health assistant.",
-                                    isUser = false
+                                    isUser = false,
+                                    time = getCurrentTimeLabel()
                                 )
                             )
                         }
@@ -162,19 +167,22 @@ fun AiChatScreen(navController: NavController) {
                     onClick = {
                         if (inputText.isNotBlank()) {
                             val trimmed = inputText.trim()
+                            val timeLabel = getCurrentTimeLabel()
                             // calculates next id based on current max id in list
                             val nextId = (messages.maxOfOrNull { it.id } ?: 0L) + 1L
                             // adds a new user message to the message list
                             val userMessage = ChatMessage(
                                 id = nextId,
                                 text = trimmed,
-                                isUser = true
+                                isUser = true,
+                                time = timeLabel
                             )
                             // creates a simple bot reply based on user text
                             val botMessage = ChatMessage(
                                 id = nextId + 1L,
                                 text = getBotReply(trimmed),
-                                isUser = false
+                                isUser = false,
+                                time = timeLabel
                             )
                             // updates the list with user and bot messages
                             messages = messages + userMessage + botMessage
@@ -236,13 +244,23 @@ fun ChatBubble(message: ChatMessage) {
                     color = bubbleColor,
                     shape = RoundedCornerShape(16.dp)
                 )
-                .padding(12.dp)
+                .padding(10.dp)
         ) {
-            Text(
-                text = message.text,
-                color = textColor,
-                style = MaterialTheme.typography.bodyMedium
-            )
+            Column {
+                // main message text
+                Text(
+                    text = message.text,
+                    color = textColor,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                // small time label under the message
+                Text(
+                    text = message.time,
+                    color = Color.White.copy(alpha = if (message.isUser) 0.7f else 0.6f),
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
         }
     }
 }
@@ -266,10 +284,19 @@ private fun getBotReply(userText: String): String {
         "bmi" in lower ->
             "You can use the BMI screen to check your body mass index."
 
+        "stress" in lower || "anxious" in lower ->
+            "Try slow breathing and a short walk. If you feel very bad, talk to a professional."
+
         "thank" in lower ->
             "You are welcome."
 
         else ->
             "I read: \"$userText\". I am a simple helper in this app."
     }
+}
+
+// builds a label like "10:35 PM" for the current time
+private fun getCurrentTimeLabel(): String {
+    val formatter = SimpleDateFormat("hh:mm a", Locale.getDefault())
+    return formatter.format(Date())
 }
