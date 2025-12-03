@@ -20,6 +20,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -70,6 +72,9 @@ fun AiChatScreen(
             listState.animateScrollToItem(messages.lastIndex)
         }
     }
+
+    // show suggestions mainly at start, before user has sent anything
+    val showSuggestions = messages.isNotEmpty() && messages.none { it.isUser }
 
     // screen scaffold with blue-and-white top app bar
     Scaffold(
@@ -131,6 +136,42 @@ fun AiChatScreen(
                 }
             }
 
+            // pre-written options shown near start of chat
+            if (showSuggestions) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        text = "Try one of these:",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Color.Gray
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        PrewrittenOptionButton(
+                            label = "I feel stressed"
+                        ) {
+                            viewModel.onInputChange("I feel stressed. What can I do?")
+                            viewModel.sendMessage()
+                        }
+
+                        PrewrittenOptionButton(
+                            label = "Sleep problems"
+                        ) {
+                            viewModel.onInputChange("I have trouble sleeping. Any tips?")
+                            viewModel.sendMessage()
+                        }
+                    }
+                }
+            }
+
             // small row that shows typing indicator when assistant is preparing a reply
             if (isBotTyping) {
                 Row(
@@ -187,6 +228,28 @@ fun AiChatScreen(
                 }
             }
         }
+    }
+}
+
+// small rounded button for a pre-written option
+@Composable
+fun PrewrittenOptionButton(
+    label: String,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        shape = RoundedCornerShape(20.dp),
+        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+            contentColor = MaterialTheme.colorScheme.primary
+        )
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium
+        )
     }
 }
 
