@@ -1,6 +1,7 @@
 package com.unh.personal_health_buddy.chat
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,8 +21,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -57,13 +56,14 @@ fun AiChatScreen(
     navController: NavController,
     viewModel: AiChatViewModel = viewModel()
 ) {
-
-    // state from the view model
+    // state list for all chat messages in the conversation
     val messages = viewModel.messages
+    // state for the current text in the input field
     val inputText = viewModel.inputText
+    // state to show when assistant is typing
     val isBotTyping = viewModel.isBotTyping
 
-    // list state for scrolling
+    // list state for controlling scroll position of the message list
     val listState = rememberLazyListState()
 
     // scrolls to the newest message when the list size changes
@@ -136,38 +136,42 @@ fun AiChatScreen(
                 }
             }
 
-            // pre-written options shown near start of chat
+            // stacked pre-written options for user to start chat
             if (showSuggestions) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp),
+                        .fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
+                    // small label above the stack
                     Text(
-                        text = "Try one of these:",
+                        text = "You can start with:",
                         style = MaterialTheme.typography.labelMedium,
-                        color = Color.Gray
+                        color = Color.Gray,
+                        modifier = Modifier.padding(start = 4.dp, bottom = 2.dp)
                     )
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    // one rounded row for each pre-written text
+                    PrewrittenStackItem(
+                        text = "I feel stressed"
                     ) {
-                        PrewrittenOptionButton(
-                            label = "I feel stressed"
-                        ) {
-                            viewModel.onInputChange("I feel stressed. What can I do?")
-                            viewModel.sendMessage()
-                        }
+                        viewModel.onInputChange("I feel stressed. What can I do?")
+                        viewModel.sendMessage()
+                    }
 
-                        PrewrittenOptionButton(
-                            label = "Sleep problems"
-                        ) {
-                            viewModel.onInputChange("I have trouble sleeping. Any tips?")
-                            viewModel.sendMessage()
-                        }
+                    PrewrittenStackItem(
+                        text = "I have trouble sleeping"
+                    ) {
+                        viewModel.onInputChange("I have trouble sleeping. Any tips?")
+                        viewModel.sendMessage()
+                    }
+
+                    PrewrittenStackItem(
+                        text = "Help me understand my BMI"
+                    ) {
+                        viewModel.onInputChange("How can I understand my BMI?")
+                        viewModel.sendMessage()
                     }
                 }
             }
@@ -231,24 +235,28 @@ fun AiChatScreen(
     }
 }
 
-// small rounded button for a pre-written option
+// one rounded row item for a pre-written text
 @Composable
-fun PrewrittenOptionButton(
-    label: String,
+fun PrewrittenStackItem(
+    text: String,
     onClick: () -> Unit
 ) {
-    Button(
-        onClick = onClick,
-        shape = RoundedCornerShape(20.dp),
-        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
-            contentColor = MaterialTheme.colorScheme.primary
-        )
+    // soft background and rounded shape make it look friendly
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .background(
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.06f),
+                shape = RoundedCornerShape(16.dp)
+            )
+            .padding(horizontal = 12.dp, vertical = 10.dp)
     ) {
+        // text for the pre-written option
         Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium
+            text = text,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary
         )
     }
 }
