@@ -27,6 +27,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.unh.personal_health_buddy.chat.AiChatScreen
 import com.unh.personal_health_buddy.features.BloodGroupScreen
 import com.unh.personal_health_buddy.screens.EmergencyContactScreen
 import com.unh.personal_health_buddy.screens.HomeScreen
@@ -143,6 +144,7 @@ fun AppNavigation(
             composable("medicates_screen") { MedicateScreen(navController) }
             composable("emergency-contacts") { EmergencyContactScreen(navController) }
             composable("bmi_screen") { BmiScreen(navController) }
+            composable("chat_ai_screen") {AiChatScreen(navController) }
 
             // -------------------- PROFILE SUB-SCREENS (no bottom nav) --------------------
             composable("account") { AccountScreen(navController) }

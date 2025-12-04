@@ -1,0 +1,100 @@
+package com.unh.personal_health_buddy.chat
+
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
+class AiChatViewModel(
+    private val chatRepository: ChatRepository = DefaultChatRepository()
+) : ViewModel() {
+
+    // text typed by the user in the input field
+    var inputText by mutableStateOf("")
+        private set
+
+    // list of all messages shown in the chat
+    var messages by mutableStateOf(
+        listOf(
+            ChatMessage(
+                id = 1L,
+                text = "Hi, I am your health assistant.",
+                isUser = false,
+                time = getCurrentTimeLabel()
+            )
+        )
+    )
+        private set
+
+    // true when assistant is preparing a reply
+    var isBotTyping by mutableStateOf(false)
+        private set
+
+    // updates the text in the input field
+    fun onInputChange(newText: String) {
+        inputText = newText
+    }
+
+    // clears all messages and shows the greeting again
+    fun clearChat() {
+        messages = listOf(
+            ChatMessage(
+                id = 1L,
+                text = "Hi, I am your health assistant.",
+                isUser = false,
+                time = getCurrentTimeLabel()
+            )
+        )
+        inputText = ""
+        isBotTyping = false
+    }
+
+    // creates a user message and then a delayed bot reply
+    fun sendMessage() {
+        val trimmed = inputText.trim()
+        if (trimmed.isEmpty()) return
+
+        val timeLabel = getCurrentTimeLabel()
+        val nextId = (messages.maxOfOrNull { it.id } ?: 0L) + 1L
+
+        val userMessage = ChatMessage(
+            id = nextId,
+            text = trimmed,
+            isUser = true,
+            time = timeLabel
+        )
+
+        // add user message and clear input
+        messages = messages + userMessage
+        inputText = ""
+        isBotTyping = true
+
+        // add bot reply after a short delay
+        viewModelScope.launch {
+            delay(800L)
+
+            val replyText = chatRepository.getBotReply(trimmed)
+
+            val botMessage = ChatMessage(
+                id = nextId + 1L,
+                text = replyText,
+                isUser = false,
+                time = getCurrentTimeLabel()
+            )
+            messages = messages + botMessage
+            isBotTyping = false
+        }
+    }
+
+    // builds a time label like "10:35 PM"
+    private fun getCurrentTimeLabel(): String {
+        val formatter = SimpleDateFormat("hh:mm a", Locale.getDefault())
+        return formatter.format(Date())
+    }
+}
