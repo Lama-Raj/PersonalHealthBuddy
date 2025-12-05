@@ -284,7 +284,7 @@ fun SignInScreen(
             modifier = Modifier.fillMaxWidth(0.9f),
             enabled = !isLoading,
             colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = Color.White,
+                focusedTextColor = Color.Black,
                 unfocusedTextColor = ButtonBlue,
                 focusedContainerColor = AppSurfaceLight,
                 unfocusedContainerColor = AppSurfaceLight
@@ -317,7 +317,7 @@ fun SignInScreen(
             enabled = !isLoading,
             colors = OutlinedTextFieldDefaults.colors(
                 focusedTextColor = ButtonBlue,
-                unfocusedTextColor = Color.White,
+                unfocusedTextColor = Color.Black,
                 focusedContainerColor = AppSurfaceLight,
                 unfocusedContainerColor = AppSurfaceLight
             )
