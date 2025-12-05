@@ -69,7 +69,7 @@ val screensWithoutBottomNav = setOf(
     "faqs",
     "blood_group_screen",
     "medicates_screen",
-    "emergency-contacts",
+    "emergency_screen",
     "logout"
 )
 
@@ -140,7 +140,7 @@ fun AppNavigation(
             // -------------------- FEATURE SCREENS (with bottom nav) --------------------
             composable("blood_group_screen") { BloodGroupScreen(navController) }
             composable("medicates_screen") { MedicateScreen(navController) }
-            composable("emergency-contacts") { EmergencyContactScreen(navController) }
+            composable("emergency_screen") { EmergencyContactScreen(navController) }
             composable("bmi_screen") { BmiScreen(navController) }
             composable("chat_ai_screen") {AiChatScreen(navController) }
 
