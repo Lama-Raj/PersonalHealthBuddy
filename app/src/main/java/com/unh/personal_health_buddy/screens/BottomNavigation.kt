@@ -1,20 +1,12 @@
 package com.unh.personal_health_buddy.navigations
-import androidx.compose.material.icons.filled.*
-import android.R.attr.data
-import android.net.http.SslCertificate.restoreState
-import android.net.http.SslCertificate.saveState
+
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
@@ -29,22 +21,16 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.unh.personal_health_buddy.database.BottomNavItem
+import com.unh.personal_health_buddy.navigation.bottomNavItems
+import com.unh.personal_health_buddy.notifications.InAppNotificationManager
 import com.unh.personal_health_buddy.ui.theme.ButtonBlue
 import com.unh.personal_health_buddy.ui.theme.MediumGray
-import com.unh.personal_health_buddy.database.*
-import com.unh.personal_health_buddy.navigation.bottomNavItems
-import com.unh.personal_health_buddy.ui.theme.BottomNavBar
-import com.unh.personal_health_buddy.notifications.InAppNotificationManager
 
 // -------------------- BottomNavBar --------------------
 @Composable
