@@ -3,10 +3,8 @@ package com.unh.personal_health_buddy.navigation
 import AccountFormScreen
 import AccountScreen
 import GoogleMapScreen
-import LogoutConfirmationDialog
 import android.content.Intent
 import androidx.activity.result.ActivityResultLauncher
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -29,17 +27,17 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.unh.personal_health_buddy.chat.AiChatScreen
 import com.unh.personal_health_buddy.features.BloodGroupScreen
-import com.unh.personal_health_buddy.screens.EmergencyContactScreen
+import com.unh.personal_health_buddy.features.BmiScreen
+import com.unh.personal_health_buddy.contacts.EmergencyContactScreen
 import com.unh.personal_health_buddy.screens.HomeScreen
 import com.unh.personal_health_buddy.screens.MedicateScreen
-import com.unh.personal_health_buddy.screens.NotificationScreen
-import com.unh.personal_health_buddy.screens.ProfileScreen
-import com.unh.personal_health_buddy.screens.ResetPasswordDialog
-import com.unh.personal_health_buddy.screens.SignInScreen
-import com.unh.personal_health_buddy.screens.SignUpScreen
-import com.unh.personal_health_buddy.screens.WelcomeScreen
-import com.unh.personal_health_buddy.screens.profileItems
-import com.unh.personal_health_buddy.screens.*
+import com.unh.personal_health_buddy.notifications.NotificationScreen
+import com.unh.personal_health_buddy.profile.ProfileScreen
+import com.unh.personal_health_buddy.Account.ResetPasswordDialog
+import com.unh.personal_health_buddy.Account.SignInScreen
+import com.unh.personal_health_buddy.Account.SignUpScreen
+import com.unh.personal_health_buddy.profile.profileItems
+import com.unh.personal_health_buddy.screens.MainWelcomeScreen
 
 import com.unh.personal_health_buddy.ui.theme.ButtonBlue
 import com.unh.personal_health_buddy.ui.theme.MediumGray
@@ -126,7 +124,7 @@ fun AppNavigation(
             modifier = Modifier.padding(paddingValues)
         ) {
             // -------------------- AUTH SCREENS --------------------
-            composable("welcome") { WelcomeScreen(navController) }
+            composable("welcome") { MainWelcomeScreen(navController) }
             composable("sign-in") { SignInScreen(navController, googleSignInClient, launcher) }
             composable("sign-up") { SignUpScreen(navController, googleSignInClient, launcher) }
             composable("reset-password") {

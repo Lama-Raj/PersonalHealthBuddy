@@ -1,4 +1,4 @@
-package com.unh.personal_health_buddy.screens
+package com.unh.personal_health_buddy.Account
 
 import android.util.Log
 import androidx.compose.foundation.layout.Column
@@ -19,6 +19,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.Icon
+import androidx.compose.ui.text.style.TextAlign
 import com.unh.personal_health_buddy.firebase.performResetPassword
 
 
@@ -134,7 +135,7 @@ fun ResetPasswordDialog(
         title = {
             Text(
                 modifier = Modifier.fillMaxWidth(),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                textAlign = TextAlign.Center,
                 text = "Forgot Password"
             )
         },

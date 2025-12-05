@@ -1,11 +1,6 @@
-package com.unh.personal_health_buddy.screens
+package com.unh.personal_health_buddy.profile
 
 import LogoutConfirmationDialog
-import TempProfileStorage
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.net.http.SslCertificate.restoreState
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -21,38 +16,25 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.unh.personal_health_buddy.R
 import com.unh.personal_health_buddy.database.UserDataCache
-import com.unh.personal_health_buddy.ui.theme.AccentOrange
-import com.unh.personal_health_buddy.ui.theme.BmiPink
 import com.unh.personal_health_buddy.ui.theme.ButtonBlue
-import com.unh.personal_health_buddy.ui.theme.ChatGreen
 import com.unh.personal_health_buddy.ui.theme.LightBlueBackground
-import com.unh.personal_health_buddy.ui.theme.PrimaryDarkBlue
 import com.unh.personal_health_buddy.ui.theme.TextColor
 import com.unh.personal_health_buddy.ui.theme.White
-
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import org.jetbrains.annotations.Blocking
-import java.net.URL
 
 
 // ------------------- Profile Items -------------------
@@ -245,7 +227,7 @@ fun ProfileScreen(
                         )
 
                         Icon(
-                            imageVector = androidx.compose.material.icons.Icons.Default.KeyboardArrowRight,
+                            imageVector = Icons.Default.KeyboardArrowRight,
                             contentDescription = "Go",
                             tint = Color.Black
                         )
