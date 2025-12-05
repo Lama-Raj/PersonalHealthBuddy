@@ -12,8 +12,8 @@ val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
 
 /* Application Colors
- * Declaring color names here to use throughout the app
- * */
+* Declaring color names here to use throughout the app
+* */
 val PrimaryDarkBlue = Color(0xFF6BCBFF)
 val ButtonBlue = Color(0xFF4285F4) // Standard blue for buttons
 val White = Color(0xFFFFFFFF)
@@ -30,7 +30,6 @@ val AccentOrange = Color(0xFFFABE9B)
 val AccentCyan = Color(0xFF82E2E6)
 val AccentRed = Color(0xFFF19E9E)
 val AccentGreen = Color(0xFFA5D6A7)
-
 val BmiPink = Color(0xFFF88FD5)
 val BmiPinkDark = Color(0xFFE58FA0)
 val BloodOrange = Color(0xFFF0A779)
