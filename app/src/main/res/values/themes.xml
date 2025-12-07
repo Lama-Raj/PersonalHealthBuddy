@@ -5,13 +5,13 @@
         ensures a consistent blue background during app initialization, preventing
         the white flash or lag.
         -->
-        <item name="android:statusBarColor">@android:color/holo_blue_bright</item>
-        <item name="android:navigationBarColor">@android:color/holo_blue_bright</item>
+        <item name="android:statusBarColor">@color/white</item>
+        <item name="android:navigationBarColor">@color/white</item>
 
         <!-- The window background is the first color shown by the OS. -->
-        <item name="android:windowBackground">@android:color/holo_blue_bright</item>
+        <item name="android:windowBackground">@color/white</item>
 
-        <!-- Since holo_blue_bright is a light color, we use dark status bar icons (true). -->
+        <!-- Since the background is white, we keep dark icons (true) for visibility. -->
         <item name="android:windowLightStatusBar">true</item>
     </style>
 </resources>
