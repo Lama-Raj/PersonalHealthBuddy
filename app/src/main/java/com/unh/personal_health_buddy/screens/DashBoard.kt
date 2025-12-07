@@ -1,4 +1,4 @@
-package com.unh.personal_health_buddy.screen
+package com.unh.personal_health_buddy.screens
 
 import TempProfileStorage
 import androidx.annotation.DrawableRes
@@ -61,6 +61,10 @@ import com.unh.personal_health_buddy.ui.theme.ReportsCyan
 import com.unh.personal_health_buddy.ui.theme.White
 import java.util.Calendar
 import android.graphics.Bitmap
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
 
 /**
  * A simple data class to hold info for our feature cards.
@@ -81,6 +85,13 @@ private fun getGreeting(): String {
     }
 }
 
+// Function for date
+private fun getCurrentDate(): String {
+    val dateFormat = SimpleDateFormat("MMMM d, yyyy", Locale.getDefault())
+    return dateFormat.format(Date())
+}
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController) {
@@ -90,6 +101,8 @@ fun HomeScreen(navController: NavController) {
     var profileBitmap by remember { mutableStateOf<Bitmap?>(UserDataCache.profileBitmap) }
 
     val greeting by remember { mutableStateOf(getGreeting()) }
+    val currentDate by remember { mutableStateOf(getCurrentDate()) }
+
 
     // When UserDataCache finishes loading, update UI
     LaunchedEffect(UserDataCache.isDataLoaded) {
@@ -206,7 +219,7 @@ fun HomeScreen(navController: NavController) {
                             .padding(horizontal = 14.dp, vertical = 6.dp)
                     ) {
                         Text(
-                            text = "Daily overview",
+                            text = currentDate,
                             fontSize = 12.sp,
                             color = PrimaryDarkBlue,
                             fontWeight = FontWeight.Bold
@@ -386,7 +399,7 @@ fun StandardFeatureCard(
 fun LargeFeatureCard(
     feature: Feature,
     onClick: () -> Unit,
-    backgroundColor: Color, // kept for API compatibility, but not used directly
+    backgroundColor: Color,
     modifier: Modifier = Modifier
 ) {
     Card(
