@@ -147,8 +147,7 @@ fun AppNavigation(
             // -------------------- PROFILE SUB-SCREENS (no bottom nav) --------------------
             composable("account") { AccountScreen(navController) }
             composable("account-form") { AccountFormScreen(navController) }
-            //composable("appointment") { AppointmentScreen(navController) }
-            //composable("faqs") { FaqsScreen(navController) }
+
 
 
 
