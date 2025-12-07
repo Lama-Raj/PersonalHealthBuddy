@@ -33,6 +33,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.unh.personal_health_buddy.Account.ResetPasswordDialog
 import com.unh.personal_health_buddy.Account.SignInScreen
 import com.unh.personal_health_buddy.Account.SignUpScreen
+import com.unh.personal_health_buddy.FAQScreen
 import com.unh.personal_health_buddy.chat.AiChatScreen
 import com.unh.personal_health_buddy.contacts.EmergencyContactScreen
 import com.unh.personal_health_buddy.features.BloodGroupScreen
@@ -136,7 +137,7 @@ fun AppNavigation(
     ) { paddingValues ->
         NavHost(
             navController = navController,
-            startDestination = "welcome",
+            startDestination = "home",
             modifier = Modifier.padding(paddingValues)
         ) {
             // -------------------- AUTH SCREENS --------------------
@@ -163,6 +164,7 @@ fun AppNavigation(
             // -------------------- PROFILE SUB-SCREENS (no bottom nav) --------------------
             composable("account") { AccountScreen(navController) }
             composable("account-form") { AccountFormScreen(navController) }
+            composable("FAQS") { FAQScreen(navController) }
         }
     }
 }

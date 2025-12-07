@@ -6,10 +6,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.TextFieldDefaults
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.rememberScrollState
@@ -19,11 +17,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.*
@@ -34,117 +30,24 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.unh.personal_health_buddy.Authentication.FirestoreHelper
-import com.unh.personal_health_buddy.R
 import com.unh.personal_health_buddy.database.*
-import com.unh.personal_health_buddy.ui.theme.AccentOrange
-import com.unh.personal_health_buddy.ui.theme.ButtonBlue
 import com.unh.personal_health_buddy.ui.theme.ChatGreen
-import com.unh.personal_health_buddy.ui.theme.White
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import java.net.URL
 
-
-
-
-
-//
-//
-@Composable
-fun BloodGroupScreen(navController: NavController) {
-    // Use cached blood group instead of fetching
-    var userBloodType by remember {
-        mutableStateOf(UserDataCache.healthInfo?.bloodGroup?.ifBlank { "O-" } ?: "O-")
-    }
-    var isLoading by remember { mutableStateOf(!UserDataCache.isDataLoaded) }
-
-    LaunchedEffect(UserDataCache.isDataLoaded) {
-        if (UserDataCache.isDataLoaded) {
-            userBloodType = UserDataCache.healthInfo?.bloodGroup?.ifBlank { "O-" } ?: "O-"
-            isLoading = false
-        }
-    }
-}
-
-@Composable
-fun BottomActionSection(
-    isEditing: Boolean,
-    onEditClick: () -> Unit,
-    onSaveClick: () -> Unit,
-    onCancelClick: () -> Unit,
-    isLoading: Boolean
-) {
-    var expandedDropdown by remember { mutableStateOf(false) }
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.End
-    ) {
-        if (isEditing) {
-            Box {
-                // Dropdown trigger button
-                Text(
-                    text = "Options",
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    modifier = Modifier
-                        .clickable { expandedDropdown = true }
-                        .background(Color(0xFF1976D2), shape = MaterialTheme.shapes.small)
-                        .padding(horizontal = 16.dp, vertical = 10.dp)
-                )
-
-                DropdownMenu(
-                    expanded = expandedDropdown,
-                    onDismissRequest = { expandedDropdown = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("Save Changes") },
-                        onClick = {
-                            expandedDropdown = false
-                            onSaveClick()
-                        },
-                        enabled = !isLoading
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Cancel") },
-                        onClick = {
-                            expandedDropdown = false
-                            onCancelClick()
-                        }
-                    )
-                }
-            }
-        } else {
-            Text(
-                text = "Edit",
-                style = MaterialTheme.typography.labelLarge,
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .clickable(onClick = onEditClick)
-                    .padding(8.dp)
-            )
-        }
-    }
-}
 
 @Composable
 fun EditableOrInfoRow(
