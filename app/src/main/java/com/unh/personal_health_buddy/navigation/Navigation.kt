@@ -12,7 +12,12 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -25,20 +30,19 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.unh.personal_health_buddy.chat.AiChatScreen
-import com.unh.personal_health_buddy.features.BloodGroupScreen
-import com.unh.personal_health_buddy.features.BmiScreen
-import com.unh.personal_health_buddy.contacts.EmergencyContactScreen
-import com.unh.personal_health_buddy.screens.MedicateScreen
-import com.unh.personal_health_buddy.notifications.NotificationScreen
-import com.unh.personal_health_buddy.profile.ProfileScreen
 import com.unh.personal_health_buddy.Account.ResetPasswordDialog
 import com.unh.personal_health_buddy.Account.SignInScreen
 import com.unh.personal_health_buddy.Account.SignUpScreen
+import com.unh.personal_health_buddy.chat.AiChatScreen
+import com.unh.personal_health_buddy.contacts.EmergencyContactScreen
+import com.unh.personal_health_buddy.features.BloodGroupScreen
+import com.unh.personal_health_buddy.features.BmiScreen
+import com.unh.personal_health_buddy.screens.MedicateScreen
+import com.unh.personal_health_buddy.notifications.NotificationScreen
+import com.unh.personal_health_buddy.profile.ProfileScreen
 import com.unh.personal_health_buddy.profile.profileItems
 import com.unh.personal_health_buddy.screens.HomeScreen
 import com.unh.personal_health_buddy.screens.MainWelcomeScreen
-
 import com.unh.personal_health_buddy.ui.theme.ButtonBlue
 import com.unh.personal_health_buddy.ui.theme.MediumGray
 
@@ -63,17 +67,9 @@ val screensWithoutBottomNav = setOf(
     "sign-in",
     "sign-up",
     "reset-password",
-    "account",
-    "account-form",
-    "chat_ai_screen",
-    "faqs",
-    "blood_group_screen",
-    "medicates_screen",
-    "emergency_screen",
-    "logout"
 )
 
-// -------------------- APP NAVIGATION (SIMPLIFIED) --------------------
+// -------------------- APP NAVIGATION --------------------
 @Composable
 fun AppNavigation(
     navController: NavHostController,
@@ -82,6 +78,18 @@ fun AppNavigation(
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
+    // Feature screens that live "under" the Home tab
+    val featureScreens = listOf(
+        "bmi_screen",
+        "blood_group_screen",
+        "medicates_screen",
+        "emergency_screen",
+        "chat_ai_screen"
+    )
+
+    // If we're on a feature screen, treat the selected tab as "home"
+    val routeForNavBar = if (currentRoute in featureScreens) "home" else currentRoute
 
     Scaffold(
         bottomBar = {
@@ -92,16 +100,24 @@ fun AppNavigation(
                     modifier = Modifier.clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
                 ) {
                     bottomNavItems.forEach { item ->
+                        val selected = routeForNavBar == item.route
+
                         NavigationBarItem(
-                            selected = currentRoute == item.route,
+                            selected = selected,
                             onClick = {
-                                navController.navigate(item.route) {
-                                    // Pop up to home to avoid building large stack
-                                    popUpTo("home") {
-                                        saveState = true
+                                if (item.route == "home") {
+                                    // If user taps Home, always go back to home screen
+                                    navController.popBackStack("home", inclusive = false)
+                                } else {
+                                    // Standard navigation for other tabs
+                                    navController.navigate(item.route) {
+                                        // Pop up to home to avoid building large stack
+                                        popUpTo("home") {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
                                     }
-                                    launchSingleTop = true
-                                    restoreState = true
                                 }
                             },
                             icon = { Icon(item.icon, contentDescription = item.label) },
@@ -137,22 +153,16 @@ fun AppNavigation(
             composable("notifications") { NotificationScreen(navController) }
             composable("profile") { ProfileScreen(navController, profileItems, "profile") }
 
-            // -------------------- FEATURE SCREENS (with bottom nav) --------------------
+            // -------------------- FEATURE SCREENS (still show bottom nav, Home highlighted) --------------------
             composable("blood_group_screen") { BloodGroupScreen(navController) }
             composable("medicates_screen") { MedicateScreen(navController) }
             composable("emergency_screen") { EmergencyContactScreen(navController) }
             composable("bmi_screen") { BmiScreen(navController) }
-            composable("chat_ai_screen") {AiChatScreen(navController) }
+            composable("chat_ai_screen") { AiChatScreen(navController) }
 
             // -------------------- PROFILE SUB-SCREENS (no bottom nav) --------------------
             composable("account") { AccountScreen(navController) }
             composable("account-form") { AccountFormScreen(navController) }
-
-
-
-
-            // -------------------- OTHER SCREENS --------------------
-            //composable("chat_ai_screen") { ChatAIScreen(navController) }
         }
     }
 }
