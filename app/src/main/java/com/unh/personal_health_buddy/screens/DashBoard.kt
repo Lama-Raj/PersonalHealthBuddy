@@ -6,6 +6,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,10 +20,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -39,14 +45,17 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
 import com.unh.personal_health_buddy.R
 import com.unh.personal_health_buddy.database.UserDataCache
 import com.unh.personal_health_buddy.ui.theme.BloodOrange
@@ -61,9 +70,12 @@ import com.unh.personal_health_buddy.ui.theme.ReportsCyan
 import com.unh.personal_health_buddy.ui.theme.White
 import java.util.Calendar
 import android.graphics.Bitmap
+import com.unh.personal_health_buddy.features.NewsArticle
+import com.unh.personal_health_buddy.features.fetchHealthNews
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.collections.take
 
 
 /**
@@ -103,6 +115,10 @@ fun HomeScreen(navController: NavController) {
     val greeting by remember { mutableStateOf(getGreeting()) }
     val currentDate by remember { mutableStateOf(getCurrentDate()) }
 
+    // News State
+    var newsArticles by remember { mutableStateOf<List<NewsArticle>>(emptyList()) }
+    var isLoadingNews by remember { mutableStateOf(true) }
+
 
     // When UserDataCache finishes loading, update UI
     LaunchedEffect(UserDataCache.isDataLoaded) {
@@ -122,6 +138,12 @@ fun HomeScreen(navController: NavController) {
         TempProfileStorage.tempProfileBitmap?.let {
             profileBitmap = it
         }
+    }
+
+    // Fetch News
+    LaunchedEffect(Unit) {
+        newsArticles = fetchHealthNews()
+        isLoadingNews = false
     }
 
     // Features
@@ -246,105 +268,215 @@ fun HomeScreen(navController: NavController) {
                     .clip(RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp))
                     .background(Color.White)
             ) {
-                Column(
+                // Use LazyColumn to allow scrolling if content overflows
+                LazyColumn(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(
-                            PaddingValues(
-                                start = 16.dp,
-                                end = 16.dp,
-                                top = 24.dp,
-                                bottom = 16.dp
-                            )
-                        ),
+                        .fillMaxSize(),
+                    contentPadding = PaddingValues(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = 24.dp,
+                        bottom = 80.dp // Extra padding for bottom nav
+                    ),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Text(
-                            text = "Quick Actions",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = PrimaryDarkBlue
-                        )
-                        Text(
-                            text = "Access your key health tools in one tap.",
-                            fontSize = 13.sp,
-                            color = MediumGray
-                        )
+                    item {
+                         Column(
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                text = "Quick Actions",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = PrimaryDarkBlue
+                            )
+                            Text(
+                                text = "Access your key health tools in one tap.",
+                                fontSize = 13.sp,
+                                color = MediumGray
+                            )
+                        }
                     }
 
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Row(
+                    item {
+                        Column(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            StandardFeatureCard(
-                                feature = feature1,
-                                onClick = { navController.navigate("bmi_screen") },
-                                backgroundColor = BmiPink,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .aspectRatio(1f)
-                            )
-                            StandardFeatureCard(
-                                feature = feature2,
-                                onClick = { navController.navigate("blood_group_screen") },
-                                backgroundColor = BloodOrange,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .aspectRatio(1f)
-                            )
-                            StandardFeatureCard(
-                                feature = feature3,
-                                onClick = { navController.navigate("medicates_screen") },
-                                backgroundColor = ReportsCyan,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .aspectRatio(1f)
-                            )
-                        }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                StandardFeatureCard(
+                                    feature = feature1,
+                                    onClick = { navController.navigate("bmi_screen") },
+                                    backgroundColor = BmiPink,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .aspectRatio(1f)
+                                )
+                                StandardFeatureCard(
+                                    feature = feature2,
+                                    onClick = { navController.navigate("blood_group_screen") },
+                                    backgroundColor = BloodOrange,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .aspectRatio(1f)
+                                )
+                                StandardFeatureCard(
+                                    feature = feature3,
+                                    onClick = { navController.navigate("medicates_screen") },
+                                    backgroundColor = ReportsCyan,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .aspectRatio(1f)
+                                )
+                            }
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            StandardFeatureCard(
-                                feature = feature4,
-                                onClick = { navController.navigate("emergency_screen") },
-                                backgroundColor = EmergencyRed,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .aspectRatio(1f)
-                            )
-                            LargeFeatureCard(
-                                feature = feature5,
-                                onClick = { navController.navigate("chat_ai_screen") },
-                                backgroundColor = ChatGreen,
-                                modifier = Modifier
-                                    .weight(2f)
-                                    .aspectRatio(2f)
-                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                StandardFeatureCard(
+                                    feature = feature4,
+                                    onClick = { navController.navigate("emergency_screen") },
+                                    backgroundColor = EmergencyRed,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .aspectRatio(1f)
+                                )
+                                LargeFeatureCard(
+                                    feature = feature5,
+                                    onClick = { navController.navigate("chat_ai_screen") },
+                                    backgroundColor = ChatGreen,
+                                    modifier = Modifier
+                                        .weight(2f)
+                                        .aspectRatio(2f)
+                                )
+                            }
                         }
+                    }
 
+                    item {
                         Text(
                             text = "Health Articles",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = PrimaryDarkBlue
+                            color = PrimaryDarkBlue,
+                            modifier = Modifier.padding(top = 16.dp)
                         )
+                    }
+
+                    // News List
+                    if (isLoadingNews) {
+                        item {
+                            Box(modifier = Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator(color = PrimaryDarkBlue)
+                            }
+                        }
+                    } else if (newsArticles.isEmpty()) {
+                        item {
+                             Text(
+                                text = "No news available at the moment.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MediumGray,
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
+                        }
+                    } else {
+                        // Vertical List View (Limit 3)
+                        items(newsArticles.take(3)) { article ->
+                            NewsListTile(article)
+                        }
                     }
                 }
             }
         }
     }
 }
+
+@Composable
+fun NewsListTile(article: NewsArticle) {
+    val uriHandler = LocalUriHandler.current
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                try {
+                    uriHandler.openUri(article.url)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            },
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Image
+            if (article.urlToImage != null) {
+                AsyncImage(
+                    model = article.urlToImage,
+                    contentDescription = article.title,
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(R.drawable.chatai),
+                    error = painterResource(R.drawable.chatai)
+                )
+            } else {
+                 Box(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.LightGray),
+                    contentAlignment = Alignment.Center
+                ) {
+                     Image(
+                        painter = painterResource(id = R.drawable.chatai),
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                        alpha = 0.5f
+                     )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            // Title and Read More
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = article.title,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                    color = PrimaryDarkBlue
+                )
+
+                Text(
+                    text = "Read more",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = ButtonBlue,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+    }
+}
+
 
 /**
  * Standard small cards (BMI, Blood Group, Medications, Emergency Contacts)
