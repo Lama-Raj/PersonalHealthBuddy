@@ -1,5 +1,7 @@
 import org.gradle.internal.impldep.com.amazonaws.auth.policy.Principal
 import org.gradle.kotlin.dsl.implementation
+import java.util.Properties
+import java.io.FileInputStream
 
 plugins {
     alias(libs.plugins.android.application)
@@ -27,6 +29,17 @@ android {
             ?: throw GradleException("GOOGLE_CLIENT_ID is missing! Add it to gradle.properties file.")
 
         buildConfigField("String", "GOOGLE_CLIENT_ID", "\"$googleClientId\"")
+
+        // Read NEWS_API_KEY from local.properties to keep it safe
+        val localProperties = Properties()
+        val localPropertiesFile = project.rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localProperties.load(FileInputStream(localPropertiesFile))
+        }
+        val newsApiKey = localProperties.getProperty("NEWS_API_KEY") ?: ""
+
+        buildConfigField("String", "NEWS_API_KEY", "\"$newsApiKey\"")
+
     }
 
     buildTypes {
