@@ -20,12 +20,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bloodtype
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -115,6 +117,10 @@ fun BloodGroupScreen(navController: NavController) {
     var userBloodType by remember { mutableStateOf("N/A") }
     var isLoading by remember { mutableStateOf(true) }
 
+    // NEW: track missing blood group
+    var isBloodGroupMissing by remember { mutableStateOf(false) }
+    var showMissingDialog by remember { mutableStateOf(false) }
+
     // If you still use health notifications, keep these:
     var showNotifications by remember { mutableStateOf(false) }
     var notifications by remember { mutableStateOf<List<HealthNotification>>(emptyList()) }
@@ -125,10 +131,16 @@ fun BloodGroupScreen(navController: NavController) {
             val healthInfo = withContext(Dispatchers.IO) {
                 FirestoreHelper.getHealthInformation()
             }
-            healthInfo?.bloodGroup?.let { bloodGroup ->
-                if (bloodGroup.isNotBlank()) {
-                    userBloodType = bloodGroup
-                }
+
+            val bloodGroup = healthInfo?.bloodGroup
+
+            if (bloodGroup.isNullOrBlank()) {
+                // blood group not set in profile
+                isBloodGroupMissing = true
+                userBloodType = "N/A"
+                showMissingDialog = true
+            } else {
+                userBloodType = bloodGroup
             }
         } catch (e: Exception) {
             Log.e("BloodGroupScreen", "Error loading blood group: ${e.message}")
@@ -137,9 +149,9 @@ fun BloodGroupScreen(navController: NavController) {
         }
     }
 
-    // Generate health notifications based on blood type (optional, same as before)
-    LaunchedEffect(userBloodType, isLoading) {
-        if (!isLoading && userBloodType.isNotBlank()) {
+    // Generate health notifications based on blood type (only if present)
+    LaunchedEffect(userBloodType, isLoading, isBloodGroupMissing) {
+        if (!isLoading && !isBloodGroupMissing && userBloodType.isNotBlank()) {
             notifications = generateHealthNotifications(
                 bmi = null,
                 bmiCategory = "",
@@ -229,6 +241,29 @@ fun BloodGroupScreen(navController: NavController) {
                     FactsFormView(primaryTeal)
                 }
             }
+        }
+
+        // NEW: popup dialog when blood group is missing
+        if (showMissingDialog) {
+            AlertDialog(
+                onDismissRequest = { showMissingDialog = false },
+                title = {
+                    Text(
+                        text = "Blood Group Missing",
+                        fontWeight = FontWeight.SemiBold
+                    )
+                },
+                text = {
+                    Text(
+                        text = "Please update your blood group in your profile to get the full benefit from this page."
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = { showMissingDialog = false }) {
+                        Text("OK")
+                    }
+                }
+            )
         }
 
         // Optional health notifications (same behavior as before)
