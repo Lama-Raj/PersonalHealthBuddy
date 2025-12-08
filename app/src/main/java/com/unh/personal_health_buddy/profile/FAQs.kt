@@ -1,4 +1,4 @@
-package com.unh.personal_health_buddy
+package com.unh.personal_health_buddy.profile
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState

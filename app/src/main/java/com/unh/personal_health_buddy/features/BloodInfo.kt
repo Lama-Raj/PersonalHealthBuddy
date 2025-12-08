@@ -1,9 +1,6 @@
 package com.unh.personal_health_buddy.features
 
 import android.util.Log
-import androidx.compose.runtime.*
-import kotlinx.coroutines.withContext
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -15,8 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -25,6 +20,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bloodtype
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,9 +28,16 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -44,13 +47,14 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.Authentication.FirestoreHelper
-import com.unh.personal_health_buddy.ui.theme.AppSurfaceLight
-import com.unh.personal_health_buddy.ui.theme.ChatGreen
 import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 
-// Blood facts list
+// ---------------- Static data from your theme version ----------------
+
+// fact list for bottom view
 private val bloodFacts = listOf(
     "There are eight major human blood types.",
     "O- is the universal donor type.",
@@ -59,13 +63,13 @@ private val bloodFacts = listOf(
     "One blood donation can save up to three lives."
 )
 
-// Data class for blood compatibility
+// data for compatibility matching
 data class BloodInfo(
     val donateTo: List<String>,
     val receiveFrom: List<String>
 )
 
-// Blood compatibility mapping
+// match table for each blood type
 private val bloodCompatibility = mapOf(
     "O-" to BloodInfo(
         donateTo = listOf("Everyone"),
@@ -104,17 +108,18 @@ private val bloodCompatibility = mapOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BloodGroupScreen(navController: NavController) {
-    val primaryTeal = AppSurfaceLight
 
-    // Original state
-    var userBloodType by remember { mutableStateOf("O-") }
+    val primaryTeal = Color(0xFF00796B)
+
+    // dynamic user blood type from Firestore (default "Unknown")
+    var userBloodType by remember { mutableStateOf("N/A") }
     var isLoading by remember { mutableStateOf(true) }
 
-    // --- NEW: NOTIFICATION STATE ---
+    // If you still use health notifications, keep these:
     var showNotifications by remember { mutableStateOf(false) }
     var notifications by remember { mutableStateOf<List<HealthNotification>>(emptyList()) }
 
-    // Original: Load blood group from Firestore
+    // Load blood group from Firestore
     LaunchedEffect(Unit) {
         try {
             val healthInfo = withContext(Dispatchers.IO) {
@@ -132,7 +137,7 @@ fun BloodGroupScreen(navController: NavController) {
         }
     }
 
-    // NEW: Generate notifications when blood type is loaded
+    // Generate health notifications based on blood type (optional, same as before)
     LaunchedEffect(userBloodType, isLoading) {
         if (!isLoading && userBloodType.isNotBlank()) {
             notifications = generateHealthNotifications(
@@ -142,7 +147,6 @@ fun BloodGroupScreen(navController: NavController) {
                 hasPrescriptions = false,
                 lastBmiCheckDays = 0
             )
-            // Auto-show after 2 seconds
             delay(2000)
             if (notifications.isNotEmpty()) {
                 showNotifications = true
@@ -150,13 +154,17 @@ fun BloodGroupScreen(navController: NavController) {
         }
     }
 
+    // soft gradient background (from your theme code)
+    val backgroundGradient = Brush.verticalGradient(
+        listOf(Color(0xFFE0F7FA), Color.White)
+    )
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(ChatGreen)
-            .statusBarsPadding()
-            .systemBarsPadding()
+            .background(backgroundGradient)
     ) {
+
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -166,28 +174,27 @@ fun BloodGroupScreen(navController: NavController) {
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 20.sp,
                             modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center,
-                            color = AppSurfaceLight
+                            textAlign = TextAlign.Center
                         )
                     },
                     navigationIcon = {
-                        IconButton(onClick = { navController.navigate("home") }) {
+                        IconButton(onClick = { navController.popBackStack() }) {
                             Icon(
                                 Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
-                                tint = AppSurfaceLight
+                                tint = primaryTeal
                             )
                         }
                     },
-                    // NEW: Notification badge in actions
-
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent
+                    )
                 )
             },
             containerColor = Color.Transparent
         ) { paddingValues ->
+
             if (isLoading) {
-                // Original loading state
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -197,7 +204,6 @@ fun BloodGroupScreen(navController: NavController) {
                     CircularProgressIndicator(color = primaryTeal)
                 }
             } else {
-                // Original content
                 Column(
                     modifier = Modifier
                         .padding(paddingValues)
@@ -206,25 +212,26 @@ fun BloodGroupScreen(navController: NavController) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(22.dp)
                 ) {
-                    // Original: Circle logo
+
+                    // circle logo
                     SimpleWhiteCircleLogoWithBorder(
                         bloodType = userBloodType,
                         color = primaryTeal
                     )
 
-                    // Original: Donation table
+                    // dynamic table for donation info
                     DonationReceiveTable(
-                        primaryTeal = AppSurfaceLight,
+                        primaryTeal = primaryTeal,
                         userBloodType = userBloodType
                     )
 
-                    // Original: Facts list
+                    // list of facts
                     FactsFormView(primaryTeal)
                 }
             }
         }
 
-        // NEW: Notification dialog
+        // Optional health notifications (same behavior as before)
         if (showNotifications && notifications.isNotEmpty()) {
             HealthNotificationDialog(
                 notifications = notifications,
@@ -240,62 +247,69 @@ fun BloodGroupScreen(navController: NavController) {
     }
 }
 
-// Original composable - unchanged
+// circle logo view
 @Composable
 fun SimpleWhiteCircleLogoWithBorder(bloodType: String, color: Color) {
+
     Box(
         modifier = Modifier
             .size(140.dp)
             .clip(CircleShape)
-            .background(Color(0xFF009688))
+            .background(Color.White)
             .border(4.dp, color.copy(alpha = 0.45f), CircleShape),
         contentAlignment = Alignment.Center
     ) {
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
+
             Icon(
                 imageVector = Icons.Default.Bloodtype,
                 contentDescription = null,
                 tint = color,
                 modifier = Modifier.size(45.dp)
             )
+
             Text(
                 text = bloodType,
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
-                color = AppSurfaceLight
+                color = color
             )
         }
     }
 }
 
-// Original composable - unchanged
+// dynamic table view
 @Composable
 fun DonationReceiveTable(primaryTeal: Color, userBloodType: String) {
+
     val info = bloodCompatibility[userBloodType]
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFF009688), RoundedCornerShape(12.dp))
+            .background(Color.White, RoundedCornerShape(12.dp))
             .border(1.dp, primaryTeal.copy(alpha = 0.25f), RoundedCornerShape(12.dp))
             .padding(16.dp)
     ) {
+
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+
             Text(
                 "Blood Donation Info",
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 18.sp,
-                color = AppSurfaceLight
+                color = primaryTeal
             )
 
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(1.dp)
-                    .background(primaryTeal.copy(alpha = 0.25f))
+                    .background(primaryTeal.copy(alpha = 0.15f))
             )
 
             Row(
@@ -303,32 +317,35 @@ fun DonationReceiveTable(primaryTeal: Color, userBloodType: String) {
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Can Donate To column
+
+                // left column: donation list
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
+
                     Text(
                         "Can Donate To",
                         fontSize = 15.sp,
-                        color = AppSurfaceLight,
+                        color = primaryTeal,
                         fontWeight = FontWeight.Medium
                     )
+
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Color(0xFF009688), RoundedCornerShape(8.dp))
+                            .background(Color(0xFFF1FDFC), RoundedCornerShape(8.dp))
                             .padding(10.dp)
                     ) {
                         Text(
                             text = info?.donateTo?.joinToString(", ") ?: "Unknown",
                             fontSize = 14.sp,
-                            color = AppSurfaceLight
+                            color = Color(0xFF004D40)
                         )
                     }
                 }
 
-                // Divider
+                // vertical line to separate columns
                 Box(
                     modifier = Modifier
                         .width(1.dp)
@@ -336,27 +353,29 @@ fun DonationReceiveTable(primaryTeal: Color, userBloodType: String) {
                         .background(primaryTeal.copy(alpha = 0.25f))
                 )
 
-                // Can Receive From column
+                // right column: receive list
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
+
                     Text(
                         "Can Receive From",
                         fontSize = 15.sp,
-                        color = AppSurfaceLight,
+                        color = primaryTeal,
                         fontWeight = FontWeight.Medium
                     )
+
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Color(0xFF009688), RoundedCornerShape(8.dp))
+                            .background(Color(0xFFF1FDFC), RoundedCornerShape(8.dp))
                             .padding(10.dp)
                     ) {
                         Text(
                             text = info?.receiveFrom?.joinToString(", ") ?: "Unknown",
                             fontSize = 14.sp,
-                            color = AppSurfaceLight
+                            color = Color(0xFF004D40)
                         )
                     }
                 }
@@ -365,23 +384,27 @@ fun DonationReceiveTable(primaryTeal: Color, userBloodType: String) {
     }
 }
 
-// Original composable - unchanged
+// fact list below table
 @Composable
 fun FactsFormView(primaryTeal: Color) {
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
+
         Text(
             "Blood Facts",
             fontWeight = FontWeight.SemiBold,
             fontSize = 18.sp,
-            color = AppSurfaceLight,
+            color = primaryTeal,
             modifier = Modifier.padding(bottom = 4.dp)
         )
 
         bloodFacts.forEachIndexed { index, fact ->
+
             Column(modifier = Modifier.fillMaxWidth()) {
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -389,21 +412,22 @@ fun FactsFormView(primaryTeal: Color) {
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+
                     Icon(
                         imageVector = Icons.Default.Bloodtype,
                         contentDescription = null,
                         tint = primaryTeal.copy(alpha = 0.85f),
                         modifier = Modifier.size(20.dp)
                     )
+
                     Text(
                         fact,
                         fontSize = 15.sp,
-                        color = AppSurfaceLight,
+                        color = Color(0xFF00332B),
                         lineHeight = 20.sp
                     )
                 }
 
-                // Divider between facts
                 if (index != bloodFacts.lastIndex) {
                     Box(
                         modifier = Modifier

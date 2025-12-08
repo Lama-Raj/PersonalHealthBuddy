@@ -33,13 +33,13 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.unh.personal_health_buddy.Account.ResetPasswordDialog
 import com.unh.personal_health_buddy.Account.SignInScreen
 import com.unh.personal_health_buddy.Account.SignUpScreen
-import com.unh.personal_health_buddy.FAQScreen
 import com.unh.personal_health_buddy.chat.AiChatScreen
 import com.unh.personal_health_buddy.contacts.EmergencyContactScreen
 import com.unh.personal_health_buddy.features.BloodGroupScreen
 import com.unh.personal_health_buddy.features.BmiScreen
 import com.unh.personal_health_buddy.screens.MedicateScreen
 import com.unh.personal_health_buddy.notifications.NotificationScreen
+import com.unh.personal_health_buddy.profile.FAQScreen
 import com.unh.personal_health_buddy.profile.ProfileScreen
 import com.unh.personal_health_buddy.profile.profileItems
 import com.unh.personal_health_buddy.screens.HomeScreen
