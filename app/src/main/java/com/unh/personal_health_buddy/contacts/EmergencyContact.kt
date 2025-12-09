@@ -87,7 +87,6 @@ import com.unh.personal_health_buddy.database.EmergencyContact
 import com.unh.personal_health_buddy.database.UserDataCache
 import com.unh.personal_health_buddy.ui.theme.AppSurfaceLight
 import com.unh.personal_health_buddy.ui.theme.ButtonBlue
-import com.unh.personal_health_buddy.ui.theme.ChatGreen
 import com.unh.personal_health_buddy.ui.theme.White
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -107,6 +106,11 @@ fun EmergencyContactScreen(navController: NavHostController) {
     var showNotification by remember { mutableStateOf(false) }
     var notificationMessage by remember { mutableStateOf("") }
     var notificationType by remember { mutableStateOf("success") } // "success" or "delete"
+
+    // Facebook-like blue + light background
+    val primaryBlue = Color(0xFF1877F2)
+    val lightBlueBackground = Color(0xFFF3F6FF)
+    val lightBlueCard = Color(0xFFE8F0FE)
 
     // Auto-hide notification after 3 seconds
     LaunchedEffect(showNotification) {
@@ -139,7 +143,7 @@ fun EmergencyContactScreen(navController: NavHostController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(ChatGreen)
+            .background(lightBlueBackground)
     ) {
         Column(
             modifier = Modifier
@@ -149,39 +153,32 @@ fun EmergencyContactScreen(navController: NavHostController) {
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Header
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(6.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF00A58A))
+            // 🔹 SIMPLE TITLE ROW (no blue box/card)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = AppSurfaceLight
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Emergency Contact",
-                        modifier = Modifier.weight(1f),
-                        textAlign = TextAlign.Center,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = AppSurfaceLight
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = primaryBlue
                     )
-                    Spacer(modifier = Modifier.width(48.dp))
                 }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Emergency Contact",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,      // <- BOLD TITLE
+                    color = primaryBlue,
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Start
+                )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             when {
                 isLoading -> {
@@ -191,7 +188,7 @@ fun EmergencyContactScreen(navController: NavHostController) {
                             .padding(top = 48.dp),
                         contentAlignment = Alignment.TopCenter
                     ) {
-                        CircularProgressIndicator()
+                        CircularProgressIndicator(color = primaryBlue)
                     }
                 }
                 emergencyContacts.isEmpty() -> {
@@ -202,8 +199,10 @@ fun EmergencyContactScreen(navController: NavHostController) {
                         Card(
                             modifier = Modifier.width(280.dp),
                             shape = RoundedCornerShape(12.dp),
-                            border = BorderStroke(1.dp, Color(0xFF80CBC4)),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFE0F2F1))
+                            border = BorderStroke(1.dp, lightBlueCard),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color.White
+                            )
                         ) {
                             Column(
                                 modifier = Modifier.padding(vertical = 24.dp, horizontal = 16.dp),
@@ -212,13 +211,16 @@ fun EmergencyContactScreen(navController: NavHostController) {
                                 Box(
                                     modifier = Modifier
                                         .size(96.dp)
-                                        .background(color = Color(0xFFB2DFDB), shape = CircleShape),
+                                        .background(
+                                            color = lightBlueCard,
+                                            shape = CircleShape
+                                        ),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.People,
                                         contentDescription = null,
-                                        tint = Color(0xFF004D40),
+                                        tint = primaryBlue,
                                         modifier = Modifier.size(48.dp)
                                     )
                                 }
@@ -227,7 +229,7 @@ fun EmergencyContactScreen(navController: NavHostController) {
                                     text = "No Contacts Added",
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 18.sp,
-                                    color = AppSurfaceLight,
+                                    color = primaryBlue,
                                     textAlign = TextAlign.Center
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
@@ -247,7 +249,7 @@ fun EmergencyContactScreen(navController: NavHostController) {
                         text = "Saved Contacts",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.SemiBold,
-                            color = AppSurfaceLight
+                            color = primaryBlue
                         ),
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
@@ -255,7 +257,9 @@ fun EmergencyContactScreen(navController: NavHostController) {
                     emergencyContacts.forEach { contact ->
                         EmergencyContactCard(
                             contact = contact,
-                            onDelete = { contactToDelete = contact }
+                            onDelete = { contactToDelete = contact },
+                            primaryBlue = primaryBlue,
+                            lightBlueCard = lightBlueCard
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                     }
@@ -272,7 +276,7 @@ fun EmergencyContactScreen(navController: NavHostController) {
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(20.dp),
-            containerColor = Color(0xFF00A58A),
+            containerColor = primaryBlue,
             contentColor = Color.White
         ) {
             Icon(
@@ -295,7 +299,8 @@ fun EmergencyContactScreen(navController: NavHostController) {
                     notificationMessage = "Contact added: ${newContact.firstname} ${newContact.lastname}"
                     notificationType = "success"
                     showNotification = true
-                }
+                },
+                primaryBlue = primaryBlue
             )
         }
 
@@ -324,7 +329,8 @@ fun EmergencyContactScreen(navController: NavHostController) {
                                             contactToDelete = null
 
                                             // Show delete notification
-                                            notificationMessage = "Contact deleted: ${contact.firstname} ${contact.lastname}"
+                                            notificationMessage =
+                                                "Contact deleted: ${contact.firstname} ${contact.lastname}"
                                             notificationType = "delete"
                                             showNotification = true
                                         }
@@ -347,7 +353,7 @@ fun EmergencyContactScreen(navController: NavHostController) {
             )
         }
 
-        // NEW: Notification Pop-up at Bottom
+        // Notification Pop-up at Bottom
         AnimatedVisibility(
             visible = showNotification,
             enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
@@ -358,7 +364,9 @@ fun EmergencyContactScreen(navController: NavHostController) {
         ) {
             EmergencyContactNotification(
                 message = notificationMessage,
-                type = notificationType
+                type = notificationType,
+                primaryBlue = primaryBlue,
+                lightBlueCard = lightBlueCard
             )
         }
     }
@@ -367,10 +375,14 @@ fun EmergencyContactScreen(navController: NavHostController) {
 @Composable
 fun EmergencyContactNotification(
     message: String,
-    type: String
+    type: String,
+    primaryBlue: Color,
+    lightBlueCard: Color
 ) {
-    val backgroundColor = if (type == "delete") Color(0xFFFFEBEE) else Color(0xFFE0F2F1)
-    val iconColor = if (type == "delete") Color(0xFFD32F2F) else Color(0xFF00897B)
+    val backgroundColor =
+        if (type == "delete") Color(0xFFFFEBEE) else lightBlueCard
+    val iconColor =
+        if (type == "delete") Color(0xFFD32F2F) else primaryBlue
     val icon = if (type == "delete") Icons.Default.Delete else Icons.Default.PersonAdd
 
     Card(
@@ -389,7 +401,7 @@ fun EmergencyContactNotification(
                 modifier = Modifier
                     .size(50.dp)
                     .clip(CircleShape)
-                    .background(iconColor.copy(alpha = 0.2f)),
+                    .background(iconColor.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -416,16 +428,18 @@ fun EmergencyContactNotification(
 @Composable
 fun EmergencyContactCard(
     contact: EmergencyContact,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    primaryBlue: Color,
+    lightBlueCard: Color
 ) {
     var expanded by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, Color(0xFFB2DFDB)),
+        border = BorderStroke(1.dp, lightBlueCard),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF009688)
+            containerColor = primaryBlue
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -444,8 +458,16 @@ fun EmergencyContactCard(
                     color = AppSurfaceLight
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(text = "Phone: ${contact.phoneNumber}", fontSize = 14.sp, color = AppSurfaceLight)
-                Text(text = "Relationship: ${contact.relationship}", fontSize = 14.sp, color = AppSurfaceLight)
+                Text(
+                    text = "Phone: ${contact.phoneNumber}",
+                    fontSize = 14.sp,
+                    color = AppSurfaceLight
+                )
+                Text(
+                    text = "Relationship: ${contact.relationship}",
+                    fontSize = 14.sp,
+                    color = AppSurfaceLight
+                )
             }
 
             Box {
@@ -455,7 +477,8 @@ fun EmergencyContactCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.ArrowDropDown,
-                        contentDescription = "More Options"
+                        contentDescription = "More Options",
+                        tint = AppSurfaceLight
                     )
                 }
 
@@ -492,7 +515,8 @@ fun EmergencyContactCard(
 @Composable
 fun AddEmergencyContactDialog(
     onDismiss: () -> Unit,
-    onSave: (EmergencyContact) -> Unit
+    onSave: (EmergencyContact) -> Unit,
+    primaryBlue: Color
 ) {
     var firstname by remember { mutableStateOf("") }
     var lastname by remember { mutableStateOf("") }
@@ -522,11 +546,12 @@ fun AddEmergencyContactDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            shape = RoundedCornerShape(16.dp)
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {
             Column(
                 modifier = Modifier
-                    .background(Color(0xFF009688))
+                    .background(Color.White)
                     .padding(16.dp)
                     .verticalScroll(rememberScrollState())
             ) {
@@ -535,7 +560,7 @@ fun AddEmergencyContactDialog(
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center,
-                    color = AppSurfaceLight
+                    color = primaryBlue
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -549,7 +574,7 @@ fun AddEmergencyContactDialog(
                             firstnameError = false
                         }
                     },
-                    label = { Text("First Name", color = AppSurfaceLight) },
+                    label = { Text("First Name", color = Color.DarkGray) },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Text,
                         imeAction = ImeAction.Next
@@ -569,11 +594,14 @@ fun AddEmergencyContactDialog(
                             } else false
                         },
                     leadingIcon = {
-                        RoundedIcon(Icons.Default.Person, ButtonBlue, AppSurfaceLight)
+                        RoundedIcon(Icons.Default.Person, primaryBlue, Color.White)
                     },
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = AppSurfaceLight,
-                        unfocusedTextColor = AppSurfaceLight
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                        focusedBorderColor = primaryBlue,
+                        unfocusedBorderColor = Color.LightGray,
+                        cursorColor = primaryBlue
                     )
                 )
                 if (firstnameError) {
@@ -596,7 +624,7 @@ fun AddEmergencyContactDialog(
                             lastnameError = false
                         }
                     },
-                    label = { Text("Last Name", color = AppSurfaceLight) },
+                    label = { Text("Last Name", color = Color.DarkGray) },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Text,
                         imeAction = ImeAction.Next
@@ -616,11 +644,14 @@ fun AddEmergencyContactDialog(
                             } else false
                         },
                     leadingIcon = {
-                        RoundedIcon(Icons.Default.Person, ButtonBlue, AppSurfaceLight)
+                        RoundedIcon(Icons.Default.Person, primaryBlue, Color.White)
                     },
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = AppSurfaceLight,
-                        unfocusedTextColor = AppSurfaceLight
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                        focusedBorderColor = primaryBlue,
+                        unfocusedBorderColor = Color.LightGray,
+                        cursorColor = primaryBlue
                     )
                 )
                 if (lastnameError) {
@@ -643,7 +674,7 @@ fun AddEmergencyContactDialog(
                             phoneError = false
                         }
                     },
-                    label = { Text("Phone Number", color = AppSurfaceLight) },
+                    label = { Text("Phone Number", color = Color.DarkGray) },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Phone,
                         imeAction = ImeAction.Next
@@ -663,18 +694,21 @@ fun AddEmergencyContactDialog(
                             } else false
                         },
                     leadingIcon = {
-                        RoundedIcon(Icons.Default.Phone, ButtonBlue, AppSurfaceLight)
+                        RoundedIcon(Icons.Default.Phone, primaryBlue, Color.White)
                     },
                     supportingText = {
                         Text(
                             text = "${phoneNumber.length}/10",
                             style = MaterialTheme.typography.bodySmall,
-                            color = AppSurfaceLight
+                            color = Color.DarkGray
                         )
                     },
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = AppSurfaceLight,
-                        unfocusedTextColor = AppSurfaceLight
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                        focusedBorderColor = primaryBlue,
+                        unfocusedBorderColor = Color.LightGray,
+                        cursorColor = primaryBlue
                     )
                 )
                 if (phoneError) {
@@ -697,9 +731,9 @@ fun AddEmergencyContactDialog(
                         value = relationship,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Relationship", color = AppSurfaceLight) },
+                        label = { Text("Relationship", color = Color.DarkGray) },
                         leadingIcon = {
-                            RoundedIcon(Icons.Default.People, ButtonBlue, AppSurfaceLight)
+                            RoundedIcon(Icons.Default.People, primaryBlue, Color.White)
                         },
                         trailingIcon = {
                             ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedDropdown)
@@ -718,8 +752,11 @@ fun AddEmergencyContactDialog(
                                 } else false
                             },
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = AppSurfaceLight,
-                            unfocusedTextColor = AppSurfaceLight
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black,
+                            focusedBorderColor = primaryBlue,
+                            unfocusedBorderColor = Color.LightGray,
+                            cursorColor = primaryBlue
                         )
                     )
 
@@ -751,8 +788,8 @@ fun AddEmergencyContactDialog(
                         modifier = Modifier.weight(1f),
                         enabled = !isSaving,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = ButtonBlue,
-                            contentColor = White
+                            containerColor = primaryBlue,
+                            contentColor = Color.White
                         ),
                     ) {
                         Text("Cancel")
@@ -796,8 +833,8 @@ fun AddEmergencyContactDialog(
                                 phoneNumber.length == 10 &&
                                 relationship.isNotBlank(),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = ButtonBlue,
-                            contentColor = White,
+                            containerColor = primaryBlue,
+                            contentColor = Color.White,
                             disabledContainerColor = Color.LightGray,
                             disabledContentColor = Color.White
                         )
@@ -820,6 +857,7 @@ fun AddEmergencyContactDialog(
         firstnameFocus.requestFocus()
     }
 }
+
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

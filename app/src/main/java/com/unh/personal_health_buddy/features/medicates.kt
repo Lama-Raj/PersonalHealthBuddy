@@ -1,4 +1,4 @@
-package com.unh.personal_health_buddy.screens
+package com.unh.personal_health_buddy.features
 
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
@@ -25,14 +25,17 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.database.Prescription
 import com.unh.personal_health_buddy.Authentication.FirestoreHelper
 import com.unh.personal_health_buddy.features.HealthNotificationDialog
 import com.unh.personal_health_buddy.features.generateHealthNotifications
+import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -589,5 +592,12 @@ private fun PrescriptionDetailsDialog(
                 }
             }
         }
+    }
+}
+@Preview(showBackground = true)
+@Composable
+fun MedicateScreenPreview() {
+    PersonalHealthBuddyTheme {
+        MedicateScreen(navController = rememberNavController())
     }
 }

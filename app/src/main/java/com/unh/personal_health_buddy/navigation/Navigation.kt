@@ -37,7 +37,7 @@ import com.unh.personal_health_buddy.chat.AiChatScreen
 import com.unh.personal_health_buddy.contacts.EmergencyContactScreen
 import com.unh.personal_health_buddy.features.BloodGroupScreen
 import com.unh.personal_health_buddy.features.BmiScreen
-import com.unh.personal_health_buddy.screens.MedicateScreen
+import com.unh.personal_health_buddy.features.MedicateScreen
 import com.unh.personal_health_buddy.notifications.NotificationScreen
 import com.unh.personal_health_buddy.profile.FAQScreen
 import com.unh.personal_health_buddy.profile.ProfileScreen
