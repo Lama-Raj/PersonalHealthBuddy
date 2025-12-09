@@ -111,7 +111,8 @@ private val bloodCompatibility = mapOf(
 @Composable
 fun BloodGroupScreen(navController: NavController) {
 
-    val primaryTeal = Color(0xFF00796B)
+    // blue primary color
+    val primaryBlue = Color(0xFF1877F2)
 
     // dynamic user blood type from Firestore (default "Unknown")
     var userBloodType by remember { mutableStateOf("N/A") }
@@ -166,9 +167,9 @@ fun BloodGroupScreen(navController: NavController) {
         }
     }
 
-    // soft gradient background (from your theme code)
+    // Light blue → white gradient (same vibe as other screens)
     val backgroundGradient = Brush.verticalGradient(
-        listOf(Color(0xFFE0F7FA), Color.White)
+        listOf(Color(0xFFE8F1FF), Color.White)
     )
 
     Box(
@@ -183,10 +184,11 @@ fun BloodGroupScreen(navController: NavController) {
                     title = {
                         Text(
                             "Blood Group Details",
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 24.sp,
                             modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
+                            color = primaryBlue
                         )
                     },
                     navigationIcon = {
@@ -194,7 +196,7 @@ fun BloodGroupScreen(navController: NavController) {
                             Icon(
                                 Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
-                                tint = primaryTeal
+                                tint = primaryBlue
                             )
                         }
                     },
@@ -213,7 +215,7 @@ fun BloodGroupScreen(navController: NavController) {
                         .padding(paddingValues),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = primaryTeal)
+                    CircularProgressIndicator(color = primaryBlue)
                 }
             } else {
                 Column(
@@ -228,22 +230,22 @@ fun BloodGroupScreen(navController: NavController) {
                     // circle logo
                     SimpleWhiteCircleLogoWithBorder(
                         bloodType = userBloodType,
-                        color = primaryTeal
+                        color = primaryBlue
                     )
 
                     // dynamic table for donation info
                     DonationReceiveTable(
-                        primaryTeal = primaryTeal,
+                        primaryTeal = primaryBlue,
                         userBloodType = userBloodType
                     )
 
                     // list of facts
-                    FactsFormView(primaryTeal)
+                    FactsFormView(primaryTeal = primaryBlue)
                 }
             }
         }
 
-        // NEW: popup dialog when blood group is missing
+        // popup dialog when blood group is missing
         if (showMissingDialog) {
             AlertDialog(
                 onDismissRequest = { showMissingDialog = false },
@@ -369,13 +371,13 @@ fun DonationReceiveTable(primaryTeal: Color, userBloodType: String) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Color(0xFFF1FDFC), RoundedCornerShape(8.dp))
+                            .background(Color(0xFFF3F6FF), RoundedCornerShape(8.dp))
                             .padding(10.dp)
                     ) {
                         Text(
                             text = info?.donateTo?.joinToString(", ") ?: "Unknown",
                             fontSize = 14.sp,
-                            color = Color(0xFF004D40)
+                            color = Color(0xFF0D47A1)
                         )
                     }
                 }
@@ -404,13 +406,13 @@ fun DonationReceiveTable(primaryTeal: Color, userBloodType: String) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Color(0xFFF1FDFC), RoundedCornerShape(8.dp))
+                            .background(Color(0xFFF3F6FF), RoundedCornerShape(8.dp))
                             .padding(10.dp)
                     ) {
                         Text(
                             text = info?.receiveFrom?.joinToString(", ") ?: "Unknown",
                             fontSize = 14.sp,
-                            color = Color(0xFF004D40)
+                            color = Color(0xFF0D47A1)
                         )
                     }
                 }
@@ -458,7 +460,7 @@ fun FactsFormView(primaryTeal: Color) {
                     Text(
                         fact,
                         fontSize = 15.sp,
-                        color = Color(0xFF00332B),
+                        color = Color(0xFF1A237E),
                         lineHeight = 20.sp
                     )
                 }
