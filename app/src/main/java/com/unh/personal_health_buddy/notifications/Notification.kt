@@ -31,7 +31,7 @@ import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-// --- Navigation Definitions ---
+// Navigation Definitions
 sealed class NavigationItem(val route: String, val icon: ImageVector, val title: String) {
     object Home : NavigationItem("home", Icons.Filled.Home, "Home")
     object Map : NavigationItem("map", Icons.Filled.Place, "Map")
@@ -42,7 +42,7 @@ sealed class NavigationItem(val route: String, val icon: ImageVector, val title:
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationScreen(navController: NavController) {
-    // --- STYLING ---
+    // STYLING
     // blue for primary accents
     val activeColor = Color(0xFF1877F2)
 
@@ -64,18 +64,17 @@ fun NotificationScreen(navController: NavController) {
             val info = withContext(Dispatchers.IO) { FirestoreHelper.getHealthInformation() }
             val prescriptions = withContext(Dispatchers.IO) { FirestoreHelper.readAllPrescriptions() }
 
-            if (info != null) {
-                // Generate notifications based on health data
-                val hasMeds = prescriptions.isNotEmpty()
+            val hasMeds = prescriptions.isNotEmpty()
 
-                generatedNotifications = generateHealthNotifications(
-                    bmi = null,               // BMI not persistent in HealthInformation yet
-                    bmiCategory = "",
-                    bloodType = info.bloodGroup,
-                    hasPrescriptions = hasMeds,
-                    lastBmiCheckDays = 0      // keep consistent with other calls
-                )
-            }
+            // Always generate notifications, even if health info is null.
+            // generateHealthNotifications will also add a random “nudge” notification.
+            generatedNotifications = generateHealthNotifications(
+                bmi = null,               // BMI not persistent in HealthInformation yet
+                bmiCategory = "",
+                bloodType = info?.bloodGroup,
+                hasPrescriptions = hasMeds,
+                lastBmiCheckDays = 0      // keep consistent with other calls
+            )
         } catch (e: Exception) {
             e.printStackTrace()
         } finally {
@@ -89,7 +88,7 @@ fun NotificationScreen(navController: NavController) {
         // Map InAppNotification (Session) to HealthNotification (Display)
         val sessionNotifications = InAppNotificationManager.notifications.map { inApp ->
             HealthNotification(
-                id = inApp.id.toString(),
+                id = inApp.id.toString(), 
                 title = inApp.title,
                 message = inApp.message,
                 type = NotificationType.GENERAL_INFO,
@@ -176,15 +175,16 @@ fun NotificationScreen(navController: NavController) {
                             NotificationCard(
                                 notification = notification,
                                 onDismiss = {
-                                    // FIX: Convert it.id to String before comparing
+                                    // If it's a session notification, remove from manager
                                     if (InAppNotificationManager.notifications.any { it.id.toString() == notification.id }) {
-                                        InAppNotificationManager.notifications.removeIf { it.id.toString() == notification.id }
+                                        InAppNotificationManager.notifications.removeIf {
+                                            it.id.toString() == notification.id
+                                        }
                                     }
                                     // Generated notifications are persistent based on data state
                                 }
                             )
                         }
-
                     }
                 }
             }

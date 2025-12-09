@@ -293,6 +293,44 @@ fun generateHealthNotifications(
         )
     }
 
+    // Gentle random nudges encouraging healthy actions
+    val nudgeCandidates = listOf(
+        HealthNotification(
+            id = "nudge_bmi_check",
+            title = "Quick BMI Check",
+            message = "Hey, take a moment to calculate your BMI and track your progress.",
+            type = NotificationType.GENERAL_INFO,
+            icon = Icons.Default.FitnessCenter,
+            priority = NotificationPriority.LOW
+        ),
+        HealthNotification(
+            id = "nudge_take_med",
+            title = "Have you taken your meds?",
+            message = "If you have active prescriptions, remember to take or review them today.",
+            type = NotificationType.GENERAL_INFO,
+            icon = Icons.Default.Medication,
+            priority = NotificationPriority.MEDIUM
+        ),
+        HealthNotification(
+            id = "nudge_drink_water",
+            title = "Hydration Reminder",
+            message = "Grab a glass of water and stay hydrated.",
+            type = NotificationType.GENERAL_INFO,
+            icon = Icons.Default.LocalDrink,
+            priority = NotificationPriority.LOW
+        )
+    )
+
+    // Only add a random nudge if there isn't already one with the same id
+    val availableNudges = nudgeCandidates.filter { candidate ->
+        notifications.none { it.id == candidate.id }
+    }
+
+    if (availableNudges.isNotEmpty()) {
+        val randomNudge = availableNudges.random()
+        notifications.add(randomNudge)
+    }
+
     return notifications
 }
 
