@@ -176,7 +176,7 @@ fun NotificationDemo() {
         Button(onClick = {
             InAppNotificationManager.addNotification(
                 title = "New Message",
-                message = "Hello Adaobi! This is a test notification."
+                message = "Hello! This is a test notification."
             )
             showDialog = true
         }) {

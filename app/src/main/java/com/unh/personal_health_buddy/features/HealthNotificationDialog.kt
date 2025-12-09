@@ -1,13 +1,19 @@
 package com.unh.personal_health_buddy.features
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -16,7 +22,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.animation.animateContentSize
+import kotlinx.coroutines.delay
 
 // Data class for notifications
 data class HealthNotification(
@@ -60,7 +66,7 @@ fun HealthNotificationDialog(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp) // Padding from bottom
+                .padding(bottom = 16.dp)
         ) {
             notifications.forEach { notification ->
                 NotificationCard(
@@ -156,10 +162,6 @@ fun NotificationCard(
     }
 }
 
-// Remove the EmptyNotificationState composable - not needed anymore
-
-// Remove NotificationBadge - not needed anymore
-
 // Helper function to generate notifications based on health data
 fun generateHealthNotifications(
     bmi: Float?,
@@ -185,6 +187,7 @@ fun generateHealthNotifications(
                     )
                 )
             }
+
             "Overweight" -> {
                 notifications.add(
                     HealthNotification(
@@ -197,6 +200,7 @@ fun generateHealthNotifications(
                     )
                 )
             }
+
             "Obese" -> {
                 notifications.add(
                     HealthNotification(
@@ -209,6 +213,7 @@ fun generateHealthNotifications(
                     )
                 )
             }
+
             "Healthy" -> {
                 notifications.add(
                     HealthNotification(
@@ -248,7 +253,7 @@ fun generateHealthNotifications(
                 HealthNotification(
                     id = "blood_universal_donor",
                     title = "You're a Universal Donor!",
-                    message = "Your blood type ${type} is the universal donor. Your donation can save lives for anyone! Consider donating blood regularly.",
+                    message = "Your blood type $type is the universal donor. Your donation can save lives for anyone! Consider donating blood regularly.",
                     type = NotificationType.BLOOD_DONATION,
                     icon = Icons.Default.Bloodtype,
                     priority = NotificationPriority.MEDIUM
@@ -259,7 +264,7 @@ fun generateHealthNotifications(
                 HealthNotification(
                     id = "blood_universal_receiver",
                     title = "Universal Receiver",
-                    message = "Your blood type ${type} can receive from anyone! While you can help others with AB+ blood, you're fortunate to have many donors.",
+                    message = "Your blood type $type can receive from anyone! You're fortunate to have many potential donors.",
                     type = NotificationType.BLOOD_DONATION,
                     icon = Icons.Default.Bloodtype,
                     priority = NotificationPriority.LOW
@@ -270,7 +275,7 @@ fun generateHealthNotifications(
                 HealthNotification(
                     id = "blood_donation_reminder",
                     title = "Blood Donation Reminder",
-                    message = "Your blood type is ${type}. Consider donating blood to help those in need. Every donation counts!",
+                    message = "Your blood type is $type. Consider donating blood to help those in need. Every donation counts!",
                     type = NotificationType.BLOOD_DONATION,
                     icon = Icons.Default.Favorite,
                     priority = NotificationPriority.LOW
@@ -293,43 +298,41 @@ fun generateHealthNotifications(
         )
     }
 
-    // Gentle random nudges encouraging healthy actions
-    val nudgeCandidates = listOf(
+    // Extra general nudges to increase number of notifications
+    notifications.add(
         HealthNotification(
-            id = "nudge_bmi_check",
-            title = "Quick BMI Check",
-            message = "Hey, take a moment to calculate your BMI and track your progress.",
-            type = NotificationType.GENERAL_INFO,
-            icon = Icons.Default.FitnessCenter,
-            priority = NotificationPriority.LOW
-        ),
-        HealthNotification(
-            id = "nudge_take_med",
-            title = "Have you taken your meds?",
-            message = "If you have active prescriptions, remember to take or review them today.",
-            type = NotificationType.GENERAL_INFO,
-            icon = Icons.Default.Medication,
-            priority = NotificationPriority.MEDIUM
-        ),
-        HealthNotification(
-            id = "nudge_drink_water",
-            title = "Hydration Reminder",
-            message = "Grab a glass of water and stay hydrated.",
-            type = NotificationType.GENERAL_INFO,
-            icon = Icons.Default.LocalDrink,
+            id = "nudge_bmi",
+            title = "Check Your BMI",
+            message = "Curious about your health? Open the BMI tool and see how you're doing today.",
+            type = NotificationType.BMI_REMINDER,
+            icon = Icons.Default.MonitorHeart,
             priority = NotificationPriority.LOW
         )
     )
 
-    // Only add a random nudge if there isn't already one with the same id
-    val availableNudges = nudgeCandidates.filter { candidate ->
-        notifications.none { it.id == candidate.id }
+    if (hasPrescriptions) {
+        notifications.add(
+            HealthNotification(
+                id = "nudge_meds",
+                title = "Medication Check-in",
+                message = "Have you taken all of your medications for today? Tap the Medication tab to review.",
+                type = NotificationType.PRESCRIPTION_REMINDER,
+                icon = Icons.Default.Medication,
+                priority = NotificationPriority.MEDIUM
+            )
+        )
     }
 
-    if (availableNudges.isNotEmpty()) {
-        val randomNudge = availableNudges.random()
-        notifications.add(randomNudge)
-    }
+    notifications.add(
+        HealthNotification(
+            id = "nudge_walk",
+            title = "Time for a Quick Walk",
+            message = "Even a 10-minute walk can boost your mood and health. Consider stretching your legs!",
+            type = NotificationType.GENERAL_INFO,
+            icon = Icons.Default.DirectionsWalk,
+            priority = NotificationPriority.LOW
+        )
+    )
 
     return notifications
 }
@@ -342,7 +345,7 @@ fun AutoShowNotificationEffect(
 ) {
     LaunchedEffect(notifications) {
         if (notifications.isNotEmpty()) {
-            kotlinx.coroutines.delay(1000) // Wait 1 second after screen loads
+            delay(1000) // Wait 1 second after screen loads
             onShow()
         }
     }
