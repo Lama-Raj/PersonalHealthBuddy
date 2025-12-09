@@ -1,29 +1,14 @@
 package com.unh.personal_health_buddy.notifications
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.background
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Place
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -36,10 +21,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.unh.personal_health_buddy.Authentication.FirestoreHelper
+import com.unh.personal_health_buddy.features.HealthNotification
+import com.unh.personal_health_buddy.features.NotificationCard
+import com.unh.personal_health_buddy.features.NotificationPriority
+import com.unh.personal_health_buddy.features.NotificationType
+import com.unh.personal_health_buddy.features.generateHealthNotifications
 import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 // --- Navigation Definitions ---
-
 sealed class NavigationItem(val route: String, val icon: ImageVector, val title: String) {
     object Home : NavigationItem("home", Icons.Filled.Home, "Home")
     object Map : NavigationItem("map", Icons.Filled.Place, "Map")
@@ -51,10 +43,64 @@ sealed class NavigationItem(val route: String, val icon: ImageVector, val title:
 @Composable
 fun NotificationScreen(navController: NavController) {
     // --- STYLING ---
-    val newGradientStart = Color(0xFFF0F8F8) // Very Light Mint/Teal
-    val newGradientEnd = Color(0xFFFFFFFF)   // White
-    val vibrantGradient = Brush.verticalGradient(colors = listOf(newGradientStart, newGradientEnd))
-    val activeColor = Color(0xFF378680) // A dark mint/teal for text
+    // blue for primary accents
+    val activeColor = Color(0xFF1877F2)
+
+    // Soft light-blue to white gradient background
+    val gradientBackground = Brush.verticalGradient(
+        colors = listOf(
+            Color(0xFFE7F0FF), // very light blue
+            Color(0xFFFFFFFF)  // white
+        )
+    )
+
+    // Persistent notifications fetched from Firestore data
+    var generatedNotifications by remember { mutableStateOf<List<HealthNotification>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+
+    // Fetch data and generate notifications
+    LaunchedEffect(Unit) {
+        try {
+            val info = withContext(Dispatchers.IO) { FirestoreHelper.getHealthInformation() }
+            val prescriptions = withContext(Dispatchers.IO) { FirestoreHelper.readAllPrescriptions() }
+
+            if (info != null) {
+                // Generate notifications based on health data
+                val hasMeds = prescriptions.isNotEmpty()
+
+                generatedNotifications = generateHealthNotifications(
+                    bmi = null,               // BMI not persistent in HealthInformation yet
+                    bmiCategory = "",
+                    bloodType = info.bloodGroup,
+                    hasPrescriptions = hasMeds,
+                    lastBmiCheckDays = 0      // keep consistent with other calls
+                )
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            isLoading = false
+        }
+    }
+
+    // Combine generated notifications with In-App Session Notifications
+    // Since InAppNotificationManager is in the same package, no import needed if package matches.
+    val allNotifications = remember(generatedNotifications, InAppNotificationManager.notifications.toList()) {
+        // Map InAppNotification (Session) to HealthNotification (Display)
+        val sessionNotifications = InAppNotificationManager.notifications.map { inApp ->
+            HealthNotification(
+                id = inApp.id.toString(),
+                title = inApp.title,
+                message = inApp.message,
+                type = NotificationType.GENERAL_INFO,
+                icon = Icons.Default.Notifications,
+                priority = NotificationPriority.MEDIUM
+            )
+        }
+
+        // Combine: Session notifications first, then generated ones
+        sessionNotifications + generatedNotifications
+    }
 
     Scaffold(
         topBar = {
@@ -75,7 +121,11 @@ fun NotificationScreen(navController: NavController) {
                 actions = {
                     // Invisible button to balance the title
                     IconButton(onClick = { }, enabled = false) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = Color.Transparent)
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = null,
+                            tint = Color.Transparent
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -85,36 +135,69 @@ fun NotificationScreen(navController: NavController) {
                 )
             )
         },
-
         containerColor = Color.Transparent
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .offset(y = (-paddingValues.calculateBottomPadding()))
-                .padding(top = paddingValues.calculateTopPadding())
+                .background(gradientBackground)
+                .padding(
+                    top = paddingValues.calculateTopPadding(),
+                    bottom = paddingValues.calculateBottomPadding()
+                )
         ) {
-        }
+            when {
+                isLoading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = activeColor
+                    )
+                }
 
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                EmptyState(color = activeColor)
+                allNotifications.isEmpty() -> {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        EmptyState(color = activeColor)
+                    }
+                }
+
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        contentPadding = PaddingValues(bottom = 16.dp)
+                    ) {
+                        items(allNotifications) { notification ->
+                            NotificationCard(
+                                notification = notification,
+                                onDismiss = {
+                                    // FIX: Convert it.id to String before comparing
+                                    if (InAppNotificationManager.notifications.any { it.id.toString() == notification.id }) {
+                                        InAppNotificationManager.notifications.removeIf { it.id.toString() == notification.id }
+                                    }
+                                    // Generated notifications are persistent based on data state
+                                }
+                            )
+                        }
+
+                    }
+                }
             }
         }
     }
+}
 
-
-
-// --- NEW COMPOSABLE ---
 @Composable
 private fun EmptyState(color: Color) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = Modifier.padding(horizontal = 32.dp) // Add some side padding
+        modifier = Modifier.padding(horizontal = 32.dp)
     ) {
         Icon(
             imageVector = Icons.Default.Notifications,
