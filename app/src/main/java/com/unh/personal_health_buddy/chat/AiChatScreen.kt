@@ -36,6 +36,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -66,7 +67,9 @@ fun AiChatScreen(
     // list state for controlling scroll position of the message list
     val listState = rememberLazyListState()
 
-    // scrolls to the newest message when the list size changes
+    // primary blue
+    val primaryBlue = Color(0xFF1877F2)
+
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
             listState.animateScrollToItem(messages.lastIndex)
@@ -76,158 +79,169 @@ fun AiChatScreen(
     // show suggestions mainly at start, before user has sent anything
     val showSuggestions = messages.isNotEmpty() && messages.none { it.isUser }
 
-    // screen scaffold with blue-and-white top app bar
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "AI Health Assistant",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+    // soft light-blue → white background like other screens
+    val backgroundGradient = Brush.verticalGradient(
+        listOf(Color(0xFFE8F1FF), Color.White)
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(backgroundGradient)
+    ) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = "AI Health Assistant",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = primaryBlue
                         )
-                    }
-                },
-                actions = {
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = primaryBlue
+                            )
+                        }
+                    },
+                    actions = {
                     // clear button that resets the chat messages
-                    IconButton(
-                        onClick = { viewModel.clearChat() }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Delete,
-                            contentDescription = "Clear chat"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.primary,
-                    actionIconContentColor = MaterialTheme.colorScheme.primary
+                        IconButton(
+                            onClick = { viewModel.clearChat() }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Delete,
+                                contentDescription = "Clear chat",
+                                tint = primaryBlue
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent
+                    )
                 )
-            )
-        }
-    ) { innerPadding ->
-        // main content column under the top bar
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.03f))
-                .padding(horizontal = 12.dp, vertical = 8.dp)
-        ) {
-            // scrollable list of chat messages
-            LazyColumn(
+            },
+            containerColor = Color.Transparent
+        ) { innerPadding ->
+            Column(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                state = listState
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
             ) {
-                items(messages, key = { it.id }) { message ->
-                    ChatBubble(message = message)
-                    Spacer(modifier = Modifier.height(4.dp))
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    state = listState
+                ) {
+                    items(messages, key = { it.id }) { message ->
+                        ChatBubble(message = message)
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
                 }
-            }
 
             // stacked pre-written options for user to start chat
-            if (showSuggestions) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
+                if (showSuggestions) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
                     // small label above the stack
-                    Text(
-                        text = "You can start with:",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = Color.Gray,
-                        modifier = Modifier.padding(start = 4.dp, bottom = 2.dp)
-                    )
+                        Text(
+                            text = "You can start with:",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(start = 4.dp, bottom = 2.dp)
+                        )
 
                     // one rounded row for each pre-written text
-                    PrewrittenStackItem(
-                        text = "I feel stressed"
-                    ) {
-                        viewModel.onInputChange("I feel stressed. What can I do?")
-                        viewModel.sendMessage()
-                    }
+                        PrewrittenStackItem(
+                            text = "I feel stressed",
+                            primaryBlue = primaryBlue
+                        ) {
+                            viewModel.onInputChange("I feel stressed. What can I do?")
+                            viewModel.sendMessage()
+                        }
 
-                    PrewrittenStackItem(
-                        text = "I have trouble sleeping"
-                    ) {
-                        viewModel.onInputChange("I have trouble sleeping. Any tips?")
-                        viewModel.sendMessage()
-                    }
+                        PrewrittenStackItem(
+                            text = "I have trouble sleeping",
+                            primaryBlue = primaryBlue
+                        ) {
+                            viewModel.onInputChange("I have trouble sleeping. Any tips?")
+                            viewModel.sendMessage()
+                        }
 
-                    PrewrittenStackItem(
-                        text = "Help me understand my BMI"
-                    ) {
-                        viewModel.onInputChange("How can I understand my BMI?")
-                        viewModel.sendMessage()
+                        PrewrittenStackItem(
+                            text = "Help me understand my BMI",
+                            primaryBlue = primaryBlue
+                        ) {
+                            viewModel.onInputChange("How can I understand my BMI?")
+                            viewModel.sendMessage()
+                        }
                     }
                 }
-            }
 
             // small row that shows typing indicator when assistant is preparing a reply
-            if (isBotTyping) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp, vertical = 4.dp),
-                    horizontalArrangement = Arrangement.Start
-                ) {
-                    Text(
-                        text = "Assistant is typing...",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.Gray
-                    )
+                if (isBotTyping) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 4.dp, vertical = 4.dp),
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        Text(
+                            text = "Assistant is typing...",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.Gray
+                        )
+                    }
                 }
-            }
 
             // input area card with text field and send button
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                shape = RoundedCornerShape(24.dp)
-            ) {
-                Row(
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(top = 8.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    shape = RoundedCornerShape(24.dp)
                 ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                     // text field where user types a message
-                    OutlinedTextField(
-                        value = inputText,
-                        onValueChange = { viewModel.onInputChange(it) },
-                        modifier = Modifier.weight(1f),
-                        placeholder = { Text("Type your message...") },
-                        singleLine = true,
-                        shape = RoundedCornerShape(20.dp)
-                    )
+                        OutlinedTextField(
+                            value = inputText,
+                            onValueChange = { viewModel.onInputChange(it) },
+                            modifier = Modifier.weight(1f),
+                            placeholder = { Text("Type your message...") },
+                            singleLine = true,
+                            shape = RoundedCornerShape(20.dp)
+                        )
 
-                    Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
 
                     // send icon button on the right side, enabled only when there is text
-                    IconButton(
-                        onClick = { viewModel.sendMessage() },
-                        enabled = inputText.isNotBlank()
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Send,
-                            contentDescription = "Send"
-                        )
+                        IconButton(
+                            onClick = { viewModel.sendMessage() },
+                            enabled = inputText.isNotBlank()
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Send,
+                                contentDescription = "Send",
+                                tint = if (inputText.isNotBlank()) primaryBlue else Color.Gray
+                            )
+                        }
                     }
                 }
             }
@@ -239,6 +253,7 @@ fun AiChatScreen(
 @Composable
 fun PrewrittenStackItem(
     text: String,
+    primaryBlue: Color,
     onClick: () -> Unit
 ) {
     // soft background and rounded shape make it look friendly
@@ -247,7 +262,7 @@ fun PrewrittenStackItem(
             .fillMaxWidth()
             .clickable { onClick() }
             .background(
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.06f),
+                color = primaryBlue.copy(alpha = 0.06f),
                 shape = RoundedCornerShape(16.dp)
             )
             .padding(horizontal = 12.dp, vertical = 10.dp)
@@ -256,7 +271,7 @@ fun PrewrittenStackItem(
         Text(
             text = text,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.primary
+            color = primaryBlue
         )
     }
 }
@@ -265,21 +280,20 @@ fun PrewrittenStackItem(
 @Composable
 fun ChatBubble(message: ChatMessage) {
 
-    // Blue for user messages
-    val userBlue = Color(0xFF0084FF)
+    val userBlue = Color(0xFF1877F2)
+    val assistantBubble = Color(0xFFF3F6FF)
+    val assistantText = Color(0xFF102A43)
 
-    // bubble color depends on sender
     val bubbleColor = if (message.isUser) {
         userBlue
     } else {
-        MaterialTheme.colorScheme.surfaceVariant
+        assistantBubble
     }
 
-    // text color depends on bubble type
     val textColor = if (message.isUser) {
         Color.White
     } else {
-        MaterialTheme.colorScheme.onSurfaceVariant
+        assistantText
     }
 
     // bubble corner shape depends on sender
@@ -340,7 +354,10 @@ fun ChatBubble(message: ChatMessage) {
                     // small time label under the message
                     Text(
                         text = message.time,
-                        color = Color.White.copy(alpha = if (message.isUser) 0.7f else 0.6f),
+                        color = if (message.isUser)
+                            Color.White.copy(alpha = 0.7f)
+                        else
+                            assistantText.copy(alpha = 0.6f),
                         style = MaterialTheme.typography.labelSmall
                     )
                 }
