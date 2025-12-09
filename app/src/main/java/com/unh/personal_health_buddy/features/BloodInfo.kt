@@ -187,7 +187,7 @@ fun BloodGroupScreen(navController: NavController) {
                             fontWeight = FontWeight.Bold,
                             fontSize = 24.sp,
                             modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center,
+                            textAlign = TextAlign.Left,
                             color = primaryBlue
                         )
                     },

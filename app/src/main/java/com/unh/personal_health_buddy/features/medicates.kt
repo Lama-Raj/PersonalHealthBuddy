@@ -151,8 +151,8 @@ fun MedicateScreen(navController: NavController) {
                         Text(
                             "Medication",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 30.sp,
-                            textAlign = TextAlign.Center,
+                            fontSize = 24.sp,
+                            textAlign = TextAlign.Left,
                             modifier = Modifier.fillMaxWidth(),
                             color = softTeal
                         )

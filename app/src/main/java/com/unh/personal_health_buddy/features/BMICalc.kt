@@ -128,7 +128,8 @@ fun BmiScreen(navController: NavController) {
             topBar = {
                 // Defines the content for the top app bar area.
                 TopAppBar(
-                    title = { Text("Calculate Your BMI") },
+                    title = { Text("Calculate Your BMI")
+                            },
                     navigationIcon = {
                         // Defines a clickable icon button.
                         IconButton(onClick = { navController.popBackStack() }) {

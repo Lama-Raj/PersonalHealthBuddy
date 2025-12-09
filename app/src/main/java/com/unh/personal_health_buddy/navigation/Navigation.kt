@@ -2,7 +2,6 @@ package com.unh.personal_health_buddy.navigation
 
 import AccountFormScreen
 import AccountScreen
-import GoogleMapScreen
 import android.content.Intent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.foundation.layout.padding
@@ -38,6 +37,7 @@ import com.unh.personal_health_buddy.contacts.EmergencyContactScreen
 import com.unh.personal_health_buddy.features.BloodGroupScreen
 import com.unh.personal_health_buddy.features.BmiScreen
 import com.unh.personal_health_buddy.features.MedicateScreen
+import com.unh.personal_health_buddy.map.GoogleMapScreen
 import com.unh.personal_health_buddy.notifications.NotificationScreen
 import com.unh.personal_health_buddy.profile.FAQScreen
 import com.unh.personal_health_buddy.profile.ProfileScreen
@@ -47,14 +47,14 @@ import com.unh.personal_health_buddy.screens.MainWelcomeScreen
 import com.unh.personal_health_buddy.ui.theme.ButtonBlue
 import com.unh.personal_health_buddy.ui.theme.MediumGray
 
-// -------------------- DATA CLASS --------------------
+// DATA CLASS
 data class BottomNavItem(
     val route: String,
     val icon: ImageVector,
     val label: String
 )
 
-// -------------------- BOTTOM NAV ITEMS --------------------
+// BOTTOM NAV ITEMS
 val bottomNavItems = listOf(
     BottomNavItem("home", Icons.Filled.Home, "Home"),
     BottomNavItem("map", Icons.Filled.LocationOn, "Map"),
@@ -62,7 +62,7 @@ val bottomNavItems = listOf(
     BottomNavItem("profile", Icons.Filled.Person, "Profile")
 )
 
-// -------------------- SCREENS THAT SHOULD HIDE BOTTOM NAV --------------------
+// SCREENS THAT SHOULD HIDE BOTTOM NAV
 val screensWithoutBottomNav = setOf(
     "welcome",
     "sign-in",
@@ -70,7 +70,7 @@ val screensWithoutBottomNav = setOf(
     "reset-password",
 )
 
-// -------------------- APP NAVIGATION --------------------
+// APP NAVIGATION
 @Composable
 fun AppNavigation(
     navController: NavHostController,
@@ -140,7 +140,7 @@ fun AppNavigation(
             startDestination = "home",
             modifier = Modifier.padding(paddingValues)
         ) {
-            // -------------------- AUTH SCREENS --------------------
+            // AUTH SCREENS
             composable("welcome") { MainWelcomeScreen(navController) }
             composable("sign-in") { SignInScreen(navController, googleSignInClient, launcher) }
             composable("sign-up") { SignUpScreen(navController, googleSignInClient, launcher) }
@@ -148,20 +148,20 @@ fun AppNavigation(
                 ResetPasswordDialog(navController, onDismiss = { navController.popBackStack() })
             }
 
-            // -------------------- MAIN SCREENS (with bottom nav) --------------------
+            // MAIN SCREENS (with bottom nav)
             composable("home") { HomeScreen(navController) }
             composable("map") { GoogleMapScreen(navController) }
             composable("notifications") { NotificationScreen(navController) }
             composable("profile") { ProfileScreen(navController, profileItems, "profile") }
 
-            // -------------------- FEATURE SCREENS (still show bottom nav, Home highlighted) --------------------
+            // FEATURE SCREENS (still show bottom nav, Home highlighted)
             composable("blood_group_screen") { BloodGroupScreen(navController) }
             composable("medicates_screen") { MedicateScreen(navController) }
             composable("emergency_screen") { EmergencyContactScreen(navController) }
             composable("bmi_screen") { BmiScreen(navController) }
             composable("chat_ai_screen") { AiChatScreen(navController) }
 
-            // -------------------- PROFILE SUB-SCREENS (no bottom nav) --------------------
+            //PROFILE SUB-SCREENS (no bottom nav)
             composable("account") { AccountScreen(navController) }
             composable("account-form") { AccountFormScreen(navController) }
             composable("FAQS") { FAQScreen(navController) }

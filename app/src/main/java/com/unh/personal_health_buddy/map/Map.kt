@@ -1,38 +1,72 @@
+package com.unh.personal_health_buddy.map
+
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.util.Log
-import com.unh.personal_health_buddy.R
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.*
-import com.unh.personal_health_buddy.ui.theme.AppSurfaceLight
+import com.google.maps.android.compose.Circle
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
+import com.unh.personal_health_buddy.R
 import com.unh.personal_health_buddy.ui.theme.ButtonBlue
-import com.unh.personal_health_buddy.ui.theme.ChatGreen
 import com.unh.personal_health_buddy.ui.theme.MediumGray
 import com.unh.personal_health_buddy.ui.theme.PrimaryDarkBlue
 import com.unh.personal_health_buddy.ui.theme.White
@@ -41,40 +75,62 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Locale
 
-
-@SuppressLint("ConfigurationScreenWidthHeight")
+@SuppressLint("MissingPermission") // We guard location usage with runtime permission
 @Composable
 fun GoogleMapScreen(navController: NavController) {
     val context = LocalContext.current
+
+    // Initial camera position
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(LatLng(41.29, -72.9615), 15f)
     }
 
-    var searchQuery by remember { mutableStateOf("") }
+    // DEFAULT QUERY: health services near me
+    val defaultQuery = "Health services near me"
+    var searchQuery by remember { mutableStateOf(defaultQuery) }
     var searchedLocation by remember { mutableStateOf<LatLng?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
+    // Light blue -> white background
+    val backgroundGradient = Brush.verticalGradient(
+        listOf(
+            Color(0xFFE3F2FD), // light blue
+            Color.White        // white
+        )
+    )
 
+    // Auto-run the default search once when screen opens
+    LaunchedEffect(Unit) {
+        if (searchQuery.isNotBlank()) {
+            val latLng = geocodeLocation(context, searchQuery)
+            latLng?.let {
+                searchedLocation = it
+                cameraPositionState.animate(
+                    update = CameraUpdateFactory.newLatLngZoom(it, 15f),
+                    durationMs = 1000
+                )
+            }
+        }
+    }
 
-    // Root background fills entire screen including behind system bars
     Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight()
-            .background(ChatGreen)
-
+            .fillMaxSize()
+            .background(backgroundGradient)
     ) {
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
-            // Back button and Search Section with horizontal padding
-            Column(
+
+            // ---------- Top Bar (Custom, light) ----------
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
-
+                    .padding(top = 4.dp, bottom = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // Back button with IconButton (better UX)
                 IconButton(
                     onClick = {
                         navController.navigate("home") {
@@ -86,39 +142,69 @@ fun GoogleMapScreen(navController: NavController) {
                     }
                 ) {
                     Icon(
-                        imageVector = Icons.Default.ArrowBackIosNew,
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back to Home",
-                        tint = AppSurfaceLight,
-                        modifier = Modifier
-                            .size(20.dp)
+                        tint = ButtonBlue
                     )
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.width(4.dp))
 
-                // Google Map Icon
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    Text(
+                        text = "Nearby Map",
+                        fontSize = 22.sp,
+                        color = PrimaryDarkBlue,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = "Search a place or explore around you",
+                        fontSize = 13.sp,
+                        color = MediumGray
+                    )
+                }
+
                 Image(
                     painter = painterResource(id = R.drawable.google_map),
                     contentDescription = "Google Map",
                     modifier = Modifier
-                        .size(80.dp)
-                        .align(Alignment.CenterHorizontally)
+                        .height(40.dp)
+                        .padding(start = 8.dp)
                 )
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-                // Search Section
+            // ---------- Search Card ----------
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
+                ),
+                elevation = CardDefaults.cardElevation(4.dp)
+            ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .offset(y = 30.dp)
-                        .padding(8.dp),
+                        .padding(12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+
                     OutlinedTextField(
                         value = searchQuery,
                         onValueChange = { searchQuery = it },
-                        placeholder = { Text("Search location...", color = MediumGray) },
+                        placeholder = {
+                            Text(
+                                "Search location...",
+                                color = MediumGray,
+                                fontSize = 14.sp
+                            )
+                        },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Search,
@@ -128,88 +214,123 @@ fun GoogleMapScreen(navController: NavController) {
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Color.White, RoundedCornerShape(4.dp)),
+                            .background(Color.Transparent, RoundedCornerShape(8.dp)),
                         textStyle = LocalTextStyle.current.copy(
                             color = PrimaryDarkBlue,
-                            textAlign = TextAlign.Start
+                            textAlign = TextAlign.Start,
+                            fontSize = 14.sp
                         ),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = ButtonBlue,
-                            unfocusedBorderColor = MediumGray,
+                            unfocusedBorderColor = MediumGray.copy(alpha = 0.5f),
                             cursorColor = ButtonBlue,
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White
                         ),
-                        singleLine = true
+                        singleLine = true,
+                        shape = RoundedCornerShape(10.dp)
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     Button(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(50.dp),
-
+                            .height(46.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = ButtonBlue,
                             contentColor = White
                         ),
                         onClick = {
-                            coroutineScope.launch {
-                                val latLng = geocodeLocation(context, searchQuery)
-                                latLng?.let {
-                                    searchedLocation = it
-                                    cameraPositionState.animate(
-                                        update = CameraUpdateFactory.newLatLngZoom(it, 15f),
-                                        durationMs = 1000
-                                    )
+                            if (searchQuery.isNotBlank()) {
+                                coroutineScope.launch {
+                                    val latLng = geocodeLocation(context, searchQuery)
+                                    latLng?.let {
+                                        searchedLocation = it
+                                        cameraPositionState.animate(
+                                            update = CameraUpdateFactory.newLatLngZoom(it, 15f),
+                                            durationMs = 1000
+                                        )
+                                    }
                                 }
                             }
                         }
                     ) {
-                        Text("Search")
+                        Text(
+                            "Search",
+                            fontSize = 16.sp
+                        )
                     }
                 }
             }
 
+            Spacer(modifier = Modifier.height(12.dp))
 
-            Spacer(modifier = Modifier.height(19.dp))
-
-            // Map - fills remaining space with NO horizontal padding
+            // ---------- Map Card ----------
             val hasLocationPermission = RequestLocationPermission()
 
-            Box(
+            Card(
                 modifier = Modifier
-                    .weight(1f)
                     .fillMaxWidth()
-                    .offset(y = 5.dp)
-                    .padding(top = 8.dp, bottom = 0.dp)
-
+                    .weight(1f),
+                shape = RoundedCornerShape(20.dp),
+                elevation = CardDefaults.cardElevation(6.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
+                )
             ) {
-                GoogleMap(
-                    modifier = Modifier.fillMaxSize(),
-                    cameraPositionState = cameraPositionState,
-                    properties = MapProperties(
-                        isMyLocationEnabled = hasLocationPermission
-                    ),
-                    uiSettings = MapUiSettings(
-                        zoomControlsEnabled = true,
-                        compassEnabled = true,
-                        myLocationButtonEnabled = true
-                    )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
                 ) {
-                    searchedLocation?.let { location ->
-                        Circle(
-                            center = location,
-                            radius = 500.0,
-                            fillColor = Color(0x5543D8F3),
-                            strokeColor = ButtonBlue,
-                            strokeWidth = 4f
+                    GoogleMap(
+                        modifier = Modifier.fillMaxSize(),
+                        cameraPositionState = cameraPositionState,
+                        properties = MapProperties(
+                            isMyLocationEnabled = hasLocationPermission
+                        ),
+                        uiSettings = MapUiSettings(
+                            zoomControlsEnabled = true,
+                            compassEnabled = true,
+                            myLocationButtonEnabled = true
                         )
-                        Marker(
-                            state = MarkerState(position = location),
-                            title = "Searched Location",
-                            snippet = searchQuery
-                        )
+                    ) {
+                        searchedLocation?.let { location ->
+                            // Soft highlight circle around searched location
+                            Circle(
+                                center = location,
+                                radius = 500.0,
+                                fillColor = Color(0x3343D8F3),
+                                strokeColor = ButtonBlue,
+                                strokeWidth = 4f
+                            )
+                            Marker(
+                                state = MarkerState(position = location),
+                                title = "Searched Location",
+                                snippet = searchQuery
+                            )
+                        }
+                    }
+
+                    // Little hint overlay at top of map
+                    if (searchedLocation == null) {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopCenter)
+                                .padding(top = 12.dp)
+                                .background(
+                                    color = Color.White.copy(alpha = 0.9f),
+                                    shape = RoundedCornerShape(50)
+                                )
+                                .padding(horizontal = 16.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = "Tip: Use the search above or tap my-location to center on you.",
+                                color = MediumGray,
+                                fontSize = 12.sp,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
                 }
             }
@@ -219,10 +340,8 @@ fun GoogleMapScreen(navController: NavController) {
     Log.d("GoogleMapScreen", "Google Map screen displayed")
 }
 
-
 /**
  * Requests location permission and returns true when either fine or coarse location is granted.
- * Behavior unchanged from your original implementation.
  */
 @Composable
 fun RequestLocationPermission(): Boolean {
@@ -264,7 +383,7 @@ fun RequestLocationPermission(): Boolean {
 }
 
 /**
- * Geocode helper (kept same as your original)
+ * Geocode helper
  */
 suspend fun geocodeLocation(context: android.content.Context, locationName: String): LatLng? {
     return withContext(Dispatchers.IO) {
@@ -280,9 +399,6 @@ suspend fun geocodeLocation(context: android.content.Context, locationName: Stri
         }
     }
 }
-
-
-
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
