@@ -107,7 +107,7 @@ fun EmergencyContactScreen(navController: NavHostController) {
     var notificationMessage by remember { mutableStateOf("") }
     var notificationType by remember { mutableStateOf("success") } // "success" or "delete"
 
-    // Facebook-like blue + light background
+    // blue + light background
     val primaryBlue = Color(0xFF1877F2)
     val lightBlueBackground = Color(0xFFF3F6FF)
     val lightBlueCard = Color(0xFFE8F0FE)

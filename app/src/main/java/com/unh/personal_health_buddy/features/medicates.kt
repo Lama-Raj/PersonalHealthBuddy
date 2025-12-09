@@ -3,7 +3,18 @@ package com.unh.personal_health_buddy.features
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -13,9 +24,41 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Medication
+import androidx.compose.material.icons.filled.Note
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SmallFloatingActionButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,10 +74,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.unh.personal_health_buddy.database.Prescription
 import com.unh.personal_health_buddy.Authentication.FirestoreHelper
-import com.unh.personal_health_buddy.features.HealthNotificationDialog
-import com.unh.personal_health_buddy.features.generateHealthNotifications
+import com.unh.personal_health_buddy.database.Prescription
 import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -44,8 +85,12 @@ import kotlinx.coroutines.withContext
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MedicateScreen(navController: NavController) {
-    val softTeal = Color(0xFF009688)
-    val tealLight = Color(0xFFE0F2F1)
+    // light + blue theme style
+    val primaryBlue = Color(0xFF1877F2)
+    val lightBlueBackground = Color(0xFFF3F6FF)
+
+    val softTeal = primaryBlue
+    val tealLight = lightBlueBackground
     val scope = rememberCoroutineScope()
 
     var isMenuExpanded by remember { mutableStateOf(false) }
@@ -83,7 +128,6 @@ fun MedicateScreen(navController: NavController) {
                 hasPrescriptions = prescriptions.isNotEmpty(),
                 lastBmiCheckDays = 0
             )
-            // Auto-show if there are prescriptions
             if (prescriptions.isNotEmpty()) {
                 delay(1500)
                 showNotifications = true
@@ -103,7 +147,6 @@ fun MedicateScreen(navController: NavController) {
         Scaffold(
             topBar = {
                 TopAppBar(
-                    modifier = Modifier.padding(top = 16.dp),
                     title = {
                         Text(
                             "Medication",
@@ -132,7 +175,8 @@ fun MedicateScreen(navController: NavController) {
                 Column(
                     horizontalAlignment = Alignment.End,
                     verticalArrangement = Arrangement.spacedBy(18.dp),
-                    modifier = Modifier.padding(bottom = 80.dp)
+                    // 🔻 Move FAB closer to bottom
+                    modifier = Modifier.padding(bottom = 24.dp, end = 16.dp)
                 ) {
                     AnimatedVisibility(isMenuExpanded) {
                         Column(
@@ -363,8 +407,20 @@ private fun AddPrescriptionDialog(
                     color = activeColor
                 )
 
-                CustomField(value = medName, onChange = { medName = it }, label = "Medication Name", icon = Icons.Default.Medication)
-                CustomField(value = dosage, onChange = { dosage = it }, label = "Dosage (e.g. 10mg)", icon = Icons.Default.Info)
+                CustomField(
+                    value = medName,
+                    onChange = { medName = it },
+                    label = "Medication Name",
+                    icon = Icons.Default.Medication,
+                    activeColor = activeColor
+                )
+                CustomField(
+                    value = dosage,
+                    onChange = { dosage = it },
+                    label = "Dosage (e.g. 10mg)",
+                    icon = Icons.Default.Info,
+                    activeColor = activeColor
+                )
 
                 // Frequency
                 ExposedDropdownMenuBox(
@@ -372,73 +428,187 @@ private fun AddPrescriptionDialog(
                     onExpandedChange = { expandFrequency = !expandFrequency }
                 ) {
                     OutlinedTextField(
-                        value = frequency, onValueChange = {}, readOnly = true, label = { Text("Frequency") },
+                        value = frequency,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Frequency") },
                         leadingIcon = { Icon(Icons.Default.Schedule, null) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandFrequency) },
-                        modifier = Modifier.fillMaxWidth().menuAnchor(), shape = RoundedCornerShape(12.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black,
+                            focusedBorderColor = activeColor,
+                            unfocusedBorderColor = Color.LightGray,
+                            cursorColor = activeColor
+                        )
                     )
-                    ExposedDropdownMenu(expanded = expandFrequency, onDismissRequest = { expandFrequency = false }) {
+                    ExposedDropdownMenu(
+                        expanded = expandFrequency,
+                        onDismissRequest = { expandFrequency = false }
+                    ) {
                         frequencyOptions.forEach { item ->
-                            DropdownMenuItem(text = { Text(item) }, onClick = { frequency = item; expandFrequency = false })
+                            DropdownMenuItem(
+                                text = { Text(item) },
+                                onClick = {
+                                    frequency = item
+                                    expandFrequency = false
+                                }
+                            )
                         }
                     }
                 }
 
                 // Form
-                ExposedDropdownMenuBox(expanded = expandForm, onExpandedChange = { expandForm = !expandForm }) {
+                ExposedDropdownMenuBox(
+                    expanded = expandForm,
+                    onExpandedChange = { expandForm = !expandForm }
+                ) {
                     OutlinedTextField(
-                        value = form, onValueChange = {}, readOnly = true, label = { Text("Form") },
+                        value = form,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Form") },
                         leadingIcon = { Icon(Icons.Default.Info, null) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandForm) },
-                        modifier = Modifier.fillMaxWidth().menuAnchor(), shape = RoundedCornerShape(12.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black,
+                            focusedBorderColor = activeColor,
+                            unfocusedBorderColor = Color.LightGray,
+                            cursorColor = activeColor
+                        )
                     )
-                    ExposedDropdownMenu(expanded = expandForm, onDismissRequest = { expandForm = false }) {
+                    ExposedDropdownMenu(
+                        expanded = expandForm,
+                        onDismissRequest = { expandForm = false }
+                    ) {
                         formOptions.forEach { item ->
-                            DropdownMenuItem(text = { Text(item) }, onClick = { form = item; expandForm = false })
+                            DropdownMenuItem(
+                                text = { Text(item) },
+                                onClick = {
+                                    form = item
+                                    expandForm = false
+                                }
+                            )
                         }
                     }
                 }
 
                 // Time of Day
-                ExposedDropdownMenuBox(expanded = expandTimeOfDay, onExpandedChange = { expandTimeOfDay = !expandTimeOfDay }) {
+                ExposedDropdownMenuBox(
+                    expanded = expandTimeOfDay,
+                    onExpandedChange = { expandTimeOfDay = !expandTimeOfDay }
+                ) {
                     OutlinedTextField(
-                        value = timeOfDay, onValueChange = {}, readOnly = true, label = { Text("Time of Day") },
+                        value = timeOfDay,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Time of Day") },
                         leadingIcon = { Icon(Icons.Default.Schedule, null) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandTimeOfDay) },
-                        modifier = Modifier.fillMaxWidth().menuAnchor(), shape = RoundedCornerShape(12.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black,
+                            focusedBorderColor = activeColor,
+                            unfocusedBorderColor = Color.LightGray,
+                            cursorColor = activeColor
+                        )
                     )
-                    ExposedDropdownMenu(expanded = expandTimeOfDay, onDismissRequest = { expandTimeOfDay = false }) {
+                    ExposedDropdownMenu(
+                        expanded = expandTimeOfDay,
+                        onDismissRequest = { expandTimeOfDay = false }
+                    ) {
                         timeOfDayOptions.forEach { item ->
-                            DropdownMenuItem(text = { Text(item) }, onClick = { timeOfDay = item; expandTimeOfDay = false })
+                            DropdownMenuItem(
+                                text = { Text(item) },
+                                onClick = {
+                                    timeOfDay = item
+                                    expandTimeOfDay = false
+                                }
+                            )
                         }
                     }
                 }
 
                 // With Food
-                ExposedDropdownMenuBox(expanded = expandWithFood, onExpandedChange = { expandWithFood = !expandWithFood }) {
+                ExposedDropdownMenuBox(
+                    expanded = expandWithFood,
+                    onExpandedChange = { expandWithFood = !expandWithFood }
+                ) {
                     OutlinedTextField(
-                        value = withFood, onValueChange = {}, readOnly = true, label = { Text("With Food?") },
+                        value = withFood,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("With Food?") },
                         leadingIcon = { Icon(Icons.Default.Info, null) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandWithFood) },
-                        modifier = Modifier.fillMaxWidth().menuAnchor(), shape = RoundedCornerShape(12.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black,
+                            focusedBorderColor = activeColor,
+                            unfocusedBorderColor = Color.LightGray,
+                            cursorColor = activeColor
+                        )
                     )
-                    ExposedDropdownMenu(expanded = expandWithFood, onDismissRequest = { expandWithFood = false }) {
+                    ExposedDropdownMenu(
+                        expanded = expandWithFood,
+                        onDismissRequest = { expandWithFood = false }
+                    ) {
                         withFoodOptions.forEach { item ->
-                            DropdownMenuItem(text = { Text(item) }, onClick = { withFood = item; expandWithFood = false })
+                            DropdownMenuItem(
+                                text = { Text(item) },
+                                onClick = {
+                                    withFood = item
+                                    expandWithFood = false
+                                }
+                            )
                         }
                     }
                 }
 
-                CustomField(value = notes, onChange = { notes = it }, label = "Notes (Optional)", icon = Icons.Default.Note, keyboardType = KeyboardType.Text)
+                CustomField(
+                    value = notes,
+                    onChange = { notes = it },
+                    label = "Notes (Optional)",
+                    icon = Icons.Default.Note,
+                    keyboardType = KeyboardType.Text,
+                    activeColor = activeColor
+                )
 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    TextButton(onClick = onDismiss) { Text("Cancel", color = Color.Gray) }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Cancel", color = Color.Gray)
+                    }
                     Spacer(modifier = Modifier.width(10.dp))
                     Button(
                         onClick = {
                             val newP = Prescription(
-                                name = medName, dosage = dosage, frequency = frequency, form = form,
-                                timeOfDay = timeOfDay, withFood = withFood, notes = notes
+                                name = medName,
+                                dosage = dosage,
+                                frequency = frequency,
+                                form = form,
+                                timeOfDay = timeOfDay,
+                                withFood = withFood,
+                                notes = notes
                             )
                             onSave(newP)
                         },
@@ -459,7 +629,8 @@ private fun CustomField(
     onChange: (String) -> Unit,
     label: String,
     icon: ImageVector,
-    keyboardType: KeyboardType = KeyboardType.Text
+    keyboardType: KeyboardType = KeyboardType.Text,
+    activeColor: Color
 ) {
     OutlinedTextField(
         value = value,
@@ -468,7 +639,14 @@ private fun CustomField(
         leadingIcon = { Icon(icon, null) },
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(12.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = Color.Black,
+            unfocusedTextColor = Color.Black,
+            focusedBorderColor = activeColor,
+            unfocusedBorderColor = Color.LightGray,
+            cursorColor = activeColor
+        )
     )
 }
 
@@ -527,7 +705,11 @@ private fun PrescriptionCard(
         colors = CardDefaults.cardColors(Color.White),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        Column(modifier = Modifier.fillMaxWidth().padding(18.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(18.dp)
+        ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
@@ -536,13 +718,31 @@ private fun PrescriptionCard(
                         .background(activeColor.copy(alpha = 0.12f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.Medication, null, tint = activeColor, modifier = Modifier.size(28.dp))
+                    Icon(
+                        Icons.Default.Medication,
+                        null,
+                        tint = activeColor,
+                        modifier = Modifier.size(28.dp)
+                    )
                 }
                 Spacer(modifier = Modifier.width(16.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(prescription.name, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF004D40))
-                    Text("${prescription.dosage} • ${prescription.frequency} • ${prescription.form}", fontSize = 14.sp, color = Color.Gray)
-                    Text("${prescription.timeOfDay} • ${prescription.withFood}", fontSize = 13.sp, color = Color(0xFF607D8B))
+                    Text(
+                        prescription.name,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF004D40)
+                    )
+                    Text(
+                        "${prescription.dosage} • ${prescription.frequency} • ${prescription.form}",
+                        fontSize = 14.sp,
+                        color = Color.Gray
+                    )
+                    Text(
+                        "${prescription.timeOfDay} • ${prescription.withFood}",
+                        fontSize = 13.sp,
+                        color = Color(0xFF607D8B)
+                    )
                 }
                 Spacer(modifier = Modifier.width(16.dp))
                 OutlinedButton(
@@ -557,7 +757,11 @@ private fun PrescriptionCard(
             }
             if (prescription.notes.isNotBlank()) {
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(text = "Notes: ${prescription.notes}", fontSize = 13.sp, color = Color(0xFF455A64))
+                Text(
+                    text = "Notes: ${prescription.notes}",
+                    fontSize = 13.sp,
+                    color = Color(0xFF455A64)
+                )
             }
         }
     }
@@ -576,8 +780,16 @@ private fun PrescriptionDetailsDialog(
             colors = CardDefaults.cardColors(Color.White),
             elevation = CardDefaults.cardElevation(10.dp)
         ) {
-            Column(modifier = Modifier.padding(22.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(text = prescription.name, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = activeColor)
+            Column(
+                modifier = Modifier.padding(22.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    text = prescription.name,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = activeColor
+                )
                 Text("Dosage: ${prescription.dosage}")
                 Text("Frequency: ${prescription.frequency}")
                 Text("Form: ${prescription.form}")
@@ -585,15 +797,23 @@ private fun PrescriptionDetailsDialog(
                 Text("With Food: ${prescription.withFood}")
                 if (prescription.notes.isNotBlank()) Text("Notes: ${prescription.notes}")
                 Spacer(modifier = Modifier.height(12.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    TextButton(onClick = onDismiss) { Text("Close", color = Color.Gray) }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Close", color = Color.Gray)
+                    }
                     Spacer(modifier = Modifier.width(10.dp))
-                    TextButton(onClick = { onDelete(prescription.id) }) { Text("Delete", color = Color.Red, fontWeight = FontWeight.SemiBold) }
+                    TextButton(onClick = { onDelete(prescription.id) }) {
+                        Text("Delete", color = Color.Red, fontWeight = FontWeight.SemiBold)
+                    }
                 }
             }
         }
     }
 }
+
 @Preview(showBackground = true)
 @Composable
 fun MedicateScreenPreview() {
