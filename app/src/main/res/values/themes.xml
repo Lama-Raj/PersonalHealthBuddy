@@ -1,17 +1,16 @@
 <resources>
     <style name="Theme.PersonalHealthBuddy" parent="Theme.Material3.Light.NoActionBar">
         <!--
-        Setting all system bar colors and the window background to holo_blue_bright
-        ensures a consistent blue background during app initialization, preventing
-        the white flash or lag.
+        Set status and navigation bars to transparent.
+        This allows the app content (and background colors) to expand behind them (Edge-to-Edge).
         -->
-        <item name="android:statusBarColor">@color/white</item>
-        <item name="android:navigationBarColor">@color/white</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
 
         <!-- The window background is the first color shown by the OS. -->
         <item name="android:windowBackground">@color/white</item>
 
-        <!-- Since the background is white, we keep dark icons (true) for visibility. -->
+        <!-- Since the background is light, we keep dark icons (true) for visibility. -->
         <item name="android:windowLightStatusBar">true</item>
     </style>
 </resources>

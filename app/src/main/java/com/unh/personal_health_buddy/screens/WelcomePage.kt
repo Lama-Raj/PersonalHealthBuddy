@@ -114,7 +114,7 @@ fun MainWelcomeScreen(navController: NavController) {
         // Use style help from Gemini.
         // 2. Sign Up Button (Outlined)
         OutlinedButton(
-            onClick = { navController.navigate("signup") },
+            onClick = { navController.navigate("sign-up") },
             modifier = Modifier
                 .fillMaxWidth(fraction = 0.80f) // Set button width.
                 .height(60.dp),

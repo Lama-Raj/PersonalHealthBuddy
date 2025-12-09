@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
@@ -23,10 +24,9 @@ import java.net.URL
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Make system navigation bar transparent and handle edge-to-edge
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        window.navigationBarColor = android.graphics.Color.TRANSPARENT
+        
+        // Enable Edge-to-Edge display
+        enableEdgeToEdge()
 
         Log.d("MainActivity", "onCreate called")
 
@@ -34,7 +34,8 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             val context = LocalContext.current
 
-            PersonalHealthBuddyTheme {
+            // Force Light Mode by passing darkTheme = false
+            PersonalHealthBuddyTheme(darkTheme = false) {
                 LaunchedEffect(Unit) {
                     FirebaseApp.initializeApp(context)
 
