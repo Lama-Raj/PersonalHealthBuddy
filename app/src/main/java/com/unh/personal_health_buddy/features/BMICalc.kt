@@ -93,10 +93,18 @@ fun BmiScreen(navController: NavController) {
     val (newActiveColor, newGradientStart, newGradientEnd) = if (selectedGender == Gender.MALE) {
         // Checks if the selected gender is MALE.
         // Assigns blue colors for active, gradient start, and gradient end.
-        Triple(Color(0xFF0288D1), Color(0xFFB3E5FC), Color(0xFF81D4FA))
+        Triple(
+            Color(0xFF1877F2), // active blue (Facebook-like)
+            Color(0xFFE8F1FF), // soft light blue at the top
+            Color.White        // fade to white at the bottom
+        )
     } else {
         // Assigns pink colors if FEMALE is selected.
-        Triple(Color(0xFFC2185B), Color(0xFFF8BBD0), Color(0xFFF48FB1))
+        Triple(
+            Color(0xFFE91E63), // pink accent for female
+            Color(0xFFFCE4EC), // soft pink at the top
+            Color.White        // fade to white at the bottom
+        )
     }
 
     // Creates a vertical gradient brush.
@@ -166,7 +174,7 @@ fun BmiScreen(navController: NavController) {
                     modifier = Modifier.fillMaxWidth(), // Makes the card take the full available width.
                     shape = RoundedCornerShape(16.dp), // Sets the card's corners to be rounded.
                     // Sets the card's background to semi-transparent white.
-                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.7f)),
+                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.9f)),
                     // Adds a small shadow effect under the card.
                     elevation = CardDefaults.cardElevation(4.dp)
                 ) {
