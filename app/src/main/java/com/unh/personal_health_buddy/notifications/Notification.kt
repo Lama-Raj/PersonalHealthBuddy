@@ -1,9 +1,9 @@
 package com.unh.personal_health_buddy.notifications
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.background
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -23,7 +23,6 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.Authentication.FirestoreHelper
 import com.unh.personal_health_buddy.features.HealthNotification
-import com.unh.personal_health_buddy.features.NotificationCard
 import com.unh.personal_health_buddy.features.NotificationPriority
 import com.unh.personal_health_buddy.features.NotificationType
 import com.unh.personal_health_buddy.features.generateHealthNotifications
@@ -88,7 +87,7 @@ fun NotificationScreen(navController: NavController) {
         // Map InAppNotification (Session) to HealthNotification (Display)
         val sessionNotifications = InAppNotificationManager.notifications.map { inApp ->
             HealthNotification(
-                id = inApp.id.toString(), 
+                id = inApp.id.toString(),          // Int -> String
                 title = inApp.title,
                 message = inApp.message,
                 type = NotificationType.GENERAL_INFO,
@@ -118,12 +117,17 @@ fun NotificationScreen(navController: NavController) {
                     }
                 },
                 actions = {
-                    // Invisible button to balance the title
-                    IconButton(onClick = { }, enabled = false) {
+                    // Clear notifications button
+                    IconButton(
+                        onClick = {
+                            generatedNotifications = emptyList()
+                            InAppNotificationManager.notifications.clear()
+                        }
+                    ) {
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = null,
-                            tint = Color.Transparent
+                            imageVector = Icons.Default.DeleteSweep,
+                            contentDescription = "Clear notifications",
+                            tint = activeColor
                         )
                     }
                 },
@@ -168,27 +172,73 @@ fun NotificationScreen(navController: NavController) {
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(horizontal = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(0.dp),
                         contentPadding = PaddingValues(bottom = 16.dp)
                     ) {
                         items(allNotifications) { notification ->
-                            NotificationCard(
-                                notification = notification,
-                                onDismiss = {
-                                    // If it's a session notification, remove from manager
-                                    if (InAppNotificationManager.notifications.any { it.id.toString() == notification.id }) {
-                                        InAppNotificationManager.notifications.removeIf {
-                                            it.id.toString() == notification.id
-                                        }
-                                    }
-                                    // Generated notifications are persistent based on data state
-                                }
-                            )
+                            NotificationListItem(notification = notification)
                         }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun NotificationListItem(
+    notification: HealthNotification
+) {
+    // Bare list look: default surface, no card, no elevation
+    val textColor = MaterialTheme.colorScheme.onSurface
+    val secondaryTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.Top
+        ) {
+            Icon(
+                imageVector = notification.icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .size(24.dp)
+                    .padding(top = 2.dp)
+            )
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = notification.title,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = textColor
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = notification.message,
+                    fontSize = 14.sp,
+                    color = secondaryTextColor
+                )
+            }
+        }
+
+        // Divider between items
+        Divider(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp),
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+        )
     }
 }
 
