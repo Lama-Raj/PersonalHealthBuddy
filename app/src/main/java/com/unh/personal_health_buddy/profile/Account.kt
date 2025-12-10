@@ -50,6 +50,7 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
+// Ensure this matches your package (lowercase 'authentication')
 import com.unh.personal_health_buddy.authentication.FirestoreHelper
 import com.unh.personal_health_buddy.R
 import com.unh.personal_health_buddy.database.*
@@ -117,6 +118,7 @@ fun StyledEditableRow(
     var expandedDropdown by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
+    // Container matching ProfileRow style
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -125,6 +127,7 @@ fun StyledEditableRow(
             .background(White)
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
+        // Label
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
@@ -132,8 +135,10 @@ fun StyledEditableRow(
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold
         )
+
         Spacer(modifier = Modifier.height(4.dp))
 
+        // Content Area
         if (isEditing && !readOnly) {
             if (isDateField) {
                 Box(modifier = Modifier.fillMaxWidth().clickable {
@@ -191,22 +196,33 @@ fun StyledEditableRow(
                     }
                 }
             } else {
+                // Clean TextField without standard borders to fit the card look
                 BasicTextField(
                     value = value,
                     onValueChange = onValueChange,
-                    textStyle = TextStyle(color = TextColor, fontSize = 16.sp, fontWeight = FontWeight.Normal),
+                    textStyle = TextStyle(
+                        color = TextColor,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Normal
+                    ),
                     keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = ImeAction.Next),
                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                     decorationBox = { innerTextField ->
                         Box(modifier = Modifier.fillMaxWidth()) {
                             if (value.isEmpty()) Text("Enter $label", color = Color.Gray.copy(alpha = 0.5f))
                             innerTextField()
-                            Box(Modifier.align(Alignment.BottomStart).fillMaxWidth().height(1.dp).background(PrimaryBlue.copy(alpha = 0.3f)))
+                            Box(
+                                Modifier.align(Alignment.BottomStart)
+                                    .fillMaxWidth()
+                                    .height(1.dp)
+                                    .background(PrimaryBlue.copy(alpha = 0.3f))
+                            )
                         }
                     }
                 )
             }
         } else {
+            // View Mode
             Text(
                 text = displayValue,
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
@@ -238,13 +254,18 @@ fun StyledBottomSection(
     editableAllergies: String, onAllergiesChange: (String) -> Unit,
     editableMedication: String, onMedicationChange: (String) -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp)) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 24.dp)
+    ) {
         if (isLoading) {
             Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = PrimaryBlue)
             }
         } else {
             SectionHeader("Personal Information")
+
             user?.let { u ->
                 StyledEditableRow("First Name", if (isEditing) editableFirstname else u.firstname, isEditing, onFirstnameChange)
                 StyledEditableRow("Last Name", if (isEditing) editableLastname else u.lastname, isEditing, onLastnameChange)
@@ -255,14 +276,17 @@ fun StyledBottomSection(
                 StyledEditableRow("Home Address", if (isEditing) editableHomeAddress else u.homeAddress, isEditing, onHomeAddressChange)
                 StyledEditableRow("City", if (isEditing) editableCity else u.city, isEditing, onCityChange)
             }
+
             Spacer(modifier = Modifier.height(24.dp))
 
             SectionHeader("Emergency Contacts")
+
             val contactsToDisplay = if (isEditing) editableEmergencyContacts else emergencyContacts
             if (contactsToDisplay.isNotEmpty()) {
                 contactsToDisplay.forEachIndexed { index, c ->
                     if(index > 0) Spacer(modifier = Modifier.height(12.dp))
                     Text("Contact ${index + 1}", style = MaterialTheme.typography.labelSmall, color = PrimaryBlue, modifier = Modifier.padding(start=4.dp, bottom=4.dp))
+
                     StyledEditableRow("First Name", c.firstname, isEditing, { v -> if (editableEmergencyContacts.size > index) editableEmergencyContacts[index] = editableEmergencyContacts[index].copy(firstname = v) })
                     StyledEditableRow("Last Name", c.lastname, isEditing, { v -> if (editableEmergencyContacts.size > index) editableEmergencyContacts[index] = editableEmergencyContacts[index].copy(lastname = v) })
                     StyledEditableRow("Phone", c.phoneNumber, isEditing, { v -> if (editableEmergencyContacts.size > index) editableEmergencyContacts[index] = editableEmergencyContacts[index].copy(phoneNumber = v) }, keyboardType = KeyboardType.Phone)
@@ -271,16 +295,20 @@ fun StyledBottomSection(
             } else {
                 Text("No emergency contacts added.", fontStyle = FontStyle.Italic, color = TextColor.copy(alpha = 0.6f), modifier = Modifier.padding(start=4.dp))
             }
+
             Spacer(modifier = Modifier.height(24.dp))
 
             SectionHeader("Health Information")
+
             val displayBlood = if (isEditing) editableBloodGroup else healthInfo?.bloodGroup ?: ""
             val displayAllergies = if (isEditing) editableAllergies else healthInfo?.allergies ?: ""
             val displayMedication = if (isEditing) editableMedication else healthInfo?.medication ?: ""
+
             StyledEditableRow("Blood Group", displayBlood, isEditing, onBloodGroupChange, isDropdown = true, dropdownOptions = BLOOD_GROUPS)
             StyledEditableRow("Allergies", displayAllergies, isEditing, onAllergiesChange)
             StyledEditableRow("Medications", displayMedication, isEditing, onMedicationChange)
         }
+
         Spacer(modifier = Modifier.height(60.dp))
     }
 }
@@ -289,7 +317,10 @@ fun StyledBottomSection(
 fun SectionHeader(title: String) {
     Text(
         text = title,
-        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold, fontSize = 14.sp),
+        style = MaterialTheme.typography.bodyMedium.copy(
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 14.sp
+        ),
         color = TextColor.copy(alpha = 0.75f),
         modifier = Modifier.padding(bottom = 8.dp, start = 4.dp)
     )
@@ -366,36 +397,30 @@ fun AccountScreen(navController: NavHostController) {
         newProfileBitmap = null; isProfileImageDeleted = false
     }
 
-    // --- FETCH LOGIC (FIX FOR LOADING ON STARTUP) ---
+    // --- FETCH LOGIC ---
     LaunchedEffect(UserDataCache.isDataLoaded, user?.profileImageUrl) {
-        // 1. If data loaded in cache, pop UI
         if (UserDataCache.isDataLoaded) {
             user = UserDataCache.user
             emergencyContacts = UserDataCache.emergencyContacts
             healthInfo = UserDataCache.healthInfo
             initializeEditableStates(user, emergencyContacts, healthInfo)
 
-            // Check cache for bitmap
             if (UserDataCache.profileBitmap != null) {
                 currentProfileBitmap = UserDataCache.profileBitmap
-                Log.d("AccountScreen", "Loaded bitmap from cache")
             }
             isLoading = false
         }
 
-        // 2. If no bitmap in cache/temp, try to download from URL
+        // Backup download logic (if cache missed)
         val url = user?.profileImageUrl
         if (currentProfileBitmap == null && !url.isNullOrEmpty()) {
-            Log.d("AccountScreen", "Bitmap null, downloading from: $url")
             try {
                 withContext(Dispatchers.IO) {
                     val stream = URL(url).openStream()
                     val bitmap = BitmapFactory.decodeStream(stream)
-
                     withContext(Dispatchers.Main) {
                         if (bitmap != null) {
                             currentProfileBitmap = bitmap
-                            // SAVE TO CACHE SO WE DON'T DOWNLOAD AGAIN
                             UserDataCache.profileBitmap = bitmap
                             TempProfileStorage.tempProfileBitmap = bitmap
                         }
@@ -407,58 +432,58 @@ fun AccountScreen(navController: NavHostController) {
         }
     }
 
-    // --- SAVE LOGIC (FIX FOR OVERWRITING) ---
+    // --- SAVE LOGIC ---
     val onSaveClick: () -> Unit = {
         if (!isSaving) {
             isSaving = true
             CoroutineScope(Dispatchers.IO).launch {
                 try {
-                    // Create local copy to handle smart cast
+                    // Local copy to avoid smart cast error
                     val localNewBitmap = newProfileBitmap
 
+                    // 1. Update Local Cache Immediately
                     if (isProfileImageDeleted) {
                         FirestoreHelper.deleteUserProfileImage()
                         TempProfileStorage.tempProfileBitmap = null
                         currentProfileBitmap = null
                         UserDataCache.profileBitmap = null
                     } else if (localNewBitmap != null) {
-                        // *** UPDATE LOCAL CACHE IMMEDIATELY ***
                         TempProfileStorage.tempProfileBitmap = localNewBitmap
                         currentProfileBitmap = localNewBitmap
                         UserDataCache.profileBitmap = localNewBitmap
                     }
 
+                    // 2. Prepare Data Objects
                     val parsedGender = try { Gender.valueOf(editableGender.uppercase()) } catch (_: Exception) { Gender.OTHER }
                     val updatedUser = user?.copy(firstname = editableFirstname, lastname = editableLastname, dateOfBirth = editableDateOfBirth, gender = parsedGender, email = editableEmail, phoneNumber = editablePhoneNumber, homeAddress = editableHomeAddress, city = editableCity) ?: User(firstname = editableFirstname, lastname = editableLastname, gender = parsedGender, email = editableEmail)
                     val updatedHealth = HealthInformation(bloodGroup = editableBloodGroup, allergies = editableAllergies, medication = editableMedication)
 
-                    // Write to Firestore - passing local bitmap variable
-                    if (localNewBitmap != null) {
-                        // This calls the helper which now uses "userId.jpg", overwriting the file.
-                        FirestoreHelper.writeUser(updatedUser, localNewBitmap)
-                    } else {
-                        // Pass null if no *new* image (Helper handles preserving old URL)
-                        FirestoreHelper.writeUser(updatedUser, null)
-                    }
+                    // 3. MASTER UPDATE (Uploads image -> Gets URL -> Saves User)
+                    // The Helper uses "userId/profile.jpg" ensuring overwrite and folder structure.
+                    FirestoreHelper.updateUserData(
+                        userId,
+                        updatedUser,
+                        editableEmergencyContacts.toList(),
+                        updatedHealth,
+                        localNewBitmap // Pass the new bitmap
+                    )
 
-                    FirestoreHelper.updateUserData(userId, updatedUser, editableEmergencyContacts.toList(), updatedHealth)
+                    // 4. Re-sync Local User Object (to capture the new URL string)
+                    val refreshedUser = FirestoreHelper.getUser(userId)
 
-                    // Update UI & Cache
-                    UserDataCache.user = updatedUser
+                    UserDataCache.user = refreshedUser
                     UserDataCache.emergencyContacts = editableEmergencyContacts.toList()
                     UserDataCache.healthInfo = updatedHealth
 
                     withContext(Dispatchers.Main) {
-                        user = updatedUser
+                        user = refreshedUser
                         emergencyContacts = editableEmergencyContacts.toList()
                         healthInfo = updatedHealth
                         isEditing = false
                         Toast.makeText(context, "Saved successfully", Toast.LENGTH_SHORT).show()
                     }
                 } catch (e: Exception) {
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
-                    }
+                    withContext(Dispatchers.Main) { Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show() }
                 } finally {
                     isSaving = false
                 }
@@ -469,7 +494,6 @@ fun AccountScreen(navController: NavHostController) {
     // --- UI STRUCTURE ---
     val gradientBackground = Brush.verticalGradient(listOf(LightBlueBg, White))
 
-    // Image Logic (Safe calls added)
     val displayBitmap = remember(newProfileBitmap, isProfileImageDeleted, currentProfileBitmap) {
         when {
             newProfileBitmap != null -> newProfileBitmap?.asImageBitmap()
@@ -479,32 +503,71 @@ fun AccountScreen(navController: NavHostController) {
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize().background(gradientBackground)) {
-        // --- 1. Top Header ---
-        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { navController.navigate("profile") }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = TextColor) }
-                Text(text = "Account Details", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, fontSize = 22.sp), color = PrimaryBlue)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(gradientBackground)
+    ) {
+
+        // --- 1. Top Header Section ---
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 18.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Header Row
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = { navController.navigate("profile") }) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = TextColor)
+                }
+
+                Text(
+                    text = "Account Details",
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, fontSize = 22.sp),
+                    color = PrimaryBlue
+                )
+
+                // Right Options/Edit Button
                 Box {
                     if (isEditing) {
-                        IconButton(onClick = { expandedEditDropdown = true }) { Icon(Icons.Default.Check, contentDescription = "Save", tint = PrimaryBlue) }
+                        IconButton(onClick = { expandedEditDropdown = true }) {
+                            Icon(Icons.Default.Check, contentDescription = "Save", tint = PrimaryBlue)
+                        }
                     } else {
-                        IconButton(onClick = { expandedDropdown = true }) { Icon(Icons.Default.MoreVert, contentDescription = "Options", tint = PrimaryBlue) }
+                        IconButton(onClick = { expandedDropdown = true }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "Options", tint = PrimaryBlue)
+                        }
                     }
+
                     DropdownMenu(expanded = expandedDropdown, onDismissRequest = { expandedDropdown = false }, modifier = Modifier.background(White)) {
-                        DropdownMenuItem(text = { Text("Edit Details") }, onClick = { expandedDropdown = false; initializeEditableStates(user, emergencyContacts, healthInfo); isEditing = true }, leadingIcon = { Icon(Icons.Default.Edit, null, tint = PrimaryBlue) })
+                        DropdownMenuItem(
+                            text = { Text("Edit Details") },
+                            onClick = { expandedDropdown = false; initializeEditableStates(user, emergencyContacts, healthInfo); isEditing = true },
+                            leadingIcon = { Icon(Icons.Default.Edit, null, tint = PrimaryBlue) }
+                        )
                         Divider()
-                        DropdownMenuItem(text = { Text("Delete Account", color = Color.Red) }, onClick = { expandedDropdown = false; showDeleteDialog = true }, leadingIcon = { Icon(Icons.Default.Delete, null, tint = Color.Red) })
+                        DropdownMenuItem(
+                            text = { Text("Delete Account", color = Color.Red) },
+                            onClick = { expandedDropdown = false; showDeleteDialog = true },
+                            leadingIcon = { Icon(Icons.Default.Delete, null, tint = Color.Red) }
+                        )
                     }
+
                     DropdownMenu(expanded = expandedEditDropdown, onDismissRequest = { expandedEditDropdown = false }, modifier = Modifier.background(White)) {
                         DropdownMenuItem(text = { Text("Save Changes") }, onClick = { expandedEditDropdown = false; onSaveClick() }, enabled = !isLoading)
                         DropdownMenuItem(text = { Text("Cancel Editing") }, onClick = { expandedEditDropdown = false; isEditing = false; newProfileBitmap = null; isProfileImageDeleted = false })
                     }
                 }
             }
+
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Profile Image Box
+            // Profile Image (Centered with Edit Overlay)
             Box(
                 modifier = Modifier
                     .size(110.dp)
@@ -515,22 +578,48 @@ fun AccountScreen(navController: NavHostController) {
                 contentAlignment = Alignment.Center
             ) {
                 if (displayBitmap != null) {
-                    Image(bitmap = displayBitmap, contentDescription = "Profile", modifier = Modifier.matchParentSize(), contentScale = ContentScale.Crop)
+                    Image(
+                        bitmap = displayBitmap,
+                        contentDescription = "Profile",
+                        modifier = Modifier.matchParentSize(),
+                        contentScale = ContentScale.Crop
+                    )
                 } else {
-                    Image(painter = painterResource(id = R.drawable.profile_picture), contentDescription = "Default Profile", modifier = Modifier.matchParentSize(), contentScale = ContentScale.Crop)
+                    Image(
+                        painter = painterResource(id = R.drawable.profile_picture),
+                        contentDescription = "Default Profile",
+                        modifier = Modifier.matchParentSize(),
+                        contentScale = ContentScale.Crop
+                    )
                 }
+
                 if (isEditing) {
-                    Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)), contentAlignment = Alignment.Center) {
+                    Box(
+                        modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Icon(Icons.Default.CameraAlt, contentDescription = "Edit", tint = White, modifier = Modifier.size(28.dp))
                     }
                 }
             }
+
             Spacer(modifier = Modifier.height(12.dp))
-            Text(text = "${user?.firstname ?: "User"} ${user?.lastname ?: ""}", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontSize = 20.sp), color = TextColor)
+
+            Text(
+                text = "${user?.firstname ?: "User"} ${user?.lastname ?: ""}",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontSize = 20.sp),
+                color = TextColor
+            )
         }
 
-        // --- 2. Bottom Content ---
-        Column(modifier = Modifier.fillMaxWidth().weight(1f).clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)).background(LightBlueBg)) {
+        // --- 2. Bottom Content Section ---
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+                .background(LightBlueBg)
+        ) {
             Box(modifier = Modifier.fillMaxSize()) {
                 Column(modifier = Modifier.fillMaxSize().verticalScroll(scrollState)) {
                     StyledBottomSection(
@@ -549,6 +638,8 @@ fun AccountScreen(navController: NavHostController) {
                         editableMedication, { editableMedication = it }
                     )
                 }
+
+                // Overlays
                 if (showPhotoOptions) {
                     Box(modifier = Modifier.fillMaxSize().clickable { showPhotoOptions = false }, contentAlignment = Alignment.Center) {
                         PhotoOptionsMenu(
@@ -560,6 +651,7 @@ fun AccountScreen(navController: NavHostController) {
                         )
                     }
                 }
+
                 if (isLoading || isSaving) {
                     Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.2f)), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator(color = PrimaryBlue)
@@ -581,6 +673,7 @@ fun AccountScreen(navController: NavHostController) {
             dismissButton = { TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel", color = TextColor) } }
         )
     }
+
     if (showPasswordDialog) {
         AlertDialog(
             onDismissRequest = { if (!isDeleting) { showPasswordDialog = false; passwordInput = ""; deleteError = null } },
@@ -598,19 +691,20 @@ fun AccountScreen(navController: NavHostController) {
                 }
             },
             confirmButton = {
-                Button(onClick = {
-                    if (passwordInput.isNotBlank() && !isDeleting) {
-                        isDeleting = true
-                        val email = user?.email ?: FirebaseAuth.getInstance().currentUser?.email ?: ""
-                        CoroutineScope(Dispatchers.IO).launch {
-                            try {
-                                if(FirestoreHelper.deleteUserAccountWithReauth(email, passwordInput)) {
-                                    withContext(Dispatchers.Main) { UserDataCache.clear(); TempProfileStorage.tempProfileBitmap = null; navController.navigate("welcome") { popUpTo(0) { inclusive = true } } }
-                                } else { withContext(Dispatchers.Main) { deleteError = "Failed to delete."; isDeleting = false } }
-                            } catch (e: Exception) { withContext(Dispatchers.Main) { deleteError = e.message; isDeleting = false } }
+                Button(
+                    onClick = {
+                        if (passwordInput.isNotBlank() && !isDeleting) {
+                            isDeleting = true
+                            val email = user?.email ?: FirebaseAuth.getInstance().currentUser?.email ?: ""
+                            CoroutineScope(Dispatchers.IO).launch {
+                                try {
+                                    if(FirestoreHelper.deleteUserAccountWithReauth(email, passwordInput)) {
+                                        withContext(Dispatchers.Main) { UserDataCache.clear(); TempProfileStorage.tempProfileBitmap = null; navController.navigate("welcome") { popUpTo(0) { inclusive = true } } }
+                                    } else { withContext(Dispatchers.Main) { deleteError = "Failed to delete."; isDeleting = false } }
+                                } catch (e: Exception) { withContext(Dispatchers.Main) { deleteError = e.message; isDeleting = false } }
+                            }
                         }
-                    }
-                },
+                    },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
                 ) { Text(if (isDeleting) "Deleting..." else "Delete Account") }
             },

@@ -26,356 +26,46 @@ object FirestoreHelper {
     private val storage: FirebaseStorage = FirebaseStorage.getInstance()
     private val storageRef: StorageReference = storage.reference
 
-    // ==================== FIREBASE STORAGE OPERATIONS ====================
+    // ==================== MASTER SAVE FUNCTION (THE FIX) ====================
 
     /**
-     * Uploads profile image to Firebase Storage.
-     * FIX: Path is now "profile_images/{userId}/profile.jpg"
-     * 1. Creates a folder for the user ({userId}).
-     * 2. Uses a static name "profile.jpg" to ensure it overwrites previous uploads.
+     * Handles ALL updates: User profile, Image upload, Contacts, and Health Info.
+     * Updated to accept 'profileBitmap' (5th argument) to resolve your error.
      */
-    private suspend fun uploadProfileImage(bitmap: Bitmap): String? {
-        return withContext(Dispatchers.IO) {
-            try {
-                val userId = getCurrentUserId()
-
-                // *** THE FIX IS HERE ***
-                // This puts the image INSIDE a folder named after the userId.
-                // The file is always named "profile.jpg", so it overwrites automatically.
-                val imageRef = storageRef.child("profile_images/$userId/profile.jpg")
-
-                val baos = ByteArrayOutputStream()
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 85, baos)
-                val imageData = baos.toByteArray()
-
-                val metadata = storageMetadata {
-                    contentType = "image/jpeg"
-                }
-
-                // Upload
-                val uploadTask = imageRef.putBytes(imageData, metadata)
-                uploadTask.await()
-
-                // Get Download URL
-                val downloadUrl = imageRef.downloadUrl.await()
-
-                Log.d("FirestoreHelper", "Profile image uploaded to folder: $downloadUrl")
-                downloadUrl.toString()
-
-            } catch (e: StorageException) {
-                Log.e("FirestoreHelper", "Storage error: ${e.errorCode} - ${e.message}", e)
-                null
-            } catch (e: Exception) {
-                Log.e("FirestoreHelper", "Error uploading profile image: ${e.message}", e)
-                null
-            }
-        }
-    }
-
-    /**
-     * Updates profile image.
-     * Because we are overwriting "profile.jpg", we don't strictly need to delete the old one
-     * if the path is the same. However, if the user previously had a random-ID file,
-     * we attempt to delete it to keep the folder clean.
-     */
-    private suspend fun updateProfileImage(oldImageUrl: String?, newBitmap: Bitmap): String? {
-        if (!oldImageUrl.isNullOrEmpty()) {
-            try {
-                deleteProfileImage(oldImageUrl)
-            } catch (e: Exception) {
-                // If delete fails (e.g. file name changed), just proceed to upload the new one
-            }
-        }
-        return uploadProfileImage(newBitmap)
-    }
-
-    private suspend fun deleteProfileImage(imageUrl: String?): Boolean {
-        if (imageUrl.isNullOrEmpty()) return false
-
-        return withContext(Dispatchers.IO) {
-            try {
-                val imageRef = storage.getReferenceFromUrl(imageUrl)
-                imageRef.delete().await()
-                Log.d("FirestoreHelper", "Old profile image deleted")
-                true
-            } catch (e: StorageException) {
-                if (e.errorCode == StorageException.ERROR_OBJECT_NOT_FOUND) {
-                    true
-                } else {
-                    Log.e("FirestoreHelper", "Error deleting image: ${e.message}", e)
-                    false
-                }
-            } catch (e: Exception) {
-                Log.e("FirestoreHelper", "Error deleting image: ${e.message}", e)
-                false
-            }
-        }
-    }
-
-    // ==================== USER OPERATIONS ====================
-
-    suspend fun getUser(userId: String): User? {
-        return withContext(Dispatchers.IO) {
-            try {
-                val snapshot = db.collection("users").document(userId).get().await()
-                snapshot.toObject(User::class.java)
-            } catch (e: Exception) {
-                Log.e("FirestoreHelper", "Error getting user: ${e.message}")
-                null
-            }
-        }
-    }
-
-    suspend fun writeUser(user: User, bitmap: Bitmap?) {
-        return withContext(Dispatchers.IO) {
-            val userId = getCurrentUserId()
-
-            // Get existing user to preserve old image URL if no new one provided
-            val existingUser = getUser(userId)
-            val oldImageUrl = existingUser?.profileImageUrl
-
-            // Upload new profile image if provided
-            val profileImageUrl = if (bitmap != null) {
-                updateProfileImage(oldImageUrl, bitmap)
-            } else {
-                oldImageUrl
-            }
-
-            // Update user object with image URL
-            val userWithImage = user.copy(profileImageUrl = profileImageUrl)
-
-            // Save to Firestore
-            db.collection("users")
-                .document(userId)
-                .set(userWithImage)
-                .await()
-
-            Log.d("FirestoreHelper", "User saved. Image URL: $profileImageUrl")
-        }
-    }
-
-    // ==================== HELPERS ====================
-
-    fun getVerifiedUser(): Pair<String, String> {
-        val user = FirebaseAuth.getInstance().currentUser
-        requireNotNull(user?.uid) { "No authenticated user UID found." }
-        requireNotNull(user.email) { "Authenticated user has no email." }
-        return user.uid to user.email!!
-    }
-
-    private fun getCurrentUserId(): String {
-        return auth.currentUser?.uid ?: throw Exception("No authenticated user")
-    }
-
-    // ==================== EMERGENCY CONTACTS ====================
-
-    suspend fun writeEmergencyContact(contact: EmergencyContact) {
-        val userId = getCurrentUserId()
-        return writeEmergencyContact(contact, userId)
-    }
-
-    private suspend fun writeEmergencyContact(contact: EmergencyContact, userId: String) {
-        return withContext(Dispatchers.IO) {
-            val contactRef = db.collection("users")
-                .document(userId)
-                .collection("emergencyContacts")
-                .document()
-
-            val contactWithId = contact.copy(contactId = contactRef.id)
-            contactRef.set(contactWithId).await()
-        }
-    }
-
-    suspend fun readAllEmergencyContacts(): List<EmergencyContact> {
-        return withContext(Dispatchers.IO) {
-            val userId = getCurrentUserId()
-            val snapshot = db.collection("users")
-                .document(userId)
-                .collection("emergencyContacts")
-                .get()
-                .await()
-
-            snapshot.documents.mapNotNull { doc ->
-                doc.toObject(EmergencyContact::class.java)
-            }
-        }
-    }
-
-    suspend fun deleteEmergencyContact(contactId: String) {
-        return withContext(Dispatchers.IO) {
-            val userId = getCurrentUserId()
-            db.collection("users")
-                .document(userId)
-                .collection("emergencyContacts")
-                .document(contactId)
-                .delete()
-                .await()
-        }
-    }
-
-    suspend fun updateEmergencyContact(contact: EmergencyContact) {
-        val userId = getCurrentUserId()
-        return updateEmergencyContact(contact, userId)
-    }
-
-    private suspend fun updateEmergencyContact(contact: EmergencyContact, userId: String) {
-        return withContext(Dispatchers.IO) {
-            db.collection("users")
-                .document(userId)
-                .collection("emergencyContacts")
-                .document(contact.contactId)
-                .set(contact)
-                .await()
-        }
-    }
-
-    suspend fun getEmergencyContact(): EmergencyContact? {
-        return withContext(Dispatchers.IO) {
-            try {
-                val userId = getCurrentUserId()
-                val snapshot = db.collection("users")
-                    .document(userId)
-                    .collection("emergencyContacts")
-                    .limit(1)
-                    .get()
-                    .await()
-                snapshot.documents.firstOrNull()?.toObject(EmergencyContact::class.java)
-            } catch (e: Exception) {
-                null
-            }
-        }
-    }
-
-    // ==================== HEALTH INFORMATION ====================
-
-    suspend fun getHealthInformation(): HealthInformation? {
-        return withContext(Dispatchers.IO) {
-            try {
-                val userId = getCurrentUserId()
-                val snapshot = db.collection("users")
-                    .document(userId)
-                    .collection("healthInformation")
-                    .document("info")
-                    .get()
-                    .await()
-                snapshot.toObject(HealthInformation::class.java)
-            } catch (e: Exception) {
-                null
-            }
-        }
-    }
-
-    suspend fun writeHealthInformation(healthInfo: HealthInformation) {
-        val userId = getCurrentUserId()
-        return writeHealthInformation(healthInfo, userId)
-    }
-
-    private suspend fun writeHealthInformation(healthInfo: HealthInformation, userId: String) {
-        return withContext(Dispatchers.IO) {
-            db.collection("users")
-                .document(userId)
-                .collection("healthInformation")
-                .document("info")
-                .set(healthInfo)
-                .await()
-        }
-    }
-
-    // ==================== PRESCRIPTION OPERATIONS ====================
-
-    suspend fun writePrescription(prescription: Prescription) {
-        return withContext(Dispatchers.IO) {
-            try {
-                val userId = getCurrentUserId()
-                val prescriptionRef = db.collection("users")
-                    .document(userId)
-                    .collection("prescriptions")
-                    .document()
-
-                val prescriptionWithId = prescription.copy(id = prescriptionRef.id)
-                prescriptionRef.set(prescriptionWithId).await()
-            } catch (e: Exception) {
-                throw e
-            }
-        }
-    }
-
-    suspend fun readAllPrescriptions(): List<Prescription> {
-        return withContext(Dispatchers.IO) {
-            try {
-                val userId = getCurrentUserId()
-                val snapshot = db.collection("users")
-                    .document(userId)
-                    .collection("prescriptions")
-                    .get()
-                    .await()
-
-                snapshot.documents.mapNotNull { doc ->
-                    doc.toObject(Prescription::class.java)
-                }
-            } catch (e: Exception) {
-                emptyList()
-            }
-        }
-    }
-
-    suspend fun deletePrescription(prescriptionId: String) {
-        return withContext(Dispatchers.IO) {
-            try {
-                val userId = getCurrentUserId()
-                db.collection("users")
-                    .document(userId)
-                    .collection("prescriptions")
-                    .document(prescriptionId)
-                    .delete()
-                    .await()
-            } catch (e: Exception) {
-                throw e
-            }
-        }
-    }
-
-    suspend fun deleteAllPrescriptions() {
-        return withContext(Dispatchers.IO) {
-            try {
-                val userId = getCurrentUserId()
-                val prescriptionsSnapshot = db.collection("users")
-                    .document(userId)
-                    .collection("prescriptions")
-                    .get()
-                    .await()
-
-                prescriptionsSnapshot.documents.forEach { doc ->
-                    doc.reference.delete().await()
-                }
-            } catch (e: Exception) {
-                throw e
-            }
-        }
-    }
-
-    // ==================== BULK UPDATE ====================
-
     suspend fun updateUserData(
         userId: String,
         updatedUser: User,
         updatedContacts: List<EmergencyContact>,
-        updatedHealth: HealthInformation?
+        updatedHealth: HealthInformation?,
+        profileBitmap: Bitmap? // <--- Added this 5th parameter
     ) {
         return withContext(Dispatchers.IO) {
             try {
                 val currentUserId = getCurrentUserId()
-                if (userId != currentUserId) {
-                    throw Exception("User ID mismatch")
+                if (userId != currentUserId) throw Exception("User ID mismatch")
+
+                // 1. Handle Image Upload FIRST
+                var finalUser = updatedUser
+
+                if (profileBitmap != null) {
+                    // Upload to: profile_images/{userId}/profile.jpg
+                    val newUrl = uploadProfileImage(profileBitmap)
+
+                    // Update user object with the new URL
+                    if (newUrl != null) {
+                        finalUser = updatedUser.copy(profileImageUrl = newUrl)
+                    }
                 }
 
-                // 1. Update User
+                // 2. Save User Profile
                 db.collection("users")
                     .document(userId)
-                    .set(updatedUser)
+                    .set(finalUser)
                     .await()
 
-                // 2. Update Contacts
+                Log.d("FirestoreHelper", "User saved. URL: ${finalUser.profileImageUrl}")
+
+                // 3. Update Emergency Contacts
                 updatedContacts.forEach { contact ->
                     if (contact.contactId.isBlank()) {
                         writeEmergencyContact(contact, userId)
@@ -384,7 +74,7 @@ object FirestoreHelper {
                     }
                 }
 
-                // 3. Update Health Info
+                // 4. Update Health Information
                 if (updatedHealth != null) {
                     writeHealthInformation(updatedHealth, userId)
                 } else {
@@ -397,92 +87,198 @@ object FirestoreHelper {
                 }
 
             } catch (e: Exception) {
-                Log.e("FirestoreHelper", "Error performing bulk update: ${e.message}", e)
+                Log.e("FirestoreHelper", "Error in bulk update: ${e.message}", e)
                 throw e
             }
         }
     }
 
-    // ==================== DELETE ACCOUNT ====================
+    // ==================== STORAGE OPERATIONS ====================
 
-    suspend fun deleteUserProfileImage() {
+    private suspend fun uploadProfileImage(bitmap: Bitmap): String? {
         return withContext(Dispatchers.IO) {
             try {
                 val userId = getCurrentUserId()
-                val user = getUser(userId)
-                val imageUrl = user?.profileImageUrl
 
-                if (imageUrl != null) {
-                    deleteProfileImage(imageUrl)
+                // *** FOLDER STRUCTURE FIX ***
+                // Creates a folder named {userId} and puts 'profile.jpg' inside it.
+                val imageRef = storageRef.child("profile_images/$userId/profile.jpg")
 
-                    val updatedUser = user.copy(profileImageUrl = null)
-                    db.collection("users")
-                        .document(userId)
-                        .set(updatedUser)
-                        .await()
+                val baos = ByteArrayOutputStream()
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 85, baos)
+                val imageData = baos.toByteArray()
 
-                    Log.d("FirestoreHelper", "User profile image deleted")
-                }
+                val metadata = storageMetadata { contentType = "image/jpeg" }
+
+                // Overwrite the file
+                imageRef.putBytes(imageData, metadata).await()
+
+                val downloadUrl = imageRef.downloadUrl.await()
+                Log.d("FirestoreHelper", "Uploaded: $downloadUrl")
+                downloadUrl.toString()
+
             } catch (e: Exception) {
-                Log.e("FirestoreHelper", "Error deleting user profile image: ${e.message}", e)
-                throw e
+                Log.e("FirestoreHelper", "Upload failed: ${e.message}", e)
+                null
             }
         }
+    }
+
+    // ==================== UTILITIES ====================
+
+    fun getVerifiedUser(): Pair<String, String> {
+        val user = FirebaseAuth.getInstance().currentUser
+        requireNotNull(user?.uid)
+        return user.uid to user.email!!
+    }
+
+    private fun getCurrentUserId(): String {
+        return auth.currentUser?.uid ?: throw Exception("No authenticated user")
+    }
+
+    suspend fun getUser(userId: String): User? {
+        return try {
+            val snapshot = db.collection("users").document(userId).get().await()
+            snapshot.toObject(User::class.java)
+        } catch (e: Exception) { null }
+    }
+
+    // --- Emergency Contacts ---
+    suspend fun writeEmergencyContact(contact: EmergencyContact) {
+        writeEmergencyContact(contact, getCurrentUserId())
+    }
+
+    private suspend fun writeEmergencyContact(contact: EmergencyContact, userId: String) {
+        val ref = db.collection("users").document(userId).collection("emergencyContacts").document()
+        ref.set(contact.copy(contactId = ref.id)).await()
+    }
+
+    suspend fun updateEmergencyContact(contact: EmergencyContact) {
+        updateEmergencyContact(contact, getCurrentUserId())
+    }
+
+    private suspend fun updateEmergencyContact(contact: EmergencyContact, userId: String) {
+        db.collection("users").document(userId).collection("emergencyContacts").document(contact.contactId).set(contact).await()
+    }
+
+    suspend fun readAllEmergencyContacts(): List<EmergencyContact> {
+        return try {
+            val uid = getCurrentUserId()
+            val snap = db.collection("users").document(uid).collection("emergencyContacts").get().await()
+            snap.toObjects(EmergencyContact::class.java)
+        } catch (e: Exception) { emptyList() }
+    }
+
+    suspend fun deleteEmergencyContact(contactId: String) {
+        db.collection("users").document(getCurrentUserId()).collection("emergencyContacts").document(contactId).delete().await()
+    }
+
+    // --- Health Info ---
+    suspend fun getHealthInformation(): HealthInformation? {
+        return try {
+            val uid = getCurrentUserId()
+            val snap = db.collection("users").document(uid).collection("healthInformation").document("info").get().await()
+            snap.toObject(HealthInformation::class.java)
+        } catch (e: Exception) { null }
+    }
+
+    suspend fun writeHealthInformation(healthInfo: HealthInformation) {
+        writeHealthInformation(healthInfo, getCurrentUserId())
+    }
+
+    private suspend fun writeHealthInformation(healthInfo: HealthInformation, userId: String) {
+        db.collection("users").document(userId).collection("healthInformation").document("info").set(healthInfo).await()
+    }
+
+    // --- Prescriptions ---
+    suspend fun writePrescription(prescription: Prescription) {
+        val userId = getCurrentUserId()
+        val ref = db.collection("users").document(userId).collection("prescriptions").document()
+        ref.set(prescription.copy(id = ref.id)).await()
+    }
+
+    suspend fun readAllPrescriptions(): List<Prescription> {
+        val userId = getCurrentUserId()
+        val snap = db.collection("users").document(userId).collection("prescriptions").get().await()
+        return snap.toObjects(Prescription::class.java)
+    }
+
+    suspend fun deletePrescription(id: String) {
+        db.collection("users").document(getCurrentUserId()).collection("prescriptions").document(id).delete().await()
+    }
+
+    suspend fun deleteAllPrescriptions() {
+        val userId = getCurrentUserId()
+        val snap = db.collection("users").document(userId).collection("prescriptions").get().await()
+        snap.forEach { it.reference.delete() }
+    }
+
+    // --- Delete Logic ---
+    suspend fun deleteUserProfileImage() {
+        val userId = getCurrentUserId()
+        val user = getUser(userId)
+
+        user?.profileImageUrl?.let { url ->
+            try { storage.getReferenceFromUrl(url).delete().await() } catch(e: Exception){}
+        }
+
+        val updatedUser = user?.copy(profileImageUrl = null)
+        if (updatedUser != null) {
+            db.collection("users").document(userId).set(updatedUser).await()
+        }
+    }
+
+    // Keep writeUser for legacy calls if needed, but simple one
+    suspend fun writeUser(user: User, bitmap: Bitmap?) {
+        // Just redirect to master update with empty lists
+        updateUserData(getCurrentUserId(), user, emptyList(), null, bitmap)
     }
 
     suspend fun deleteAllUserData(userId: String) {
-        return withContext(Dispatchers.IO) {
-            try {
-                val currentUserId = getCurrentUserId()
-                if (userId != currentUserId) throw Exception("User ID mismatch")
+        val currentUserId = getCurrentUserId()
+        if (userId != currentUserId) throw Exception("User ID mismatch")
 
-                // 1. Delete contacts
-                try {
-                    val contacts = db.collection("users").document(userId).collection("emergencyContacts").get().await()
-                    contacts.documents.forEach { it.reference.delete().await() }
-                } catch (e: Exception) {}
+        // 1. Delete contacts
+        try {
+            val contacts = db.collection("users").document(userId).collection("emergencyContacts").get().await()
+            contacts.documents.forEach { it.reference.delete().await() }
+        } catch (e: Exception) {}
 
-                // 2. Delete health info
-                try {
-                    db.collection("users").document(userId).collection("healthInformation").document("info").delete().await()
-                } catch (e: Exception) {}
+        // 2. Delete health info
+        try {
+            db.collection("users").document(userId).collection("healthInformation").document("info").delete().await()
+        } catch (e: Exception) {}
 
-                // 3. Delete prescriptions
-                try {
-                    val scripts = db.collection("users").document(userId).collection("prescriptions").get().await()
-                    scripts.documents.forEach { it.reference.delete().await() }
-                } catch (e: Exception) {}
+        // 3. Delete prescriptions
+        try {
+            val scripts = db.collection("users").document(userId).collection("prescriptions").get().await()
+            scripts.documents.forEach { it.reference.delete().await() }
+        } catch (e: Exception) {}
 
-                // 4. Delete profile image
-                try {
-                    val user = getUser(userId)
-                    user?.profileImageUrl?.let { deleteProfileImage(it) }
-                } catch (e: Exception) {}
-
-                // 5. Delete user doc
-                db.collection("users").document(userId).delete().await()
-
-            } catch (e: Exception) {
-                Log.e("FirestoreHelper", "Error deleting user data: ${e.message}", e)
+        // 4. Delete profile image
+        try {
+            val user = getUser(userId)
+            user?.profileImageUrl?.let {
+                storage.getReferenceFromUrl(it).delete().await()
             }
-        }
+        } catch (e: Exception) {}
+
+        // 5. Delete folder contents
+        try {
+            storageRef.child("profile_images/$userId/profile.jpg").delete().await()
+        } catch (e: Exception) {}
+
+        // 6. Delete user doc
+        db.collection("users").document(userId).delete().await()
     }
 
-    suspend fun deleteUserAccountWithReauth(email: String, password: String): Boolean {
-        return withContext(Dispatchers.IO) {
-            try {
-                val user = auth.currentUser ?: throw Exception("No authenticated user")
-                val credential = EmailAuthProvider.getCredential(email, password)
-                user.reauthenticate(credential).await()
+    suspend fun deleteUserAccountWithReauth(email: String, p: String): Boolean {
+        val user = auth.currentUser ?: return false
+        val cred = EmailAuthProvider.getCredential(email, p)
+        user.reauthenticate(cred).await()
 
-                val userId = user.uid
-                deleteAllUserData(userId)
-                user.delete().await()
-                true
-            } catch (e: Exception) {
-                Log.e("FirestoreHelper", "Error deleting account: ${e.message}", e)
-                false
-            }
-        }
+        deleteAllUserData(user.uid)
+        user.delete().await()
+        return true
     }
 }
