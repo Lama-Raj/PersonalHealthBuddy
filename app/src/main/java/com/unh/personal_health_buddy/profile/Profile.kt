@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -22,7 +21,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Chat
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -102,7 +100,7 @@ fun ProfileScreen(
         }
     }
 
-    // Update UI when cache is loaded (optional)
+    // Update UI when cache is loaded
     LaunchedEffect(UserDataCache.isDataLoaded) {
         if (UserDataCache.isDataLoaded) {
             firstName = UserDataCache.user?.firstname ?: "User"
@@ -123,12 +121,11 @@ fun ProfileScreen(
             )
     ) {
 
-        // ---------- Top Header + Profile Card ----------
+        // ---------- Top Header + Profile Area ----------
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(0.55f)
-                .padding(horizontal = 20.dp, vertical = 18.dp),
+                .padding(horizontal = 20.dp, vertical = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Header title
@@ -159,18 +156,12 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Profile "card" – white on blue-ish background (like Medicate cards)
+            // Avatar + name + subtitle (no card, blended with background)
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(Color.White)
-                    .padding(vertical = 20.dp, horizontal = 16.dp),
+                modifier = Modifier,
                 contentAlignment = Alignment.Center
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(
                         modifier = Modifier
                             .size(110.dp)
@@ -227,6 +218,9 @@ fun ProfileScreen(
                     )
                 }
             }
+
+            // Add some space so subtitle is clearly above the bottom sheet
+            Spacer(modifier = Modifier.height(24.dp))
         }
 
         // ---------- Bottom Section with Profile Items ----------
@@ -234,7 +228,6 @@ fun ProfileScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .offset(y = 16.dp)
                 .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
                 .background(lightBlueBackground)
         ) {
@@ -274,11 +267,13 @@ fun ProfileScreen(
                                             launchSingleTop = true
                                         }
                                     }
+
                                     is ProfileItem.FAQS -> {
                                         navController.navigate("faqs") {
                                             launchSingleTop = true
                                         }
                                     }
+
                                     is ProfileItem.Logout -> {
                                         showLogoutDialog = true
                                     }
