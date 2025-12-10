@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -59,7 +61,7 @@ import com.unh.personal_health_buddy.ui.theme.White
 // ------------------- Profile Items -------------------
 sealed class ProfileItem(val title: String, val icon: ImageVector, val route: String) {
     object Account : ProfileItem("Account", Icons.Filled.Person, "account")
-    object FAQS : ProfileItem("FAQs & Help", Icons.Filled.Chat, "faqs")
+    object FAQS   : ProfileItem("FAQs & Help", Icons.Filled.Chat, "faqs")
     object Logout : ProfileItem("Logout", Icons.AutoMirrored.Filled.ExitToApp, "logout")
 }
 
@@ -81,7 +83,6 @@ fun ProfileScreen(
     var firstName by remember { mutableStateOf(UserDataCache.user?.firstname ?: "User") }
     var profileBitmap by remember { mutableStateOf(UserDataCache.profileBitmap) }
 
-    // Medicate-style theme colors
     val primaryBlue = Color(0xFF1877F2)
     val lightBlueBackground = Color(0xFFF3F6FF)
 
@@ -128,7 +129,7 @@ fun ProfileScreen(
                 .padding(horizontal = 20.dp, vertical = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Header title
+            // Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -156,78 +157,73 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Avatar + name + subtitle (no card, blended with background)
-            Box(
-                modifier = Modifier,
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Box(
-                        modifier = Modifier
-                            .size(110.dp)
-                            .background(
-                                lightBlueBackground,
-                                CircleShape
-                            )
-                            .clip(CircleShape)
-                            .border(
-                                2.dp,
-                                primaryBlue.copy(alpha = 0.4f),
-                                CircleShape
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (profileBitmap != null) {
-                            Image(
-                                bitmap = profileBitmap!!.asImageBitmap(),
-                                contentDescription = "Profile Image",
-                                modifier = Modifier
-                                    .clip(CircleShape)
-                                    .size(100.dp),
-                                contentScale = ContentScale.Crop
-                            )
-                        } else {
-                            Image(
-                                painter = painterResource(id = R.drawable.profile_picture),
-                                contentDescription = "Profile Image",
-                                modifier = Modifier
-                                    .clip(CircleShape)
-                                    .size(100.dp),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Text(
-                        text = firstName,
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp
+            // Avatar + name + subtitle
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(
+                    modifier = Modifier
+                        .size(120.dp)
+                        .background(
+                            lightBlueBackground,
+                            CircleShape
+                        )
+                        .clip(CircleShape)
+                        .border(
+                            4.dp,
+                            primaryBlue.copy(alpha = 0.4f),
+                            CircleShape
                         ),
-                        color = primaryBlue
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = "Signed in to Personal Health Buddy",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextColor.copy(alpha = 0.7f)
-                    )
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (profileBitmap != null) {
+                        Image(
+                            bitmap = profileBitmap!!.asImageBitmap(),
+                            contentDescription = "Profile Image",
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .size(120.dp),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Image(
+                            painter = painterResource(id = R.drawable.profile_picture),
+                            contentDescription = "Profile Image",
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .size(120.dp),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
                 }
-            }
 
-            // Add some space so subtitle is clearly above the bottom sheet
-            Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = firstName,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp
+                    ),
+                    color = primaryBlue
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = "Signed in to Personal Health Buddy",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextColor.copy(alpha = 0.7f)
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+            }
         }
 
-        // ---------- Bottom Section with Profile Items ----------
+        // ---------- Bottom Section with Profile Items----------
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
+                .offset(y = 16.dp)
                 .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
                 .background(lightBlueBackground)
         ) {
@@ -286,7 +282,7 @@ fun ProfileScreen(
                             modifier = Modifier
                                 .size(46.dp)
                                 .clip(CircleShape)
-                                .background(primaryBlue),
+                                .background(ButtonBlue),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
