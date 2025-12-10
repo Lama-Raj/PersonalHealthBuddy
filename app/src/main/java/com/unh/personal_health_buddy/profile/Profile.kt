@@ -22,13 +22,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Chat
-import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -65,7 +63,7 @@ import com.unh.personal_health_buddy.ui.theme.White
 // ------------------- Profile Items -------------------
 sealed class ProfileItem(val title: String, val icon: ImageVector, val route: String) {
     object Account : ProfileItem("Account", Icons.Filled.Person, "account")
-    object FAQS   : ProfileItem("FAQs & Help", Icons.Filled.Chat, "faqs")
+    object FAQS : ProfileItem("FAQs & Help", Icons.Filled.Chat, "faqs")
     object Logout : ProfileItem("Logout", Icons.AutoMirrored.Filled.ExitToApp, "logout")
 }
 
@@ -87,12 +85,12 @@ fun ProfileScreen(
     var firstName by remember { mutableStateOf(UserDataCache.user?.firstname ?: "User") }
     var profileBitmap by remember { mutableStateOf(UserDataCache.profileBitmap) }
 
-    // Medicate-style theme
+    // Medicate-style theme colors
     val primaryBlue = Color(0xFF1877F2)
     val lightBlueBackground = Color(0xFFF3F6FF)
 
-    // 🔹 global toggle state from NotificationSettings
-    var isNudgeBarOn by NotificationSettings.isTopNudgeEnabled
+    // 🔹 Local reference to global toggle
+    val isTopNudgeEnabledState = NotificationSettings.isTopNudgeEnabled
 
     // Fetch firstname and profile image URL from Firestore
     LaunchedEffect(true) {
@@ -109,7 +107,7 @@ fun ProfileScreen(
         }
     }
 
-    // Update UI when cache is loaded
+    // Update UI when cache is loaded (optional)
     LaunchedEffect(UserDataCache.isDataLoaded) {
         if (UserDataCache.isDataLoaded) {
             firstName = UserDataCache.user?.firstname ?: "User"
@@ -130,11 +128,11 @@ fun ProfileScreen(
             )
     ) {
 
-        // ---------- Top Header + Profile ----------
+        // ---------- Top Header + Profile Info ----------
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 24.dp),
+                .padding(horizontal = 20.dp, vertical = 18.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Header
@@ -163,13 +161,17 @@ fun ProfileScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Avatar + name + subtitle (no card)
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            // Profile row (image + text) – no separate card
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Box(
                     modifier = Modifier
-                        .size(110.dp)
+                        .size(90.dp)
                         .background(
                             lightBlueBackground,
                             CircleShape
@@ -188,7 +190,7 @@ fun ProfileScreen(
                             contentDescription = "Profile Image",
                             modifier = Modifier
                                 .clip(CircleShape)
-                                .size(100.dp),
+                                .size(82.dp),
                             contentScale = ContentScale.Crop
                         )
                     } else {
@@ -197,41 +199,40 @@ fun ProfileScreen(
                             contentDescription = "Profile Image",
                             modifier = Modifier
                                 .clip(CircleShape)
-                                .size(100.dp),
+                                .size(82.dp),
                             contentScale = ContentScale.Crop
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.width(16.dp))
 
-                Text(
-                    text = firstName,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
-                    ),
-                    color = primaryBlue
-                )
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = firstName,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp
+                        ),
+                        color = primaryBlue
+                    )
 
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = "Signed in to Personal Health Buddy",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextColor.copy(alpha = 0.7f)
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
+                    Text(
+                        text = "Signed in to Personal Health Buddy",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextColor.copy(alpha = 0.7f)
+                    )
+                }
             }
         }
 
-        // ---------- Bottom Section ----------
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .offset(y = 16.dp)
+                .offset(y = 8.dp)
                 .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
                 .background(lightBlueBackground)
         ) {
@@ -241,15 +242,14 @@ fun ProfileScreen(
                     .padding(
                         start = 16.dp,
                         end = 16.dp,
-                        top = 28.dp,
+                        top = 24.dp,
                         bottom = 32.dp
                     ),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
 
-                // ---- Account & Help header ----
                 Text(
-                    text = "Account & Help",
+                    text = "Account & Preferences",
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp
@@ -258,155 +258,47 @@ fun ProfileScreen(
                     modifier = Modifier.padding(bottom = 4.dp, start = 4.dp)
                 )
 
-                // ---- Existing nav rows ----
-                items.forEach { item ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 6.dp)
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(White)
-                            .clickable {
-                                when (item) {
-                                    is ProfileItem.Account -> {
-                                        navController.navigate("account") {
-                                            launchSingleTop = true
-                                        }
-                                    }
-
-                                    is ProfileItem.FAQS -> {
-                                        navController.navigate("faqs") {
-                                            launchSingleTop = true
-                                        }
-                                    }
-
-                                    is ProfileItem.Logout -> {
-                                        showLogoutDialog = true
-                                    }
-                                }
-                            }
-                            .padding(horizontal = 12.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(46.dp)
-                                .clip(CircleShape)
-                                .background(ButtonBlue),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                item.icon,
-                                contentDescription = item.title,
-                                tint = Color(0xFFE9F2FF),
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.width(12.dp))
-
-                        Column(
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(
-                                text = item.title,
-                                style = MaterialTheme.typography.bodyLarge.copy(
-                                    fontWeight = FontWeight.Medium
-                                ),
-                                color = TextColor
-                            )
-
-                            val subtitle = when (item) {
-                                is ProfileItem.Account -> "Edit personal info and health details"
-                                is ProfileItem.FAQS   -> "Get answers and contact support"
-                                is ProfileItem.Logout -> "Sign out of this device"
-                            }
-
-                            Text(
-                                text = subtitle,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = TextColor.copy(alpha = 0.6f),
-                                fontSize = 12.sp
-                            )
-                        }
-
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                            contentDescription = "Go",
-                            tint = Color(0xFF4B5563)
-                        )
+                // 1) Account
+                ProfileRow(
+                    title = ProfileItem.Account.title,
+                    subtitle = "Edit personal info and health details",
+                    icon = ProfileItem.Account.icon,
+                    primaryBlue = primaryBlue
+                ) {
+                    navController.navigate("account") {
+                        launchSingleTop = true
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                // 2) FAQs & Help
+                ProfileRow(
+                    title = ProfileItem.FAQS.title,
+                    subtitle = "Get answers and contact support",
+                    icon = ProfileItem.FAQS.icon,
+                    primaryBlue = primaryBlue
+                ) {
+                    navController.navigate("faqs") {
+                        launchSingleTop = true
+                    }
+                }
 
-                // ---- Health reminders toggle row ----
-                Text(
-                    text = "Reminders",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp
-                    ),
-                    color = TextColor.copy(alpha = 0.75f),
-                    modifier = Modifier.padding(bottom = 4.dp, start = 4.dp)
+                // 3) Health reminder toggle (between FAQ and Logout)
+                ReminderToggleRow(
+                    isEnabled = isTopNudgeEnabledState.value,
+                    onToggle = { isOn ->
+                        isTopNudgeEnabledState.value = isOn
+                    },
+                    primaryBlue = primaryBlue
                 )
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 6.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(White)
-                        .padding(horizontal = 12.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                // 4) Logout
+                ProfileRow(
+                    title = ProfileItem.Logout.title,
+                    subtitle = "Sign out of this device",
+                    icon = ProfileItem.Logout.icon,
+                    primaryBlue = primaryBlue
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(46.dp)
-                            .clip(CircleShape)
-                            .background(ButtonBlue),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Notifications,
-                            contentDescription = "Health reminders",
-                            tint = Color(0xFFE9F2FF),
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Column(
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = "Top reminder bar",
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontWeight = FontWeight.Medium
-                            ),
-                            color = TextColor
-                        )
-                        Text(
-                            text = "Show occasional health nudges at the top of the app.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = TextColor.copy(alpha = 0.6f),
-                            fontSize = 12.sp
-                        )
-                    }
-
-                    Switch(
-                        checked = isNudgeBarOn,
-                        onCheckedChange = { checked ->
-                            isNudgeBarOn = checked      // updates NotificationSettings as well
-                        },
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = White,
-                            checkedTrackColor = ButtonBlue,
-                            uncheckedThumbColor = Color.White,
-                            uncheckedTrackColor = Color.LightGray
-                        )
-                    )
+                    showLogoutDialog = true
                 }
             }
         }
@@ -421,6 +313,127 @@ fun ProfileScreen(
                 onCancel = { showLogoutDialog = false }
             )
         }
+    }
+}
+
+// Reusable row for normal profile items
+@Composable
+private fun ProfileRow(
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    primaryBlue: Color,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(White)
+            .clickable { onClick() }
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(46.dp)
+                .clip(CircleShape)
+                .background(primaryBlue),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                icon,
+                contentDescription = title,
+                tint = Color(0xFFE9F2FF),
+                modifier = Modifier.size(24.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = FontWeight.Medium
+                ),
+                color = TextColor
+            )
+
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = TextColor.copy(alpha = 0.6f),
+                fontSize = 12.sp
+            )
+        }
+
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = "Go",
+            tint = Color(0xFF4B5563)
+        )
+    }
+}
+
+// Special row for the switch
+@Composable
+private fun ReminderToggleRow(
+    isEnabled: Boolean,
+    onToggle: (Boolean) -> Unit,
+    primaryBlue: Color
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(White)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(46.dp)
+                .clip(CircleShape)
+                .background(primaryBlue.copy(alpha = 0.95f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Notifications,
+                contentDescription = "Health reminders",
+                tint = Color(0xFFE9F2FF),
+                modifier = Modifier.size(24.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = "Health reminders",
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = FontWeight.Medium
+                ),
+                color = TextColor
+            )
+            Text(
+                text = "Show reminder bar at the top of the app",
+                style = MaterialTheme.typography.bodySmall,
+                color = TextColor.copy(alpha = 0.6f),
+                fontSize = 12.sp
+            )
+        }
+
+        Switch(
+            checked = isEnabled,
+            onCheckedChange = onToggle
+        )
     }
 }
 
