@@ -65,6 +65,7 @@ import java.util.Calendar
 
 // ---------------- Constants & Colors ----------------
 val BLOOD_GROUPS = listOf("O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-")
+val GENDER_OPTIONS = listOf("Male", "Female", "Others")
 val PrimaryBlue = Color(0xFF1877F2)
 val LightBlueBg = Color(0xFFF3F6FF)
 
@@ -241,6 +242,7 @@ fun StyledBottomSection(
     healthInfo: HealthInformation?,
     isLoading: Boolean,
     isEditing: Boolean,
+    // ... all your parameters ...
     editableFirstname: String, onFirstnameChange: (String) -> Unit,
     editableLastname: String, onLastnameChange: (String) -> Unit,
     editableDateOfBirth: String, onDateOfBirthChange: (String) -> Unit,
@@ -254,11 +256,7 @@ fun StyledBottomSection(
     editableAllergies: String, onAllergiesChange: (String) -> Unit,
     editableMedication: String, onMedicationChange: (String) -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 24.dp)
-    ) {
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp)) {
         if (isLoading) {
             Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = PrimaryBlue)
@@ -270,7 +268,17 @@ fun StyledBottomSection(
                 StyledEditableRow("First Name", if (isEditing) editableFirstname else u.firstname, isEditing, onFirstnameChange)
                 StyledEditableRow("Last Name", if (isEditing) editableLastname else u.lastname, isEditing, onLastnameChange)
                 StyledEditableRow("Date of Birth", if (isEditing) editableDateOfBirth else u.dateOfBirth, isEditing, onDateOfBirthChange, isDateField = true)
-                StyledEditableRow("Gender", if (isEditing) editableGender else u.gender.name, isEditing, onGenderChange)
+
+                // *** UPDATED GENDER ROW ***
+                StyledEditableRow(
+                    label = "Gender",
+                    value = if (isEditing) editableGender else u.gender.name,
+                    isEditing = isEditing,
+                    onValueChange = onGenderChange,
+                    isDropdown = true,                // Enable dropdown mode
+                    dropdownOptions = GENDER_OPTIONS  // Pass the MALE/FEMALE/OTHER list
+                )
+
                 StyledEditableRow("Email", if (isEditing) editableEmail else u.email, isEditing, onEmailChange, readOnly = true)
                 StyledEditableRow("Phone Number", if (isEditing) editablePhoneNumber else u.phoneNumber, isEditing, onPhoneNumberChange, keyboardType = KeyboardType.Phone)
                 StyledEditableRow("Home Address", if (isEditing) editableHomeAddress else u.homeAddress, isEditing, onHomeAddressChange)
@@ -279,8 +287,9 @@ fun StyledBottomSection(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            SectionHeader("Emergency Contacts")
+            // ... (Rest of the function remains the same: Emergency Contacts & Health Info) ...
 
+            SectionHeader("Emergency Contacts")
             val contactsToDisplay = if (isEditing) editableEmergencyContacts else emergencyContacts
             if (contactsToDisplay.isNotEmpty()) {
                 contactsToDisplay.forEachIndexed { index, c ->
@@ -295,20 +304,18 @@ fun StyledBottomSection(
             } else {
                 Text("No emergency contacts added.", fontStyle = FontStyle.Italic, color = TextColor.copy(alpha = 0.6f), modifier = Modifier.padding(start=4.dp))
             }
-
             Spacer(modifier = Modifier.height(24.dp))
 
             SectionHeader("Health Information")
-
             val displayBlood = if (isEditing) editableBloodGroup else healthInfo?.bloodGroup ?: ""
             val displayAllergies = if (isEditing) editableAllergies else healthInfo?.allergies ?: ""
             val displayMedication = if (isEditing) editableMedication else healthInfo?.medication ?: ""
 
+            // Blood Group uses the same Dropdown logic
             StyledEditableRow("Blood Group", displayBlood, isEditing, onBloodGroupChange, isDropdown = true, dropdownOptions = BLOOD_GROUPS)
             StyledEditableRow("Allergies", displayAllergies, isEditing, onAllergiesChange)
             StyledEditableRow("Medications", displayMedication, isEditing, onMedicationChange)
         }
-
         Spacer(modifier = Modifier.height(60.dp))
     }
 }
