@@ -42,7 +42,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.GoogleAuthProvider
-import com.unh.personal_health_buddy.Authentication.FirestoreHelper
+import com.unh.personal_health_buddy.authentication.FirestoreHelper
 import com.unh.personal_health_buddy.R
 import com.unh.personal_health_buddy.database.UserDataCache
 import com.unh.personal_health_buddy.ui.theme.AppSurfaceLight

@@ -19,7 +19,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
-import com.unh.personal_health_buddy.Authentication.FirestoreHelper
+import com.unh.personal_health_buddy.authentication.FirestoreHelper
 import com.unh.personal_health_buddy.database.UserDataCache
 import com.unh.personal_health_buddy.firebase.SetupAuthentication
 import com.unh.personal_health_buddy.notifications.NotificationSettings   // 🔹 NEW

@@ -123,7 +123,7 @@ import com.unh.personal_health_buddy.database.User
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import com.unh.personal_health_buddy.Authentication.FirestoreHelper
+import com.unh.personal_health_buddy.authentication.FirestoreHelper
 import com.unh.personal_health_buddy.database.UserDataCache
 import com.unh.personal_health_buddy.ui.theme.AccentOrange
 import com.unh.personal_health_buddy.ui.theme.ButtonBlue

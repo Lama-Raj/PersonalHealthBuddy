@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.unh.personal_health_buddy.Authentication.FirestoreHelper
+import com.unh.personal_health_buddy.authentication.FirestoreHelper
 import com.unh.personal_health_buddy.features.HealthNotification
 import com.unh.personal_health_buddy.features.NotificationPriority
 import com.unh.personal_health_buddy.features.NotificationType
