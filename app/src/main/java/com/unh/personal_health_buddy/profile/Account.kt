@@ -1,7 +1,6 @@
 package com.unh.personal_health_buddy.profile
 
 import TempProfileStorage
-import android.Manifest
 import android.app.DatePickerDialog
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -50,7 +49,7 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
-// Ensure this matches your package (lowercase 'authentication')
+// Check this import is correct for your project
 import com.unh.personal_health_buddy.authentication.FirestoreHelper
 import com.unh.personal_health_buddy.R
 import com.unh.personal_health_buddy.database.*
@@ -62,10 +61,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.URL
 import java.util.Calendar
+import android.Manifest
 
-// ---------------- Constants & Colors ----------------
+// ---------------- Constants ----------------
 val BLOOD_GROUPS = listOf("O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-")
-val GENDER_OPTIONS = listOf("Male", "Female", "Others")
+val GENDER_OPTIONS = listOf("MALE", "FEMALE", "OTHER")
 val PrimaryBlue = Color(0xFF1877F2)
 val LightBlueBg = Color(0xFFF3F6FF)
 
@@ -102,7 +102,7 @@ fun PhotoOptionsMenu(
     }
 }
 
-// *** STYLED ROW COMPONENT ***
+// *** STYLED ROW COMPONENT (Updated for N/A Logic) ***
 @Composable
 fun StyledEditableRow(
     label: String,
@@ -115,11 +115,11 @@ fun StyledEditableRow(
     isDateField: Boolean = false,
     keyboardType: KeyboardType = KeyboardType.Text
 ) {
-    val displayValue = if (value.isBlank()) "Not Set" else value
+    // View Mode: Show "N/A" if empty
+    val displayValue = if (value.isBlank()) "N/A" else value
     var expandedDropdown by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    // Container matching ProfileRow style
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -128,7 +128,6 @@ fun StyledEditableRow(
             .background(White)
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-        // Label
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
@@ -136,11 +135,10 @@ fun StyledEditableRow(
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold
         )
-
         Spacer(modifier = Modifier.height(4.dp))
 
-        // Content Area
         if (isEditing && !readOnly) {
+            // --- EDIT MODE ---
             if (isDateField) {
                 Box(modifier = Modifier.fillMaxWidth().clickable {
                     val cal = Calendar.getInstance()
@@ -155,79 +153,59 @@ fun StyledEditableRow(
                     }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
                 }) {
                     Text(
+                        // Placeholder logic: "Select Date" if empty
                         text = value.ifBlank { "Select Date" },
                         style = MaterialTheme.typography.bodyLarge,
-                        color = if(value.isBlank()) Color.Gray else TextColor,
+                        color = if(value.isBlank()) Color.Gray.copy(alpha = 0.5f) else TextColor,
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
-                    Icon(
-                        Icons.Default.CalendarToday,
-                        contentDescription = null,
-                        tint = PrimaryBlue,
-                        modifier = Modifier.align(Alignment.CenterEnd).size(20.dp)
-                    )
+                    Icon(Icons.Default.CalendarToday, null, tint = PrimaryBlue, modifier = Modifier.align(Alignment.CenterEnd).size(20.dp))
                 }
             } else if (isDropdown) {
                 Box(modifier = Modifier.fillMaxWidth()) {
                     Box(modifier = Modifier.fillMaxWidth().clickable { expandedDropdown = true }) {
                         Text(
+                            // Placeholder logic: "Select Option" if empty
                             text = value.ifBlank { "Select Option" },
                             style = MaterialTheme.typography.bodyLarge,
-                            color = if(value.isBlank()) Color.Gray else TextColor,
+                            color = if(value.isBlank()) Color.Gray.copy(alpha = 0.5f) else TextColor,
                             modifier = Modifier.padding(vertical = 8.dp)
                         )
-                        Icon(
-                            Icons.Default.ArrowDropDown,
-                            contentDescription = null,
-                            tint = PrimaryBlue,
-                            modifier = Modifier.align(Alignment.CenterEnd)
-                        )
+                        Icon(Icons.Default.ArrowDropDown, null, tint = PrimaryBlue, modifier = Modifier.align(Alignment.CenterEnd))
                     }
-                    DropdownMenu(
-                        expanded = expandedDropdown,
-                        onDismissRequest = { expandedDropdown = false },
-                        modifier = Modifier.background(White)
-                    ) {
+                    DropdownMenu(expanded = expandedDropdown, onDismissRequest = { expandedDropdown = false }, modifier = Modifier.background(White)) {
                         dropdownOptions.forEach { option ->
-                            DropdownMenuItem(
-                                text = { Text(option) },
-                                onClick = { onValueChange(option); expandedDropdown = false }
-                            )
+                            DropdownMenuItem(text = { Text(option) }, onClick = { onValueChange(option); expandedDropdown = false })
                         }
                     }
                 }
             } else {
-                // Clean TextField without standard borders to fit the card look
+                // Standard Text Field
                 BasicTextField(
                     value = value,
                     onValueChange = onValueChange,
-                    textStyle = TextStyle(
-                        color = TextColor,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Normal
-                    ),
+                    textStyle = TextStyle(color = TextColor, fontSize = 16.sp, fontWeight = FontWeight.Normal),
                     keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = ImeAction.Next),
                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                     decorationBox = { innerTextField ->
                         Box(modifier = Modifier.fillMaxWidth()) {
-                            if (value.isEmpty()) Text("Enter $label", color = Color.Gray.copy(alpha = 0.5f))
+                            // Placeholder logic: Show "Enter [Label]" if empty
+                            if (value.isEmpty()) {
+                                Text("Enter $label", color = Color.Gray.copy(alpha = 0.5f))
+                            }
                             innerTextField()
-                            Box(
-                                Modifier.align(Alignment.BottomStart)
-                                    .fillMaxWidth()
-                                    .height(1.dp)
-                                    .background(PrimaryBlue.copy(alpha = 0.3f))
-                            )
+                            Box(Modifier.align(Alignment.BottomStart).fillMaxWidth().height(1.dp).background(PrimaryBlue.copy(alpha = 0.3f)))
                         }
                     }
                 )
             }
         } else {
-            // View Mode
+            // --- VIEW MODE ---
             Text(
                 text = displayValue,
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                color = if (displayValue == "Not Set") TextColor.copy(alpha = 0.4f) else TextColor
+                // Grey out "N/A" to make it look distinct
+                color = if (displayValue == "N/A") TextColor.copy(alpha = 0.4f) else TextColor
             )
         }
     }
@@ -242,7 +220,6 @@ fun StyledBottomSection(
     healthInfo: HealthInformation?,
     isLoading: Boolean,
     isEditing: Boolean,
-    // ... all your parameters ...
     editableFirstname: String, onFirstnameChange: (String) -> Unit,
     editableLastname: String, onLastnameChange: (String) -> Unit,
     editableDateOfBirth: String, onDateOfBirthChange: (String) -> Unit,
@@ -264,30 +241,21 @@ fun StyledBottomSection(
         } else {
             SectionHeader("Personal Information")
 
-            user?.let { u ->
-                StyledEditableRow("First Name", if (isEditing) editableFirstname else u.firstname, isEditing, onFirstnameChange)
-                StyledEditableRow("Last Name", if (isEditing) editableLastname else u.lastname, isEditing, onLastnameChange)
-                StyledEditableRow("Date of Birth", if (isEditing) editableDateOfBirth else u.dateOfBirth, isEditing, onDateOfBirthChange, isDateField = true)
+            // Pass null-safe User wrapper if needed, logic handled in LaunchedEffect
+            StyledEditableRow("First Name", editableFirstname, isEditing, onFirstnameChange)
+            StyledEditableRow("Last Name", editableLastname, isEditing, onLastnameChange)
+            StyledEditableRow("Date of Birth", editableDateOfBirth, isEditing, onDateOfBirthChange, isDateField = true)
 
-                // *** UPDATED GENDER ROW ***
-                StyledEditableRow(
-                    label = "Gender",
-                    value = if (isEditing) editableGender else u.gender.name,
-                    isEditing = isEditing,
-                    onValueChange = onGenderChange,
-                    isDropdown = true,                // Enable dropdown mode
-                    dropdownOptions = GENDER_OPTIONS  // Pass the MALE/FEMALE/OTHER list
-                )
+            StyledEditableRow("Gender", editableGender, isEditing, onGenderChange, isDropdown = true, dropdownOptions = GENDER_OPTIONS)
 
-                StyledEditableRow("Email", if (isEditing) editableEmail else u.email, isEditing, onEmailChange, readOnly = true)
-                StyledEditableRow("Phone Number", if (isEditing) editablePhoneNumber else u.phoneNumber, isEditing, onPhoneNumberChange, keyboardType = KeyboardType.Phone)
-                StyledEditableRow("Home Address", if (isEditing) editableHomeAddress else u.homeAddress, isEditing, onHomeAddressChange)
-                StyledEditableRow("City", if (isEditing) editableCity else u.city, isEditing, onCityChange)
-            }
+            // Email is strictly read-only
+            StyledEditableRow("Email", editableEmail, isEditing, onEmailChange, readOnly = true)
+
+            StyledEditableRow("Phone Number", editablePhoneNumber, isEditing, onPhoneNumberChange, keyboardType = KeyboardType.Phone)
+            StyledEditableRow("Home Address", editableHomeAddress, isEditing, onHomeAddressChange)
+            StyledEditableRow("City", editableCity, isEditing, onCityChange)
 
             Spacer(modifier = Modifier.height(24.dp))
-
-            // ... (Rest of the function remains the same: Emergency Contacts & Health Info) ...
 
             SectionHeader("Emergency Contacts")
             val contactsToDisplay = if (isEditing) editableEmergencyContacts else emergencyContacts
@@ -307,11 +275,11 @@ fun StyledBottomSection(
             Spacer(modifier = Modifier.height(24.dp))
 
             SectionHeader("Health Information")
+            // Use editable vars if editing, otherwise object
             val displayBlood = if (isEditing) editableBloodGroup else healthInfo?.bloodGroup ?: ""
             val displayAllergies = if (isEditing) editableAllergies else healthInfo?.allergies ?: ""
             val displayMedication = if (isEditing) editableMedication else healthInfo?.medication ?: ""
 
-            // Blood Group uses the same Dropdown logic
             StyledEditableRow("Blood Group", displayBlood, isEditing, onBloodGroupChange, isDropdown = true, dropdownOptions = BLOOD_GROUPS)
             StyledEditableRow("Allergies", displayAllergies, isEditing, onAllergiesChange)
             StyledEditableRow("Medications", displayMedication, isEditing, onMedicationChange)
@@ -324,10 +292,7 @@ fun StyledBottomSection(
 fun SectionHeader(title: String) {
     Text(
         text = title,
-        style = MaterialTheme.typography.bodyMedium.copy(
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 14.sp
-        ),
+        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold, fontSize = 14.sp),
         color = TextColor.copy(alpha = 0.75f),
         modifier = Modifier.padding(bottom = 8.dp, start = 4.dp)
     )
@@ -396,9 +361,26 @@ fun AccountScreen(navController: NavHostController) {
 
     // --- HELPER FUNCTIONS ---
     val initializeEditableStates: (User?, List<EmergencyContact>, HealthInformation?) -> Unit = { loadedUser, loadedContacts, loadedHealth ->
-        loadedUser?.let { u ->
-            editableFirstname = u.firstname; editableLastname = u.lastname; editableDateOfBirth = u.dateOfBirth; editableGender = u.gender.name; editableEmail = u.email; editablePhoneNumber = u.phoneNumber; editableHomeAddress = u.homeAddress; editableCity = u.city
+        // 1. Fetch Auth Email (Always reliable)
+        val authEmail = FirebaseAuth.getInstance().currentUser?.email ?: ""
+
+        if (loadedUser != null) {
+            editableFirstname = loadedUser.firstname
+            editableLastname = loadedUser.lastname
+            editableDateOfBirth = loadedUser.dateOfBirth
+            editableGender = loadedUser.gender.name
+            // FIX: If DB email empty, use Auth email
+            editableEmail = if (loadedUser.email.isNotBlank()) loadedUser.email else authEmail
+            editablePhoneNumber = loadedUser.phoneNumber
+            editableHomeAddress = loadedUser.homeAddress
+            editableCity = loadedUser.city
+        } else {
+            // New User case: Clear fields but set email
+            editableFirstname = ""; editableLastname = ""; editableDateOfBirth = ""; editableGender = ""
+            editableEmail = authEmail // Auto-populate email
+            editablePhoneNumber = ""; editableHomeAddress = ""; editableCity = ""
         }
+
         editableEmergencyContacts.clear(); editableEmergencyContacts.addAll(loadedContacts.map { it.copy() })
         loadedHealth?.let { h -> editableBloodGroup = h.bloodGroup; editableAllergies = h.allergies; editableMedication = h.medication } ?: run { editableBloodGroup = ""; editableAllergies = ""; editableMedication = "" }
         newProfileBitmap = null; isProfileImageDeleted = false
@@ -406,19 +388,23 @@ fun AccountScreen(navController: NavHostController) {
 
     // --- FETCH LOGIC ---
     LaunchedEffect(UserDataCache.isDataLoaded, user?.profileImageUrl) {
+        // Ensure UI state matches Cache on load
         if (UserDataCache.isDataLoaded) {
             user = UserDataCache.user
             emergencyContacts = UserDataCache.emergencyContacts
             healthInfo = UserDataCache.healthInfo
-            initializeEditableStates(user, emergencyContacts, healthInfo)
 
+            // Check cache for image
             if (UserDataCache.profileBitmap != null) {
                 currentProfileBitmap = UserDataCache.profileBitmap
             }
+
+            // Populate text fields for display (specifically Email for new users)
+            initializeEditableStates(user, emergencyContacts, healthInfo)
+
             isLoading = false
         }
 
-        // Backup download logic (if cache missed)
         val url = user?.profileImageUrl
         if (currentProfileBitmap == null && !url.isNullOrEmpty()) {
             try {
@@ -445,10 +431,8 @@ fun AccountScreen(navController: NavHostController) {
             isSaving = true
             CoroutineScope(Dispatchers.IO).launch {
                 try {
-                    // Local copy to avoid smart cast error
                     val localNewBitmap = newProfileBitmap
 
-                    // 1. Update Local Cache Immediately
                     if (isProfileImageDeleted) {
                         FirestoreHelper.deleteUserProfileImage()
                         TempProfileStorage.tempProfileBitmap = null
@@ -460,22 +444,23 @@ fun AccountScreen(navController: NavHostController) {
                         UserDataCache.profileBitmap = localNewBitmap
                     }
 
-                    // 2. Prepare Data Objects
                     val parsedGender = try { Gender.valueOf(editableGender.uppercase()) } catch (_: Exception) { Gender.OTHER }
-                    val updatedUser = user?.copy(firstname = editableFirstname, lastname = editableLastname, dateOfBirth = editableDateOfBirth, gender = parsedGender, email = editableEmail, phoneNumber = editablePhoneNumber, homeAddress = editableHomeAddress, city = editableCity) ?: User(firstname = editableFirstname, lastname = editableLastname, gender = parsedGender, email = editableEmail)
+
+                    // Create User object (email is read from editableEmail which has Auth fallback)
+                    val updatedUser = user?.copy(
+                        firstname = editableFirstname, lastname = editableLastname, dateOfBirth = editableDateOfBirth, gender = parsedGender, email = editableEmail, phoneNumber = editablePhoneNumber, homeAddress = editableHomeAddress, city = editableCity
+                    ) ?: User(firstname = editableFirstname, lastname = editableLastname, gender = parsedGender, email = editableEmail)
+
                     val updatedHealth = HealthInformation(bloodGroup = editableBloodGroup, allergies = editableAllergies, medication = editableMedication)
 
-                    // 3. MASTER UPDATE (Uploads image -> Gets URL -> Saves User)
-                    // The Helper uses "userId/profile.jpg" ensuring overwrite and folder structure.
                     FirestoreHelper.updateUserData(
                         userId,
                         updatedUser,
                         editableEmergencyContacts.toList(),
                         updatedHealth,
-                        localNewBitmap // Pass the new bitmap
+                        localNewBitmap
                     )
 
-                    // 4. Re-sync Local User Object (to capture the new URL string)
                     val refreshedUser = FirestoreHelper.getUser(userId)
 
                     UserDataCache.user = refreshedUser
@@ -510,71 +495,32 @@ fun AccountScreen(navController: NavHostController) {
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(gradientBackground)
-    ) {
-
-        // --- 1. Top Header Section ---
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 18.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Header Row
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = { navController.navigate("profile") }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = TextColor)
-                }
-
-                Text(
-                    text = "Account Details",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, fontSize = 22.sp),
-                    color = PrimaryBlue
-                )
-
-                // Right Options/Edit Button
+    Column(modifier = Modifier.fillMaxSize().background(gradientBackground)) {
+        // --- 1. Top Header ---
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = { navController.navigate("profile") }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = TextColor) }
+                Text(text = "Account Details", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, fontSize = 22.sp), color = PrimaryBlue)
                 Box {
                     if (isEditing) {
-                        IconButton(onClick = { expandedEditDropdown = true }) {
-                            Icon(Icons.Default.Check, contentDescription = "Save", tint = PrimaryBlue)
-                        }
+                        IconButton(onClick = { expandedEditDropdown = true }) { Icon(Icons.Default.Check, contentDescription = "Save", tint = PrimaryBlue) }
                     } else {
-                        IconButton(onClick = { expandedDropdown = true }) {
-                            Icon(Icons.Default.MoreVert, contentDescription = "Options", tint = PrimaryBlue)
-                        }
+                        IconButton(onClick = { expandedDropdown = true }) { Icon(Icons.Default.MoreVert, contentDescription = "Options", tint = PrimaryBlue) }
                     }
-
                     DropdownMenu(expanded = expandedDropdown, onDismissRequest = { expandedDropdown = false }, modifier = Modifier.background(White)) {
-                        DropdownMenuItem(
-                            text = { Text("Edit Details") },
-                            onClick = { expandedDropdown = false; initializeEditableStates(user, emergencyContacts, healthInfo); isEditing = true },
-                            leadingIcon = { Icon(Icons.Default.Edit, null, tint = PrimaryBlue) }
-                        )
+                        DropdownMenuItem(text = { Text("Edit Details") }, onClick = { expandedDropdown = false; initializeEditableStates(user, emergencyContacts, healthInfo); isEditing = true }, leadingIcon = { Icon(Icons.Default.Edit, null, tint = PrimaryBlue) })
                         Divider()
-                        DropdownMenuItem(
-                            text = { Text("Delete Account", color = Color.Red) },
-                            onClick = { expandedDropdown = false; showDeleteDialog = true },
-                            leadingIcon = { Icon(Icons.Default.Delete, null, tint = Color.Red) }
-                        )
+                        DropdownMenuItem(text = { Text("Delete Account", color = Color.Red) }, onClick = { expandedDropdown = false; showDeleteDialog = true }, leadingIcon = { Icon(Icons.Default.Delete, null, tint = Color.Red) })
                     }
-
                     DropdownMenu(expanded = expandedEditDropdown, onDismissRequest = { expandedEditDropdown = false }, modifier = Modifier.background(White)) {
                         DropdownMenuItem(text = { Text("Save Changes") }, onClick = { expandedEditDropdown = false; onSaveClick() }, enabled = !isLoading)
                         DropdownMenuItem(text = { Text("Cancel Editing") }, onClick = { expandedEditDropdown = false; isEditing = false; newProfileBitmap = null; isProfileImageDeleted = false })
                     }
                 }
             }
-
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Profile Image (Centered with Edit Overlay)
+            // Profile Image Box
             Box(
                 modifier = Modifier
                     .size(110.dp)
@@ -585,48 +531,24 @@ fun AccountScreen(navController: NavHostController) {
                 contentAlignment = Alignment.Center
             ) {
                 if (displayBitmap != null) {
-                    Image(
-                        bitmap = displayBitmap,
-                        contentDescription = "Profile",
-                        modifier = Modifier.matchParentSize(),
-                        contentScale = ContentScale.Crop
-                    )
+                    Image(bitmap = displayBitmap, contentDescription = "Profile", modifier = Modifier.matchParentSize(), contentScale = ContentScale.Crop)
                 } else {
-                    Image(
-                        painter = painterResource(id = R.drawable.profile_picture),
-                        contentDescription = "Default Profile",
-                        modifier = Modifier.matchParentSize(),
-                        contentScale = ContentScale.Crop
-                    )
+                    Image(painter = painterResource(id = R.drawable.profile_picture), contentDescription = "Default Profile", modifier = Modifier.matchParentSize(), contentScale = ContentScale.Crop)
                 }
-
                 if (isEditing) {
-                    Box(
-                        modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)),
-                        contentAlignment = Alignment.Center
-                    ) {
+                    Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)), contentAlignment = Alignment.Center) {
                         Icon(Icons.Default.CameraAlt, contentDescription = "Edit", tint = White, modifier = Modifier.size(28.dp))
                     }
                 }
             }
-
             Spacer(modifier = Modifier.height(12.dp))
-
-            Text(
-                text = "${user?.firstname ?: "User"} ${user?.lastname ?: ""}",
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontSize = 20.sp),
-                color = TextColor
-            )
+            // Display name from editable fields if editing, else from user object
+            val displayName = if(isEditing) "$editableFirstname $editableLastname" else "${user?.firstname ?: "User"} ${user?.lastname ?: ""}"
+            Text(text = displayName.trim(), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontSize = 20.sp), color = TextColor)
         }
 
-        // --- 2. Bottom Content Section ---
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-                .background(LightBlueBg)
-        ) {
+        // --- 2. Bottom Content ---
+        Column(modifier = Modifier.fillMaxWidth().weight(1f).clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)).background(LightBlueBg)) {
             Box(modifier = Modifier.fillMaxSize()) {
                 Column(modifier = Modifier.fillMaxSize().verticalScroll(scrollState)) {
                     StyledBottomSection(
@@ -635,7 +557,7 @@ fun AccountScreen(navController: NavHostController) {
                         editableLastname, { if(it.all{c -> c.isDigit().not()}) editableLastname = it },
                         editableDateOfBirth, { editableDateOfBirth = it },
                         editableGender, { editableGender = it },
-                        editableEmail, { editableEmail = it },
+                        editableEmail, { /* Read Only */ },
                         editablePhoneNumber, { if(it.length <= 10 && it.all { c -> c.isDigit() }) editablePhoneNumber = it },
                         editableHomeAddress, { editableHomeAddress = it },
                         editableCity, { editableCity = it },
@@ -645,20 +567,18 @@ fun AccountScreen(navController: NavHostController) {
                         editableMedication, { editableMedication = it }
                     )
                 }
-
-                // Overlays
                 if (showPhotoOptions) {
                     Box(modifier = Modifier.fillMaxSize().clickable { showPhotoOptions = false }, contentAlignment = Alignment.Center) {
                         PhotoOptionsMenu(
                             showMenu = true,
                             onDismiss = { showPhotoOptions = false },
-                            onTakePhoto = { showPhotoOptions = false; if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) cameraLauncher.launch(null) else permissionLauncher.launch(Manifest.permission.CAMERA) },
+                            onTakePhoto = { showPhotoOptions = false; if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) cameraLauncher.launch(null) else permissionLauncher.launch(
+                                Manifest.permission.CAMERA) },
                             onUpload = { showPhotoOptions = false; galleryLauncher.launch("image/*") },
                             onDelete = { isProfileImageDeleted = true; newProfileBitmap = null; showPhotoOptions = false }
                         )
                     }
                 }
-
                 if (isLoading || isSaving) {
                     Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.2f)), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator(color = PrimaryBlue)
@@ -668,7 +588,7 @@ fun AccountScreen(navController: NavHostController) {
         }
     }
 
-    // --- DIALOGS ---
+    // --- DIALOGS (Existing Logic) ---
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
@@ -680,7 +600,6 @@ fun AccountScreen(navController: NavHostController) {
             dismissButton = { TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel", color = TextColor) } }
         )
     }
-
     if (showPasswordDialog) {
         AlertDialog(
             onDismissRequest = { if (!isDeleting) { showPasswordDialog = false; passwordInput = ""; deleteError = null } },
@@ -698,20 +617,19 @@ fun AccountScreen(navController: NavHostController) {
                 }
             },
             confirmButton = {
-                Button(
-                    onClick = {
-                        if (passwordInput.isNotBlank() && !isDeleting) {
-                            isDeleting = true
-                            val email = user?.email ?: FirebaseAuth.getInstance().currentUser?.email ?: ""
-                            CoroutineScope(Dispatchers.IO).launch {
-                                try {
-                                    if(FirestoreHelper.deleteUserAccountWithReauth(email, passwordInput)) {
-                                        withContext(Dispatchers.Main) { UserDataCache.clear(); TempProfileStorage.tempProfileBitmap = null; navController.navigate("welcome") { popUpTo(0) { inclusive = true } } }
-                                    } else { withContext(Dispatchers.Main) { deleteError = "Failed to delete."; isDeleting = false } }
-                                } catch (e: Exception) { withContext(Dispatchers.Main) { deleteError = e.message; isDeleting = false } }
-                            }
+                Button(onClick = {
+                    if (passwordInput.isNotBlank() && !isDeleting) {
+                        isDeleting = true
+                        val email = user?.email ?: FirebaseAuth.getInstance().currentUser?.email ?: ""
+                        CoroutineScope(Dispatchers.IO).launch {
+                            try {
+                                if(FirestoreHelper.deleteUserAccountWithReauth(email, passwordInput)) {
+                                    withContext(Dispatchers.Main) { UserDataCache.clear(); TempProfileStorage.tempProfileBitmap = null; navController.navigate("welcome") { popUpTo(0) { inclusive = true } } }
+                                } else { withContext(Dispatchers.Main) { deleteError = "Failed to delete."; isDeleting = false } }
+                            } catch (e: Exception) { withContext(Dispatchers.Main) { deleteError = e.message; isDeleting = false } }
                         }
-                    },
+                    }
+                },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
                 ) { Text(if (isDeleting) "Deleting..." else "Delete Account") }
             },
