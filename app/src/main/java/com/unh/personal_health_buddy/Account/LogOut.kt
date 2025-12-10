@@ -1,9 +1,13 @@
+import TempProfileStorage
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -14,17 +18,21 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.google.firebase.auth.FirebaseAuth
+import com.unh.personal_health_buddy.R
 import com.unh.personal_health_buddy.database.UserDataCache
 import com.unh.personal_health_buddy.ui.theme.ButtonBlue
 import com.unh.personal_health_buddy.ui.theme.White
-
 
 // ------------------- Logout Dialog -------------------
 @Composable
@@ -34,27 +42,58 @@ fun LogoutConfirmationDialog(
 ) {
     Dialog(onDismissRequest = onCancel) {
         Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = White)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp),
+                    .padding(horizontal = 20.dp, vertical = 24.dp),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+
+                // App logo / icon on top
+                Image(
+                    painter = painterResource(id = R.drawable.profile_picture), // or your app logo drawable
+                    contentDescription = "App Logo",
+                    modifier = Modifier
+                        .height(56.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Title
                 Text(
-                    text = "Want to log out?",
+                    text = "Log out?",
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center,
-                    color = Color.White,
-                    fontSize = 14.sp
+                    color = Color(0xFF111827),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                // Short helper text
+                Text(
+                    text = "You can sign back in anytime.",
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    color = Color(0xFF6B7280),
+                    fontSize = 14.sp,
+                    lineHeight = 18.sp
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
+                // Primary: Logout
                 Button(
                     onClick = {
                         // Clear cache on logout
@@ -66,32 +105,37 @@ fun LogoutConfirmationDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
+                    shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = ButtonBlue,
                         contentColor = White
-                    ),
+                    )
                 ) {
-                    Text("Logout", fontSize = 14.sp)
+                    Text("Log out", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
+                // Secondary: Cancel
                 OutlinedButton(
                     onClick = onCancel,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = ButtonBlue,
-                        contentColor = White
-                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, ButtonBlue),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = White,
+                        contentColor = ButtonBlue
+                    )
                 ) {
-                    Text("Cancel", fontSize = 14.sp)
+                    Text("Stay logged in", fontSize = 15.sp, fontWeight = FontWeight.Medium)
                 }
             }
         }
     }
 }
+
 @Preview(showBackground = true)
 @Composable
 fun LogoutConfirmationDialogPreview() {

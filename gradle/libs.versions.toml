@@ -35,6 +35,7 @@ foundationLayoutVersion = "1.9.5"
 toolsCore = "1.0.0-alpha13"
 workRuntimeKtx_implementation_androidxWork = "work-runtime-testing"
 uiVersion = "1.10.0"
+generativeai = "0.9.0"
 
 
 [libraries]
@@ -82,6 +83,7 @@ androidx-tools-core = { group = "androidx.privacysandbox.tools", name = "tools-c
 
 androidx-work-ktx = { group = "androidx.work", name = "work-runtime-ktx", version = "2.11.0" }
 ui = { group = "androidx.compose.ui", name = "ui", version.ref = "uiVersion" }
+generativeai = { group = "com.google.ai.client.generativeai", name = "generativeai", version.ref = "generativeai" }
 
 
 

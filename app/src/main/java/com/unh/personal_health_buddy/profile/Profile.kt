@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -25,6 +26,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
@@ -36,18 +38,15 @@ import com.unh.personal_health_buddy.ui.theme.LightBlueBackground
 import com.unh.personal_health_buddy.ui.theme.TextColor
 import com.unh.personal_health_buddy.ui.theme.White
 
-
 // ------------------- Profile Items -------------------
 sealed class ProfileItem(val title: String, val icon: ImageVector, val route: String) {
-    object Account : ProfileItem("Account", Icons.Filled.Favorite, "account")
-    object Appointment : ProfileItem("Appointment", Icons.Filled.Event, "appointment")
-    object FAQS : ProfileItem("FAQS", Icons.Filled.Chat, "faqs")
+    object Account : ProfileItem("Account", Icons.Filled.Person, "account")
+    object FAQS : ProfileItem("FAQs & Help", Icons.Filled.Chat, "faqs")
     object Logout : ProfileItem("Logout", Icons.AutoMirrored.Filled.ExitToApp, "logout")
 }
 
 val profileItems = listOf(
     ProfileItem.Account,
-    ProfileItem.Appointment,
     ProfileItem.FAQS,
     ProfileItem.Logout
 )
@@ -59,7 +58,6 @@ fun ProfileScreen(
     items: List<ProfileItem>,
     currentRoute: String
 ) {
-
     var profileImageUrl by remember { mutableStateOf<String?>(null) }
     var showLogoutDialog by remember { mutableStateOf(false) }
     var firstName by remember { mutableStateOf(UserDataCache.user?.firstname ?: "User") }
@@ -91,23 +89,29 @@ fun ProfileScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background( LightBlueBackground)
-            .padding(0.dp)
-
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        LightBlueBackground,
+                        Color(0xFFE6F3FB)
+                    )
+                )
+            )
     ) {
         // ---------- Top Profile Card ----------
         Box(
             modifier = Modifier
-                .weight(0.5f)
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .weight(0.55f),
             contentAlignment = Alignment.Center
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(top = 40.dp, bottom = 40.dp)
+                modifier = Modifier.padding(top = 48.dp, bottom = 24.dp)
             ) {
                 Box(
                     modifier = Modifier
+                        .size(120.dp)
                         .background(
                             Brush.verticalGradient(
                                 listOf(Color(0xFF5AA9E6), Color(0xFFD6EFFF))
@@ -115,15 +119,16 @@ fun ProfileScreen(
                             CircleShape
                         )
                         .clip(CircleShape)
+                        .border(3.dp, Color.White.copy(alpha = 0.9f), CircleShape),
+                    contentAlignment = Alignment.Center
                 ) {
                     if (profileBitmap != null) {
                         Image(
                             bitmap = profileBitmap!!.asImageBitmap(),
                             contentDescription = "Profile Image",
                             modifier = Modifier
-                                .border(0.dp, Color.White, CircleShape)
                                 .clip(CircleShape)
-                                .size(110.dp),
+                                .size(108.dp),
                             contentScale = ContentScale.Crop
                         )
                     } else {
@@ -131,9 +136,9 @@ fun ProfileScreen(
                             painter = painterResource(id = R.drawable.profile_picture),
                             contentDescription = "Profile Image",
                             modifier = Modifier
-                                .border(0.dp, Color.White, CircleShape)
                                 .clip(CircleShape)
-                                .size(110.dp)
+                                .size(108.dp),
+                            contentScale = ContentScale.Crop
                         )
                     }
                 }
@@ -142,23 +147,31 @@ fun ProfileScreen(
 
                 Text(
                     text = firstName,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp
+                    ),
                     color = TextColor
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = "View and manage your account",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextColor.copy(alpha = 0.7f)
+                )
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // ---------- Bottom Column with Profile Items ----------
+        // ---------- Bottom Section with Profile Items ----------
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .offset(y = (50).dp)
-                .clip(RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp))
-                .background(Color(0xFFC8E4EE) )
+                .offset(y = 24.dp)
+                .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+                .background(Color(0xFFE1F0F7))
         ) {
             Column(
                 modifier = Modifier
@@ -166,27 +179,22 @@ fun ProfileScreen(
                     .padding(
                         start = 16.dp,
                         end = 16.dp,
-                        top = 60.dp,
-                        bottom = 60.dp
+                        top = 40.dp,
+                        bottom = 32.dp
                     ),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 items.forEach { item ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 8.dp)
-                            .clip(RoundedCornerShape(12.dp))
+                            .padding(vertical = 6.dp)
+                            .clip(RoundedCornerShape(14.dp))
                             .background(White)
                             .clickable {
                                 when (item) {
                                     is ProfileItem.Account -> {
                                         navController.navigate("account") {
-                                            launchSingleTop = true
-                                        }
-                                    }
-                                    is ProfileItem.Appointment -> {
-                                        navController.navigate("appointment") {
                                             launchSingleTop = true
                                         }
                                     }
@@ -200,28 +208,31 @@ fun ProfileScreen(
                                     }
                                 }
                             }
-                            .padding(horizontal = 1.dp, vertical = 2.dp),
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(50.dp)
+                                .size(46.dp)
                                 .clip(CircleShape)
-                                .background(ButtonBlue),
+                                .background(ButtonBlue.copy(alpha = 0.95f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 item.icon,
                                 contentDescription = item.title,
-                                tint = Color(0xFFE0EBFF)
+                                tint = Color(0xFFE9F2FF),
+                                modifier = Modifier.size(24.dp)
                             )
                         }
 
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
 
                         Text(
                             text = item.title,
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontWeight = FontWeight.Medium
+                            ),
                             color = TextColor,
                             modifier = Modifier.weight(1f)
                         )
@@ -229,7 +240,7 @@ fun ProfileScreen(
                         Icon(
                             imageVector = Icons.Default.KeyboardArrowRight,
                             contentDescription = "Go",
-                            tint = Color.Black
+                            tint = Color(0xFF4B5563)
                         )
                     }
                 }
@@ -254,4 +265,9 @@ fun ProfileScreen(
 @Composable
 fun PreviewProfileScreen() {
     val navController = rememberNavController()
+    ProfileScreen(
+        navController = navController,
+        items = profileItems,
+        currentRoute = "profile"
+    )
 }
