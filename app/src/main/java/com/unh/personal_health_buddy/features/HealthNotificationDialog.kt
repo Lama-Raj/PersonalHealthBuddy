@@ -253,7 +253,7 @@ fun generateHealthNotifications(
                 HealthNotification(
                     id = "blood_universal_donor",
                     title = "You're a Universal Donor!",
-                    message = "Your blood type $type is the universal donor. Your donation can save lives for anyone! Consider donating blood regularly.",
+                    message = "Your donation can save lives for anyone! Consider donating blood regularly.",
                     type = NotificationType.BLOOD_DONATION,
                     icon = Icons.Default.Bloodtype,
                     priority = NotificationPriority.MEDIUM

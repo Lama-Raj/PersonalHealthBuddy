@@ -3,18 +3,7 @@ package com.unh.personal_health_buddy.features
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -48,6 +37,10 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SmallFloatingActionButton
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -78,7 +71,6 @@ import com.unh.personal_health_buddy.Authentication.FirestoreHelper
 import com.unh.personal_health_buddy.database.Prescription
 import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -99,9 +91,8 @@ fun MedicateScreen(navController: NavController) {
     var isLoading by remember { mutableStateOf(true) }
     var selectedPrescription by remember { mutableStateOf<Prescription?>(null) }
 
-    // --- NOTIFICATION STATE ---
-    var showNotifications by remember { mutableStateOf(false) }
-    var notifications by remember { mutableStateOf<List<com.unh.personal_health_buddy.features.HealthNotification>>(emptyList()) }
+    // Snackbar for "Med added successfully"
+    val snackbarHostState = remember { SnackbarHostState() }
 
     // Load prescriptions from Firestore on launch
     LaunchedEffect(Unit) {
@@ -115,23 +106,6 @@ fun MedicateScreen(navController: NavController) {
             Log.e("MedicateScreen", "Error loading prescriptions: ${e.message}")
         } finally {
             isLoading = false
-        }
-    }
-
-    // Generate notifications when prescriptions are loaded
-    LaunchedEffect(prescriptions, isLoading) {
-        if (!isLoading) {
-            notifications = generateHealthNotifications(
-                bmi = null,
-                bmiCategory = "",
-                bloodType = null,
-                hasPrescriptions = prescriptions.isNotEmpty(),
-                lastBmiCheckDays = 0
-            )
-            if (prescriptions.isNotEmpty()) {
-                delay(1500)
-                showNotifications = true
-            }
         }
     }
 
@@ -171,11 +145,23 @@ fun MedicateScreen(navController: NavController) {
                     )
                 )
             },
+            // Snackbar host for small pop-up
+            snackbarHost = {
+                SnackbarHost(
+                    hostState = snackbarHostState
+                ) { data ->
+                    Snackbar(
+                        snackbarData = data,
+                        containerColor = primaryBlue,
+                        contentColor = Color.White,
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                }
+            },
             floatingActionButton = {
                 Column(
                     horizontalAlignment = Alignment.End,
                     verticalArrangement = Arrangement.spacedBy(18.dp),
-                    // 🔻 Move FAB closer to bottom
                     modifier = Modifier.padding(bottom = 24.dp, end = 16.dp)
                 ) {
                     AnimatedVisibility(isMenuExpanded) {
@@ -204,8 +190,16 @@ fun MedicateScreen(navController: NavController) {
                                             }
                                             prescriptions = emptyList()
                                             isMenuExpanded = false
+                                            snackbarHostState.showSnackbar(
+                                                message = "All medications cleared",
+                                                duration = SnackbarDuration.Short
+                                            )
                                         } catch (e: Exception) {
                                             Log.e("MedicateScreen", "Error clearing prescriptions: ${e.message}")
+                                            snackbarHostState.showSnackbar(
+                                                message = "Error clearing medications",
+                                                duration = SnackbarDuration.Short
+                                            )
                                         }
                                     }
                                 },
@@ -279,8 +273,18 @@ fun MedicateScreen(navController: NavController) {
                             }
                             prescriptions = updatedPrescriptions
                             showAddPrescriptionDialog = false
+
+                            // ✅ Show success popup here
+                            snackbarHostState.showSnackbar(
+                                message = "Medication added successfully",
+                                duration = SnackbarDuration.Short
+                            )
                         } catch (e: Exception) {
                             Log.e("MedicateScreen", "Error saving prescription: ${e.message}")
+                            snackbarHostState.showSnackbar(
+                                message = "Error adding medication",
+                                duration = SnackbarDuration.Short
+                            )
                         }
                     }
                 },
@@ -305,23 +309,18 @@ fun MedicateScreen(navController: NavController) {
                             }
                             prescriptions = updatedPrescriptions
                             selectedPrescription = null
+
+                            snackbarHostState.showSnackbar(
+                                message = "Medication deleted",
+                                duration = SnackbarDuration.Short
+                            )
                         } catch (e: Exception) {
                             Log.e("MedicateScreen", "Error deleting prescription: ${e.message}")
+                            snackbarHostState.showSnackbar(
+                                message = "Error deleting medication",
+                                duration = SnackbarDuration.Short
+                            )
                         }
-                    }
-                }
-            )
-        }
-
-        // NOTIFICATION DIALOG
-        if (showNotifications && notifications.isNotEmpty()) {
-            HealthNotificationDialog(
-                notifications = notifications,
-                onDismiss = { showNotifications = false },
-                onClearNotification = { id ->
-                    notifications = notifications.filter { it.id != id }
-                    if (notifications.isEmpty()) {
-                        showNotifications = false
                     }
                 }
             )

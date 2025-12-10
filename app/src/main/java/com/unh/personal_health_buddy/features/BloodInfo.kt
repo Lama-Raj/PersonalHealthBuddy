@@ -54,7 +54,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 
-// ---------------- Static data from your theme version ----------------
+// Static data from your theme version
 
 // fact list for bottom view
 private val bloodFacts = listOf(
@@ -118,11 +118,11 @@ fun BloodGroupScreen(navController: NavController) {
     var userBloodType by remember { mutableStateOf("N/A") }
     var isLoading by remember { mutableStateOf(true) }
 
-    // NEW: track missing blood group
+    // track missing blood group
     var isBloodGroupMissing by remember { mutableStateOf(false) }
     var showMissingDialog by remember { mutableStateOf(false) }
 
-    // If you still use health notifications, keep these:
+    // Only used for this screen: optional pop notification for universal donor
     var showNotifications by remember { mutableStateOf(false) }
     var notifications by remember { mutableStateOf<List<HealthNotification>>(emptyList()) }
 
@@ -151,18 +151,29 @@ fun BloodGroupScreen(navController: NavController) {
     }
 
     // Generate health notifications based on blood type (only if present)
+    // - not loading
+    // - blood group is not missing
+    // - user is universal donor (O-)
     LaunchedEffect(userBloodType, isLoading, isBloodGroupMissing) {
-        if (!isLoading && !isBloodGroupMissing && userBloodType.isNotBlank()) {
-            notifications = generateHealthNotifications(
-                bmi = null,
-                bmiCategory = "",
-                bloodType = userBloodType,
-                hasPrescriptions = false,
-                lastBmiCheckDays = 0
-            )
-            delay(2000)
-            if (notifications.isNotEmpty()) {
+        if (!isLoading && !isBloodGroupMissing) {
+            if (userBloodType == "O-") {
+                val type = userBloodType
+                notifications = listOf(
+                    HealthNotification(
+                        id = "blood_universal_donor",
+                        title = "You're a Universal Donor!",
+                        message = "Your blood type $type is the universal donor. Your donation can save lives for anyone! Consider donating blood regularly.",
+                        type = NotificationType.BLOOD_DONATION,
+                        icon = Icons.Default.Bloodtype,
+                        priority = NotificationPriority.MEDIUM
+                    )
+                )
+                delay(2000)
                 showNotifications = true
+            } else {
+                // No extra pop notification for other blood types
+                notifications = emptyList()
+                showNotifications = false
             }
         }
     }
@@ -268,7 +279,7 @@ fun BloodGroupScreen(navController: NavController) {
             )
         }
 
-        // Optional health notifications (same behavior as before)
+        // Pop notification ONLY for universal donor case
         if (showNotifications && notifications.isNotEmpty()) {
             HealthNotificationDialog(
                 notifications = notifications,
