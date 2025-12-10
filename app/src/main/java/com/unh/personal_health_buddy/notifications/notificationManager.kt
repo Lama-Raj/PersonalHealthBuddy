@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.unh.personal_health_buddy.features.HealthNotification
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.Date
@@ -180,22 +181,33 @@ private fun formatTimestamp(timestamp: Long): String {
         }
     }
 }
-// ---------------- Global store for dismissed HealthNotification IDs ----------------
+/**
+ * Global store of "notifications the user has dismissed", tracked by content
+ * (title + message), so the same notification does not appear again.
+ */
 object NotificationHistory {
-    // Holds the IDs of HealthNotification items that the user has dismissed/cleared.
-    val dismissedHealthIds = mutableStateListOf<String>()
 
-    fun dismissHealth(id: String) {
-        if (!dismissedHealthIds.contains(id)) {
-            dismissedHealthIds.add(id)
+    // Backed by Compose state, so UI recomposes when this changes
+    private val _dismissedKeys = mutableStateListOf<String>()
+    val dismissedKeys: SnapshotStateList<String>
+        get() = _dismissedKeys
+
+    // Build a stable key based on content
+    fun makeKey(title: String, message: String): String =
+        "${title.trim()}|${message.trim()}"
+
+    fun dismiss(notification: HealthNotification) {
+        val key = makeKey(notification.title, notification.message)
+        if (!_dismissedKeys.contains(key)) {
+            _dismissedKeys.add(key)
         }
     }
 
-    fun dismissMany(ids: Collection<String>) {
-        ids.forEach { dismissHealth(it) }
+    fun dismissMany(notifications: Collection<HealthNotification>) {
+        notifications.forEach { dismiss(it) }
     }
 
-    fun clearAll() {
-        dismissedHealthIds.clear()
+    fun reset() {
+        _dismissedKeys.clear()
     }
 }

@@ -29,7 +29,6 @@ import com.unh.personal_health_buddy.features.NotificationType
 import com.unh.personal_health_buddy.features.generateHealthNotifications
 import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 
 // Navigation Definitions
@@ -57,11 +56,11 @@ fun NotificationScreen(navController: NavController) {
     var generatedNotifications by remember { mutableStateOf<List<HealthNotification>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
-    // Notifications that are currently visible on the page (gradually revealed)
+    // Notifications currently visible on the page
     var visibleNotifications by remember { mutableStateOf<List<HealthNotification>>(emptyList()) }
 
-    // 🔹 Global list of dismissed IDs (persists beyond this composable)
-    val dismissedIds: List<String> = NotificationHistory.dismissedHealthIds
+    // 🔹 Use the global dismissedKeys as reactive state
+    val dismissedKeys = NotificationHistory.dismissedKeys
 
     // Fetch data and generate notifications once
     LaunchedEffect(Unit) {
@@ -89,7 +88,7 @@ fun NotificationScreen(navController: NavController) {
     val allNotifications = remember(
         generatedNotifications,
         InAppNotificationManager.notifications.toList(),
-        dismissedIds
+        dismissedKeys
     ) {
         val sessionNotifications = InAppNotificationManager.notifications.map { inApp ->
             HealthNotification(
@@ -102,27 +101,19 @@ fun NotificationScreen(navController: NavController) {
             )
         }
 
-        // Combine session + generated
         (sessionNotifications + generatedNotifications)
-            // 🔹 Filter out everything the user already cleared (ever)
-            .filter { it.id !in dismissedIds }
+            // 1) Remove anything the user has dismissed (ever) based on content
+            .filter {
+                val key = NotificationHistory.makeKey(it.title, it.message)
+                key !in dismissedKeys
+            }
+            // 2) Remove duplicates with same content currently in the list
+            .distinctBy { NotificationHistory.makeKey(it.title, it.message) }
     }
 
-    // Gradually reveal notifications one by one whenever "allNotifications" changes
+    // Show all remaining notifications immediately (no delay)
     LaunchedEffect(allNotifications) {
-        if (allNotifications.isEmpty()) {
-            visibleNotifications = emptyList()
-            return@LaunchedEffect
-        }
-
-        visibleNotifications = emptyList()
-
-        for (notification in allNotifications) {
-            // If user cleared it while we were looping, skip it
-            if (notification.id in NotificationHistory.dismissedHealthIds) continue
-
-            visibleNotifications = visibleNotifications + notification
-        }
+        visibleNotifications = allNotifications
     }
 
     Scaffold(
@@ -143,15 +134,12 @@ fun NotificationScreen(navController: NavController) {
                 },
                 actions = {
                     // Clear notifications button:
-                    // - Marks current visible as dismissed (never show again)
+                    // - Marks current visible as dismissed globally (by content)
                     // - Clears InApp notifications
                     IconButton(
                         onClick = {
-                            // Mark all currently visible notifications as dismissed globally
-                            NotificationHistory.dismissMany(visibleNotifications.map { it.id })
-                            // Clear visible list
+                            NotificationHistory.dismissMany(visibleNotifications)
                             visibleNotifications = emptyList()
-                            // Clear in-app session notifications
                             InAppNotificationManager.clearAll()
                         }
                     ) {
@@ -180,10 +168,10 @@ fun NotificationScreen(navController: NavController) {
                     bottom = paddingValues.calculateBottomPadding()
                 )
         ) {
-            val hasAnythingToShow = allNotifications.isNotEmpty() || visibleNotifications.isNotEmpty()
+            val hasAnythingToShow = visibleNotifications.isNotEmpty()
 
             when {
-                // No notifications at all → show empty state
+                // Nothing to show → empty state
                 !hasAnythingToShow -> {
                     Column(
                         modifier = Modifier.fillMaxSize(),
@@ -195,7 +183,6 @@ fun NotificationScreen(navController: NavController) {
                 }
 
                 else -> {
-                    // Show ONLY notifications that have been gradually revealed so far
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
