@@ -115,6 +115,7 @@ fun MedicateScreen(navController: NavController) {
 
     Box(
         modifier = Modifier
+            .offset(y = (-20).dp)
             .fillMaxSize()
             .background(backgroundGradient)
     ) {

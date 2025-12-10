@@ -1,14 +1,5 @@
 package com.unh.personal_health_buddy.notifications
 
-import NotificationDialog
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
-
-// -------------------- InAppNotificationManager --------------------
-
-
-import androidx.compose.runtime.mutableStateListOf
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -16,8 +7,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,12 +23,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.flow.MutableStateFlow
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Locale
+import java.util.Date
 
-// ---------------- Notification Manager ----------------
+// ---------------------------------
+// In-app notification manager
+// ---------------------------------
 object InAppNotificationManager {
+
     data class Notification(
         val id: Int,
         val title: String,
@@ -40,17 +40,25 @@ object InAppNotificationManager {
         val isRead: Boolean = false
     )
 
+    // Backing list of notifications (reactive for Compose)
     private val _notifications = mutableStateListOf<Notification>()
     val notifications: SnapshotStateList<Notification> get() = _notifications
 
+    // How many are unread (for badges if you want)
     val unreadCount: Int
         get() = _notifications.count { !it.isRead }
 
+    /**
+     * Add a new in-app notification.
+     * Used by RandomTopNudgeHost, MedicateScreen, BloodGroupScreen, etc.
+     */
     fun addNotification(title: String, message: String) {
+        // Use a simple incremental id; you can switch to a timestamp-based id if you prefer
+        val newId = (_notifications.maxOfOrNull { it.id } ?: 0) + 1
         _notifications.add(
             0,
             Notification(
-                id = _notifications.size,
+                id = newId,
                 title = title,
                 message = message
             )
@@ -77,14 +85,18 @@ object InAppNotificationManager {
     }
 }
 
-// ---------------- Item ----------------
+// ---------------------------------
+// Reusable row UI for one notification
+// (optional helper for NotificationScreen or lists)
+// ---------------------------------
 @Composable
 fun NotificationItem(
     notification: InAppNotificationManager.Notification,
     onClick: () -> Unit,
     onDelete: () -> Unit
 ) {
-    val backgroundColor = if (notification.isRead) Color.White else Color(0xFFE0F7FA)
+    val backgroundColor =
+        if (notification.isRead) Color.White else Color(0xFFE0F7FA)
 
     Card(
         modifier = Modifier
@@ -151,7 +163,9 @@ fun NotificationItem(
     }
 }
 
-// ---------------- Timestamp ----------------
+// ---------------------------------
+// Timestamp formatting helper
+// ---------------------------------
 private fun formatTimestamp(timestamp: Long): String {
     val now = System.currentTimeMillis()
     val diff = now - timestamp
@@ -166,26 +180,22 @@ private fun formatTimestamp(timestamp: Long): String {
         }
     }
 }
+// ---------------- Global store for dismissed HealthNotification IDs ----------------
+object NotificationHistory {
+    // Holds the IDs of HealthNotification items that the user has dismissed/cleared.
+    val dismissedHealthIds = mutableStateListOf<String>()
 
-// ---------------- Usage Example ----------------
-@Composable
-fun NotificationDemo() {
-    var showDialog by remember { mutableStateOf(false) }
-
-    Column(modifier = Modifier.padding(16.dp)) {
-        Button(onClick = {
-            InAppNotificationManager.addNotification(
-                title = "New Message",
-                message = "Hello! This is a test notification."
-            )
-            showDialog = true
-        }) {
-            Text("Show Notifications")
-        }
-
-        if (showDialog) {
-            NotificationDialog(onDismiss = { showDialog = false })
+    fun dismissHealth(id: String) {
+        if (!dismissedHealthIds.contains(id)) {
+            dismissedHealthIds.add(id)
         }
     }
-}
 
+    fun dismissMany(ids: Collection<String>) {
+        ids.forEach { dismissHealth(it) }
+    }
+
+    fun clearAll() {
+        dismissedHealthIds.clear()
+    }
+}
