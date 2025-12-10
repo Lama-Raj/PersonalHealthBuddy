@@ -23,9 +23,12 @@ import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -53,6 +56,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.unh.personal_health_buddy.R
 import com.unh.personal_health_buddy.account.LogoutConfirmationDialog
 import com.unh.personal_health_buddy.database.UserDataCache
+import com.unh.personal_health_buddy.notifications.NotificationSettings
 import com.unh.personal_health_buddy.ui.theme.ButtonBlue
 import com.unh.personal_health_buddy.ui.theme.LightBlueBackground
 import com.unh.personal_health_buddy.ui.theme.TextColor
@@ -83,8 +87,12 @@ fun ProfileScreen(
     var firstName by remember { mutableStateOf(UserDataCache.user?.firstname ?: "User") }
     var profileBitmap by remember { mutableStateOf(UserDataCache.profileBitmap) }
 
+    // Medicate-style theme
     val primaryBlue = Color(0xFF1877F2)
     val lightBlueBackground = Color(0xFFF3F6FF)
+
+    // 🔹 global toggle state from NotificationSettings
+    var isNudgeBarOn by NotificationSettings.isTopNudgeEnabled
 
     // Fetch firstname and profile image URL from Firestore
     LaunchedEffect(true) {
@@ -122,7 +130,7 @@ fun ProfileScreen(
             )
     ) {
 
-        // ---------- Top Header + Profile Area ----------
+        // ---------- Top Header + Profile ----------
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -157,18 +165,18 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Avatar + name + subtitle
+            // Avatar + name + subtitle (no card)
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(
                     modifier = Modifier
-                        .size(120.dp)
+                        .size(110.dp)
                         .background(
                             lightBlueBackground,
                             CircleShape
                         )
                         .clip(CircleShape)
                         .border(
-                            4.dp,
+                            2.dp,
                             primaryBlue.copy(alpha = 0.4f),
                             CircleShape
                         ),
@@ -180,7 +188,7 @@ fun ProfileScreen(
                             contentDescription = "Profile Image",
                             modifier = Modifier
                                 .clip(CircleShape)
-                                .size(120.dp),
+                                .size(100.dp),
                             contentScale = ContentScale.Crop
                         )
                     } else {
@@ -189,7 +197,7 @@ fun ProfileScreen(
                             contentDescription = "Profile Image",
                             modifier = Modifier
                                 .clip(CircleShape)
-                                .size(120.dp),
+                                .size(100.dp),
                             contentScale = ContentScale.Crop
                         )
                     }
@@ -218,7 +226,7 @@ fun ProfileScreen(
             }
         }
 
-        // ---------- Bottom Section with Profile Items----------
+        // ---------- Bottom Section ----------
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -239,6 +247,7 @@ fun ProfileScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
 
+                // ---- Account & Help header ----
                 Text(
                     text = "Account & Help",
                     style = MaterialTheme.typography.bodyMedium.copy(
@@ -249,6 +258,7 @@ fun ProfileScreen(
                     modifier = Modifier.padding(bottom = 4.dp, start = 4.dp)
                 )
 
+                // ---- Existing nav rows ----
                 items.forEach { item ->
                     Row(
                         modifier = Modifier
@@ -308,7 +318,7 @@ fun ProfileScreen(
 
                             val subtitle = when (item) {
                                 is ProfileItem.Account -> "Edit personal info and health details"
-                                is ProfileItem.FAQS -> "Get answers and contact support"
+                                is ProfileItem.FAQS   -> "Get answers and contact support"
                                 is ProfileItem.Logout -> "Sign out of this device"
                             }
 
@@ -326,6 +336,77 @@ fun ProfileScreen(
                             tint = Color(0xFF4B5563)
                         )
                     }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // ---- Health reminders toggle row ----
+                Text(
+                    text = "Reminders",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp
+                    ),
+                    color = TextColor.copy(alpha = 0.75f),
+                    modifier = Modifier.padding(bottom = 4.dp, start = 4.dp)
+                )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(White)
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(46.dp)
+                            .clip(CircleShape)
+                            .background(ButtonBlue),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Notifications,
+                            contentDescription = "Health reminders",
+                            tint = Color(0xFFE9F2FF),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = "Top reminder bar",
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontWeight = FontWeight.Medium
+                            ),
+                            color = TextColor
+                        )
+                        Text(
+                            text = "Show occasional health nudges at the top of the app.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextColor.copy(alpha = 0.6f),
+                            fontSize = 12.sp
+                        )
+                    }
+
+                    Switch(
+                        checked = isNudgeBarOn,
+                        onCheckedChange = { checked ->
+                            isNudgeBarOn = checked      // updates NotificationSettings as well
+                        },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = White,
+                            checkedTrackColor = ButtonBlue,
+                            uncheckedThumbColor = Color.White,
+                            uncheckedTrackColor = Color.LightGray
+                        )
+                    )
                 }
             }
         }

@@ -22,6 +22,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.unh.personal_health_buddy.Authentication.FirestoreHelper
 import com.unh.personal_health_buddy.database.UserDataCache
 import com.unh.personal_health_buddy.firebase.SetupAuthentication
+import com.unh.personal_health_buddy.notifications.NotificationSettings   // 🔹 NEW
 import com.unh.personal_health_buddy.notifications.RandomTopNudgeHost
 import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
 import kotlinx.coroutines.Dispatchers
@@ -109,8 +110,14 @@ class MainActivity : ComponentActivity() {
                         navController = navController,
                     )
 
-                    // 🔹 Show RandomTopNudgeHost ONLY when NOT on auth routes
-                    if (currentRoute != null && currentRoute !in authRoutes) {
+                    // 🔹 Show RandomTopNudgeHost ONLY when:
+                    //    - not on auth routes
+                    //    - user has turned the setting ON in Profile
+                    if (
+                        currentRoute != null &&
+                        currentRoute !in authRoutes &&
+                        NotificationSettings.isTopNudgeEnabled.value
+                    ) {
                         RandomTopNudgeHost(
                             modifier = Modifier
                                 .align(Alignment.TopCenter)
