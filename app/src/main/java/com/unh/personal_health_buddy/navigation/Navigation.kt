@@ -137,7 +137,7 @@ fun AppNavigation(
     ) { paddingValues ->
         NavHost(
             navController = navController,
-            startDestination = "home",
+            startDestination = "welcome",
             modifier = Modifier.padding(paddingValues)
         ) {
             // AUTH SCREENS

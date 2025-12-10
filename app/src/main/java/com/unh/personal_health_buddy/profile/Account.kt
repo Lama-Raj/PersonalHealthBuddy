@@ -1,802 +1,331 @@
 package com.unh.personal_health_buddy.profile
 
-import BackHeader
+import TempProfileStorage
+import android.Manifest
+import android.app.DatePickerDialog
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
+import android.os.Build
+import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.material3.OutlinedTextField
-
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.runtime.Composable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import com.unh.personal_health_buddy.Authentication.FirestoreHelper
+import com.unh.personal_health_buddy.R
 import com.unh.personal_health_buddy.database.*
-import com.unh.personal_health_buddy.ui.theme.ChatGreen
+import com.unh.personal_health_buddy.ui.theme.TextColor
+import com.unh.personal_health_buddy.ui.theme.White
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.net.URL
+import java.util.Calendar
 
+// ---------------- Constants & Colors ----------------
+val BLOOD_GROUPS = listOf("O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-")
+
+// Colors
+val PrimaryBlue = Color(0xFF1877F2)
+val LightBlueBg = Color(0xFFF3F6FF)
+
+// ---------------- Helper Components ----------------
 
 @Composable
-fun EditableOrInfoRow(
+fun PhotoOptionsMenu(
+    showMenu: Boolean,
+    onDismiss: () -> Unit,
+    onTakePhoto: () -> Unit,
+    onUpload: () -> Unit,
+    onDelete: () -> Unit
+) {
+    DropdownMenu(
+        expanded = showMenu,
+        onDismissRequest = onDismiss,
+        modifier = Modifier.background(White)
+    ) {
+        DropdownMenuItem(
+            text = { Text("Take Photo") },
+            onClick = onTakePhoto,
+            leadingIcon = { Icon(Icons.Default.CameraAlt, contentDescription = null, tint = PrimaryBlue) }
+        )
+        DropdownMenuItem(
+            text = { Text("Upload from Gallery") },
+            onClick = onUpload,
+            leadingIcon = { Icon(Icons.Default.PhotoLibrary, contentDescription = null, tint = PrimaryBlue) }
+        )
+        DropdownMenuItem(
+            text = { Text("Remove Photo", color = Color.Red) },
+            onClick = onDelete,
+            leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null, tint = Color.Red) }
+        )
+    }
+}
+
+// *** STYLED ROW COMPONENT ***
+@Composable
+fun StyledEditableRow(
     label: String,
     value: String,
     isEditing: Boolean,
     onValueChange: (String) -> Unit,
     readOnly: Boolean = false,
     isDropdown: Boolean = false,
-    dropdownOptions: List<String> = emptyList()
+    dropdownOptions: List<String> = emptyList(),
+    isDateField: Boolean = false,
+    keyboardType: KeyboardType = KeyboardType.Text
 ) {
-    val displayValue = if (value.isBlank()) "N/A" else value
+    val displayValue = if (value.isBlank()) "Not Set" else value
     var expandedDropdown by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
-    Row(
+    // Container matching ProfileRow style
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+            .padding(vertical = 6.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(White)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
+        // Label
         Text(
             text = label,
-            fontWeight = FontWeight.Medium,
-            color = Color.White,
-            modifier = Modifier.weight(0.4f)
+            style = MaterialTheme.typography.bodySmall,
+            color = TextColor.copy(alpha = 0.6f),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold
         )
 
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // Content Area
         if (isEditing && !readOnly) {
-            if (isDropdown && dropdownOptions.isNotEmpty()) {
-                Box(modifier = Modifier.weight(0.6f)) {
-                    OutlinedTextField(
-                        value = value,
-                        onValueChange = {},
-                        readOnly = true,
-                        singleLine = true,
-                        trailingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.ArrowDropDown,
-                                contentDescription = "Dropdown",
-                                tint = Color.White
-                            )
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp),
-                        textStyle = MaterialTheme.typography.bodyMedium.copy(color = Color.White),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
-                            disabledTextColor = Color.White,
-                            cursorColor = Color.White,
-                            focusedBorderColor = Color.White,
-                            unfocusedBorderColor = Color.White.copy(alpha = 0.7f)
+            if (isDateField) {
+                Box(modifier = Modifier.fillMaxWidth().clickable {
+                    val cal = Calendar.getInstance()
+                    try {
+                        if (value.isNotBlank()) {
+                            val parts = value.split("-")
+                            if (parts.size == 3) cal.set(parts[0].toInt(), parts[1].toInt() - 1, parts[2].toInt())
+                        }
+                    } catch (_: Exception) {}
+                    DatePickerDialog(context, { _, y, m, d ->
+                        onValueChange(String.format("%04d-%02d-%02d", y, m + 1, d))
+                    }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
+                }) {
+                    Text(
+                        text = value.ifBlank { "Select Date" },
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = if(value.isBlank()) Color.Gray else TextColor,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                    Icon(
+                        Icons.Default.CalendarToday,
+                        contentDescription = null,
+                        tint = PrimaryBlue,
+                        modifier = Modifier.align(Alignment.CenterEnd).size(20.dp)
+                    )
+                }
+            } else if (isDropdown) {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Box(modifier = Modifier.fillMaxWidth().clickable { expandedDropdown = true }) {
+                        Text(
+                            text = value.ifBlank { "Select Option" },
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = if(value.isBlank()) Color.Gray else TextColor,
+                            modifier = Modifier.padding(vertical = 8.dp)
                         )
-                    )
-
-                    Box(
-                        modifier = Modifier
-                            .matchParentSize()
-                            .clickable { expandedDropdown = !expandedDropdown }
-                    )
-
+                        Icon(
+                            Icons.Default.ArrowDropDown,
+                            contentDescription = null,
+                            tint = PrimaryBlue,
+                            modifier = Modifier.align(Alignment.CenterEnd)
+                        )
+                    }
                     DropdownMenu(
                         expanded = expandedDropdown,
                         onDismissRequest = { expandedDropdown = false },
-                        modifier = Modifier.fillMaxWidth(0.6f)
+                        modifier = Modifier.background(White)
                     ) {
                         dropdownOptions.forEach { option ->
                             DropdownMenuItem(
                                 text = { Text(option) },
-                                onClick = {
-                                    onValueChange(option)
-                                    expandedDropdown = false
-                                }
+                                onClick = { onValueChange(option); expandedDropdown = false }
                             )
                         }
                     }
                 }
             } else {
-                OutlinedTextField(
+                BasicTextField(
                     value = value,
                     onValueChange = onValueChange,
-                    singleLine = true,
-                    modifier = Modifier
-                        .weight(0.6f)
-                        .height(50.dp),
-                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = Color.White),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        disabledTextColor = Color.White,
-                        cursorColor = Color.White,
-                        focusedBorderColor = Color.White,
-                        unfocusedBorderColor = Color.White.copy(alpha = 0.7f)
-                    )
+                    textStyle = TextStyle(
+                        color = TextColor,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Normal
+                    ),
+                    keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = ImeAction.Next),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    decorationBox = { innerTextField ->
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            if (value.isEmpty()) Text("Enter $label", color = Color.Gray.copy(alpha = 0.5f))
+                            innerTextField()
+                            Box(
+                                Modifier.align(Alignment.BottomStart)
+                                    .fillMaxWidth()
+                                    .height(1.dp)
+                                    .background(PrimaryBlue.copy(alpha = 0.3f))
+                            )
+                        }
+                    }
                 )
             }
         } else {
             Text(
                 text = displayValue,
-                fontWeight = FontWeight.Normal,
-                color = if (readOnly && isEditing) Color.White.copy(alpha = 0.6f) else Color.White,
-                fontStyle = if (displayValue == "N/A") FontStyle.Italic else FontStyle.Normal,
-                modifier = Modifier.weight(0.6f)
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                color = if (displayValue == "Not Set") TextColor.copy(alpha = 0.4f) else TextColor
             )
         }
     }
 }
 
-val BLOOD_GROUPS = listOf("O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-")
-
-
-
+// ---------------- Bottom Section (Content) ----------------
 
 @Composable
-fun AccountTopSection(
-    navController: NavHostController,
-    user: User?,
-    expandedDropdown: Boolean,
-    onOptionsClick: () -> Unit,
-    onDismissDropdown: () -> Unit,
-    onDeleteClick: () -> Unit
-) {
-    var profileBitmap by remember { mutableStateOf<Bitmap?>(null) }
-    val firstName = user?.firstname ?: "User"
-
-    // Top headline (keeps as-is)
-
-
-    LaunchedEffect(user?.profileImageUrl, TempProfileStorage.tempProfileBitmap) {
-        val tempBitmap = TempProfileStorage.tempProfileBitmap
-        if (tempBitmap != null) {
-            profileBitmap = tempBitmap
-        } else {
-            user?.profileImageUrl?.let { url ->
-                try {
-                    withContext(Dispatchers.IO) {
-                        val stream = URL(url).openStream()
-                        profileBitmap = BitmapFactory.decodeStream(stream)
-                    }
-                } catch (e: Exception) {
-                    Log.e("AccountTopSection", "Error loading image: ${e.message}")
-                }
-            }
-        }
-    }
-
-    val imageBitmap = profileBitmap?.asImageBitmap()
-
-    Box(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color(0xFF8EEA91))
-                .offset(y = (-32).dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.height(32.dp))
-
-            BackHeader(
-                title = "Profile",
-                onBack = { navController.navigate("profile") },
-                color = Color(0xFFFFFFFF)
-
-            )
-
-            Text(
-                modifier = Modifier.offset(y = (-32).dp),
-                text = "User Information",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFFFFFFFF)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            if (imageBitmap != null) {
-                Image(
-                    bitmap = imageBitmap,
-                    contentDescription = "Profile Picture",
-                    modifier = Modifier
-                        .size(140.dp)
-                        .clip(CircleShape)
-                        .border(1.dp, MaterialTheme.colorScheme.primary, CircleShape),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = "Default Profile",
-                    modifier = Modifier.size(120.dp),
-                    tint = Color.Gray
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // <-- FIX: explicitly set color here so fetched firstName is not default black
-            Text(
-                text = firstName,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFFFFFFFF)
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-        }
-
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 32.dp, end = 8.dp)
-        ) {
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .clickable(onClick = onOptionsClick)
-                    .padding(top = 18.dp, start = 8.dp, end = 8.dp)
-                    .offset(y = (-32).dp)
-            ) {
-                Text(
-                    text = "Options",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = Color(0xFFFFFFFF),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Icon(
-                    imageVector = Icons.Default.ArrowDropDown,
-                    contentDescription = "Show options",
-                    tint = Color(0xFFFFFFFF),
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-
-            DropdownMenu(
-                expanded = expandedDropdown,
-                onDismissRequest = onDismissDropdown
-            ) {
-                // --- NEW ITEM: Navigate to Account Form ---
-                DropdownMenuItem(
-                    text = {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = "Edit User Details",
-                                tint = ChatGreen
-                            )
-                            Text(
-                                text = "Account Form",
-                                color = ChatGreen
-                            )
-
-                        }
-                    },
-                    onClick = {
-                        onDismissDropdown()
-                        navController.navigate("account-form")
-                    }
-                )
-                Divider()
-                // --- EXISTING ITEM: Delete Account ---
-                DropdownMenuItem(
-                    text = {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = "Delete",
-                                tint = Color.Red
-                            )
-                            Text("Delete Account", color = Color.Red)
-                        }
-                    },
-                    onClick = {
-                        onDismissDropdown()
-                        onDeleteClick()
-                    }
-                )
-            }
-        }
-    }
-}
-
-
-@Composable
-fun AccountTopSection(
-    navController: NavHostController,
-    user: User?,
-    expandedDropdown: Boolean,
-    onOptionsClick: () -> Unit,
-    onDismissDropdown: () -> Unit,
-    onDeleteClick: () -> Unit,
-    isEditing: Boolean,
-    onEditClick: () -> Unit,
-    onSaveClick: () -> Unit,
-    onCancelClick: () -> Unit,
-    isLoading: Boolean
-) {
-    var profileBitmap by remember { mutableStateOf<Bitmap?>(TempProfileStorage.tempProfileBitmap) }
-    val firstName = user?.firstname ?: "User"
-    var expandedEditDropdown by remember { mutableStateOf(false) }
-
-    LaunchedEffect(user?.profileImageUrl) {
-        if (profileBitmap == null) {
-            user?.profileImageUrl?.let { url ->
-                try {
-                    withContext(Dispatchers.IO) {
-                        val stream = URL(url).openStream()
-                        val bitmap = BitmapFactory.decodeStream(stream)
-                        profileBitmap = bitmap
-                        TempProfileStorage.tempProfileBitmap = bitmap // store for caching
-                    }
-                } catch (e: Exception) {
-                    Log.e("AccountTopSection", "Error loading image: ${e.message}")
-                }
-            }
-        }
-    }
-
-    val imageBitmap = profileBitmap?.asImageBitmap()
-
-    Box(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(10.dp)),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            BackHeader(
-                title = "Profile",
-                onBack = { navController.navigate("profile") },
-                color = Color.White
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            if (imageBitmap != null) {
-                Image(
-                    bitmap = imageBitmap,
-                    contentDescription = "Profile Picture",
-                    modifier = Modifier
-                        .size(140.dp)
-                        .clip(CircleShape)
-                        .border(1.dp, MaterialTheme.colorScheme.primary, CircleShape),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = "Default Profile",
-                    modifier = Modifier.size(120.dp),
-                    tint = Color.Gray
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = firstName,
-                fontWeight = FontWeight.SemiBold,
-                color = Color.White
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-        }
-
-        // Top-right dropdown (Options)
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 0.dp, end = 8.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .clickable(onClick = onOptionsClick)
-                    .padding(top = 16.dp, start = 8.dp, end = 8.dp)
-            ) {
-                Text(
-                    text = "Options",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = Color.White,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Icon(
-                    imageVector = Icons.Default.ArrowDropDown,
-                    contentDescription = "Show options",
-                    tint = Color.White,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-
-            DropdownMenu(
-                expanded = expandedDropdown,
-                onDismissRequest = onDismissDropdown
-            ) {
-                DropdownMenuItem(
-                    text = { Text("Account Form", color = Color(0xFF1976D2)) },
-                    onClick = {
-                        onDismissDropdown()
-                        navController.navigate("account-form")
-                    }
-                )
-                Divider()
-                DropdownMenuItem(
-                    text = { Text("Delete Account", color = Color.Red) },
-                    onClick = {
-                        onDismissDropdown()
-                        onDeleteClick()
-                    }
-                )
-            }
-        }
-
-        // Bottom-right Edit dropdown
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 16.dp, bottom = 8.dp)
-        ) {
-            if (isEditing) {
-                Box {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .clickable { expandedEditDropdown = true }
-                            .padding(horizontal = 8.dp, vertical = 8.dp)
-                    ) {
-                        Text(
-                            text = "Options",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = Color.White,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Icon(
-                            imageVector = Icons.Default.ArrowDropDown,
-                            contentDescription = "Show edit options",
-                            tint = Color.White,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-
-                    DropdownMenu(
-                        expanded = expandedEditDropdown,
-                        onDismissRequest = { expandedEditDropdown = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("Save Changes") },
-                            onClick = {
-                                expandedEditDropdown = false
-                                onSaveClick()
-                            },
-                            enabled = !isLoading
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Cancel") },
-                            onClick = {
-                                expandedEditDropdown = false
-                                onCancelClick()
-                            }
-                        )
-                    }
-                }
-            } else {
-                Text(
-                    text = "Edit",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = Color.White,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .clickable(onClick = onEditClick)
-                        .padding(8.dp)
-                )
-            }
-        }
-    }
-}
-
-
-
-
-@Composable
-fun BottomSection(
+fun StyledBottomSection(
     user: User?,
     emergencyContacts: List<EmergencyContact>,
     healthInfo: HealthInformation?,
     isLoading: Boolean,
     isEditing: Boolean,
-    editableFirstname: String,
-    editableLastname: String,
-    editableDateOfBirth: String,
-    editableGender: String,
-    editableEmail: String,
-    editablePhoneNumber: String,
-    editableHomeAddress: String,
-    editableCity: String,
+    editableFirstname: String, onFirstnameChange: (String) -> Unit,
+    editableLastname: String, onLastnameChange: (String) -> Unit,
+    editableDateOfBirth: String, onDateOfBirthChange: (String) -> Unit,
+    editableGender: String, onGenderChange: (String) -> Unit,
+    editableEmail: String, onEmailChange: (String) -> Unit,
+    editablePhoneNumber: String, onPhoneNumberChange: (String) -> Unit,
+    editableHomeAddress: String, onHomeAddressChange: (String) -> Unit,
+    editableCity: String, onCityChange: (String) -> Unit,
     editableEmergencyContacts: MutableList<EmergencyContact>,
-    editableBloodGroup: String,
-    editableAllergies: String,
-    editableMedication: String,
-    onFirstnameChange: (String) -> Unit,
-    onLastnameChange: (String) -> Unit,
-    onDateOfBirthChange: (String) -> Unit,
-    onGenderChange: (String) -> Unit,
-    onEmailChange: (String) -> Unit,
-    onPhoneNumberChange: (String) -> Unit,
-    onHomeAddressChange: (String) -> Unit,
-    onCityChange: (String) -> Unit,
-    onBloodGroupChange: (String) -> Unit,
-    onAllergiesChange: (String) -> Unit,
-    onMedicationChange: (String) -> Unit
+    editableBloodGroup: String, onBloodGroupChange: (String) -> Unit,
+    editableAllergies: String, onAllergiesChange: (String) -> Unit,
+    editableMedication: String, onMedicationChange: (String) -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-
+            .padding(horizontal = 16.dp, vertical = 24.dp)
     ) {
         if (isLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(32.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
+            Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = PrimaryBlue)
             }
         } else {
+            SectionHeader("Personal Information")
+
             user?.let { u ->
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                    colors = CardDefaults.cardColors(containerColor =  Color(0xFF009688))
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            "Personal Information",
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color.White
-                        )
-                        Divider(modifier = Modifier.padding(vertical = 8.dp))
-
-                        EditableOrInfoRow(
-                            label = "First Name",
-                            value = if (isEditing) editableFirstname else u.firstname,
-                            isEditing = isEditing,
-                            onValueChange = onFirstnameChange
-                        )
-                        EditableOrInfoRow(
-                            label = "Last Name",
-                            value = if (isEditing) editableLastname else u.lastname,
-                            isEditing = isEditing,
-                            onValueChange = onLastnameChange
-                        )
-                        EditableOrInfoRow(
-                            label = "Date of Birth",
-                            value = if (isEditing) editableDateOfBirth else u.dateOfBirth,
-                            isEditing = isEditing,
-                            onValueChange = onDateOfBirthChange
-                        )
-                        EditableOrInfoRow(
-                            label = "Gender",
-                            value = if (isEditing) editableGender else u.gender.name,
-                            isEditing = isEditing,
-                            onValueChange = onGenderChange
-                        )
-                        EditableOrInfoRow(
-                            label = "Email",
-                            value = if (isEditing) editableEmail else u.email,
-                            isEditing = isEditing,
-                            onValueChange = onEmailChange,
-                            readOnly = true
-                        )
-                        EditableOrInfoRow(
-                            label = "Phone Number",
-                            value = if (isEditing) editablePhoneNumber else u.phoneNumber,
-                            isEditing = isEditing,
-                            onValueChange = onPhoneNumberChange
-                        )
-                        EditableOrInfoRow(
-                            label = "Home Address",
-                            value = if (isEditing) editableHomeAddress else u.homeAddress,
-                            isEditing = isEditing,
-                            onValueChange = onHomeAddressChange
-                        )
-                        EditableOrInfoRow(
-                            label = "City",
-                            value = if (isEditing) editableCity else u.city,
-                            isEditing = isEditing,
-                            onValueChange = onCityChange
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
+                StyledEditableRow("First Name", if (isEditing) editableFirstname else u.firstname, isEditing, onFirstnameChange)
+                StyledEditableRow("Last Name", if (isEditing) editableLastname else u.lastname, isEditing, onLastnameChange)
+                StyledEditableRow("Date of Birth", if (isEditing) editableDateOfBirth else u.dateOfBirth, isEditing, onDateOfBirthChange, isDateField = true)
+                StyledEditableRow("Gender", if (isEditing) editableGender else u.gender.name, isEditing, onGenderChange)
+                StyledEditableRow("Email", if (isEditing) editableEmail else u.email, isEditing, onEmailChange, readOnly = true)
+                StyledEditableRow("Phone Number", if (isEditing) editablePhoneNumber else u.phoneNumber, isEditing, onPhoneNumberChange, keyboardType = KeyboardType.Phone)
+                StyledEditableRow("Home Address", if (isEditing) editableHomeAddress else u.homeAddress, isEditing, onHomeAddressChange)
+                StyledEditableRow("City", if (isEditing) editableCity else u.city, isEditing, onCityChange)
             }
 
-            // Emergency Contacts Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF009688))
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        "Emergency Contacts",
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = Color.White
-                    )
-                    Divider(modifier = Modifier.padding(vertical = 8.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-                    val contactsToDisplay = if (isEditing) editableEmergencyContacts else emergencyContacts
+            SectionHeader("Emergency Contacts")
 
-                    if (contactsToDisplay.isNotEmpty()) {
-                        contactsToDisplay.forEachIndexed { index, c ->
-                            if (index > 0) {
-                                Spacer(modifier = Modifier.height(12.dp))
-                                Divider(thickness = 0.5.dp, color = Color.LightGray)
-                                Spacer(modifier = Modifier.height(12.dp))
-                            }
+            val contactsToDisplay = if (isEditing) editableEmergencyContacts else emergencyContacts
+            if (contactsToDisplay.isNotEmpty()) {
+                contactsToDisplay.forEachIndexed { index, c ->
+                    if(index > 0) Spacer(modifier = Modifier.height(12.dp))
+                    Text("Contact ${index + 1}", style = MaterialTheme.typography.labelSmall, color = PrimaryBlue, modifier = Modifier.padding(start=4.dp, bottom=4.dp))
 
-                            EditableOrInfoRow(
-                                label = "First Name",
-                                value = c.firstname,
-                                isEditing = isEditing,
-                                onValueChange = { newValue ->
-                                    if (editableEmergencyContacts.size > index) {
-                                        editableEmergencyContacts[index] =
-                                            editableEmergencyContacts[index].copy(firstname = newValue)
-                                    }
-                                }
-                            )
-                            EditableOrInfoRow(
-                                label = "Last Name",
-                                value = c.lastname,
-                                isEditing = isEditing,
-                                onValueChange = { newValue ->
-                                    if (editableEmergencyContacts.size > index) {
-                                        editableEmergencyContacts[index] =
-                                            editableEmergencyContacts[index].copy(lastname = newValue)
-                                    }
-                                }
-                            )
-                            EditableOrInfoRow(
-                                label = "Phone",
-                                value = c.phoneNumber,
-                                isEditing = isEditing,
-                                onValueChange = { newValue ->
-                                    if (editableEmergencyContacts.size > index) {
-                                        editableEmergencyContacts[index] =
-                                            editableEmergencyContacts[index].copy(phoneNumber = newValue)
-                                    }
-                                }
-                            )
-                            EditableOrInfoRow(
-                                label = "Relationship",
-                                value = c.relationship,
-                                isEditing = isEditing,
-                                onValueChange = { newValue ->
-                                    if (editableEmergencyContacts.size > index) {
-                                        editableEmergencyContacts[index] =
-                                            editableEmergencyContacts[index].copy(relationship = newValue)
-                                    }
-                                }
-                            )
-                        }
-                    } else {
-                        Text(
-                            "No emergency contacts added.",
-                            fontStyle = FontStyle.Italic,
-                            color = Color.Black
-                        )
-                    }
+                    StyledEditableRow("First Name", c.firstname, isEditing, { v -> if (editableEmergencyContacts.size > index) editableEmergencyContacts[index] = editableEmergencyContacts[index].copy(firstname = v) })
+                    StyledEditableRow("Last Name", c.lastname, isEditing, { v -> if (editableEmergencyContacts.size > index) editableEmergencyContacts[index] = editableEmergencyContacts[index].copy(lastname = v) })
+                    StyledEditableRow("Phone", c.phoneNumber, isEditing, { v -> if (editableEmergencyContacts.size > index) editableEmergencyContacts[index] = editableEmergencyContacts[index].copy(phoneNumber = v) }, keyboardType = KeyboardType.Phone)
+                    StyledEditableRow("Relationship", c.relationship, isEditing, { v -> if (editableEmergencyContacts.size > index) editableEmergencyContacts[index] = editableEmergencyContacts[index].copy(relationship = v) })
                 }
+            } else {
+                Text("No emergency contacts added.", fontStyle = FontStyle.Italic, color = TextColor.copy(alpha = 0.6f), modifier = Modifier.padding(start=4.dp))
             }
-            Spacer(modifier = Modifier.height(16.dp))
 
-            // Health Information Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                colors = CardDefaults.cardColors(containerColor =  Color(0xFF009688))
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        "Health Information",
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = Color.White
-                    )
-                    Divider(modifier = Modifier.padding(vertical = 8.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-                    val currentBloodGroup = if (isEditing) editableBloodGroup else healthInfo?.bloodGroup ?: ""
-                    val currentAllergies = if (isEditing) editableAllergies else healthInfo?.allergies ?: ""
-                    val currentMedication = if (isEditing) editableMedication else healthInfo?.medication ?: ""
+            SectionHeader("Health Information")
 
-                    if (healthInfo != null || isEditing) {
-                        EditableOrInfoRow(
-                            label = "Blood Group",
-                            value = currentBloodGroup,
-                            isEditing = isEditing,
-                            onValueChange = onBloodGroupChange,
-                            isDropdown = true,
-                            dropdownOptions = BLOOD_GROUPS
-                        )
-                        EditableOrInfoRow(
-                            label = "Allergies",
-                            value = currentAllergies,
-                            isEditing = isEditing,
-                            onValueChange = onAllergiesChange
-                        )
-                        EditableOrInfoRow(
-                            label = "Medications",
-                            value = currentMedication,
-                            isEditing = isEditing,
-                            onValueChange = onMedicationChange
-                        )
-                    } else {
-                        Text(
-                            "No health information added.",
-                            fontStyle = FontStyle.Italic,
-                            color = Color.Black
-                        )
-                    }
-                }
-            }
+            val displayBlood = if (isEditing) editableBloodGroup else healthInfo?.bloodGroup ?: ""
+            val displayAllergies = if (isEditing) editableAllergies else healthInfo?.allergies ?: ""
+            val displayMedication = if (isEditing) editableMedication else healthInfo?.medication ?: ""
+
+            StyledEditableRow("Blood Group", displayBlood, isEditing, onBloodGroupChange, isDropdown = true, dropdownOptions = BLOOD_GROUPS)
+            StyledEditableRow("Allergies", displayAllergies, isEditing, onAllergiesChange)
+            StyledEditableRow("Medications", displayMedication, isEditing, onMedicationChange)
         }
+
+        Spacer(modifier = Modifier.height(60.dp))
     }
 }
 
+@Composable
+fun SectionHeader(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.bodyMedium.copy(
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 14.sp
+        ),
+        color = TextColor.copy(alpha = 0.75f),
+        modifier = Modifier.padding(bottom = 8.dp, start = 4.dp)
+    )
+}
 
-
-
-
-
+// ---------------- MAIN SCREEN ----------------
 
 @Composable
 fun AccountScreen(navController: NavHostController) {
@@ -804,14 +333,23 @@ fun AccountScreen(navController: NavHostController) {
     val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
     val context = LocalContext.current
 
+    // Data State
     var user by remember { mutableStateOf(UserDataCache.user) }
     var emergencyContacts by remember { mutableStateOf(UserDataCache.emergencyContacts) }
     var healthInfo by remember { mutableStateOf(UserDataCache.healthInfo) }
+    var currentProfileBitmap by remember { mutableStateOf<Bitmap?>(TempProfileStorage.tempProfileBitmap) }
+
+    // Edit State
+    var isEditing by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(!UserDataCache.isDataLoaded) }
     var isSaving by remember { mutableStateOf(false) }
 
-    var isEditing by remember { mutableStateOf(false) }
+    // Image Editing State
+    var newProfileBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var isProfileImageDeleted by remember { mutableStateOf(false) }
+    var showPhotoOptions by remember { mutableStateOf(false) }
 
+    // Text Field States
     var editableFirstname by remember { mutableStateOf("") }
     var editableLastname by remember { mutableStateOf("") }
     var editableDateOfBirth by remember { mutableStateOf("") }
@@ -825,88 +363,108 @@ fun AccountScreen(navController: NavHostController) {
     var editableAllergies by remember { mutableStateOf("") }
     var editableMedication by remember { mutableStateOf("") }
 
+    // Dialog States
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showPasswordDialog by remember { mutableStateOf(false) }
     var passwordInput by remember { mutableStateOf("") }
     var isDeleting by remember { mutableStateOf(false) }
     var deleteError by remember { mutableStateOf<String?>(null) }
     var expandedDropdown by remember { mutableStateOf(false) }
+    var expandedEditDropdown by remember { mutableStateOf(false) }
 
-    val initializeEditableStates: (User?, List<EmergencyContact>, HealthInformation?) -> Unit = { loadedUser, loadedContacts, loadedHealth ->
-        loadedUser?.let { u ->
-            editableFirstname = u.firstname
-            editableLastname = u.lastname
-            editableDateOfBirth = u.dateOfBirth
-            editableGender = u.gender.name
-            editableEmail = u.email
-            editablePhoneNumber = u.phoneNumber
-            editableHomeAddress = u.homeAddress
-            editableCity = u.city
-        }
-        editableEmergencyContacts.clear()
-        editableEmergencyContacts.addAll(loadedContacts.map { it.copy() })
-        loadedHealth?.let { h ->
-            editableBloodGroup = h.bloodGroup
-            editableAllergies = h.allergies
-            editableMedication = h.medication
-        } ?: run {
-            editableBloodGroup = ""
-            editableAllergies = ""
-            editableMedication = ""
+    // --- LAUNCHERS ---
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
+        bitmap?.let { newProfileBitmap = it; isProfileImageDeleted = false; showPhotoOptions = false }
+    }
+    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+        if (isGranted) cameraLauncher.launch(null) else Toast.makeText(context, "Camera permission required", Toast.LENGTH_SHORT).show()
+    }
+    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let {
+            val bitmap = if (Build.VERSION.SDK_INT < 28) MediaStore.Images.Media.getBitmap(context.contentResolver, it) else ImageDecoder.decodeBitmap(ImageDecoder.createSource(context.contentResolver, it))
+            newProfileBitmap = bitmap; isProfileImageDeleted = false; showPhotoOptions = false
         }
     }
 
-    LaunchedEffect(UserDataCache.isDataLoaded) {
+    // --- HELPER FUNCTIONS ---
+    val initializeEditableStates: (User?, List<EmergencyContact>, HealthInformation?) -> Unit = { loadedUser, loadedContacts, loadedHealth ->
+        loadedUser?.let { u ->
+            editableFirstname = u.firstname; editableLastname = u.lastname; editableDateOfBirth = u.dateOfBirth; editableGender = u.gender.name; editableEmail = u.email; editablePhoneNumber = u.phoneNumber; editableHomeAddress = u.homeAddress; editableCity = u.city
+        }
+        editableEmergencyContacts.clear(); editableEmergencyContacts.addAll(loadedContacts.map { it.copy() })
+        loadedHealth?.let { h -> editableBloodGroup = h.bloodGroup; editableAllergies = h.allergies; editableMedication = h.medication } ?: run { editableBloodGroup = ""; editableAllergies = ""; editableMedication = "" }
+        newProfileBitmap = null; isProfileImageDeleted = false
+    }
+
+    // --- FETCH LOGIC ---
+    LaunchedEffect(UserDataCache.isDataLoaded, user?.profileImageUrl) {
         if (UserDataCache.isDataLoaded) {
             user = UserDataCache.user
             emergencyContacts = UserDataCache.emergencyContacts
             healthInfo = UserDataCache.healthInfo
             initializeEditableStates(user, emergencyContacts, healthInfo)
+
+            // Fix 1: Check if cache already has the image
+            if (UserDataCache.profileBitmap != null) {
+                currentProfileBitmap = UserDataCache.profileBitmap
+            }
             isLoading = false
+        }
+
+        // Fix 2: Download if URL exists but we have no bitmap
+        val url = user?.profileImageUrl
+        if (currentProfileBitmap == null && !url.isNullOrEmpty()) {
+            try {
+                withContext(Dispatchers.IO) {
+                    val stream = URL(url).openStream()
+                    val bitmap = BitmapFactory.decodeStream(stream)
+
+                    withContext(Dispatchers.Main) {
+                        if (bitmap != null) {
+                            currentProfileBitmap = bitmap
+                            UserDataCache.profileBitmap = bitmap
+                            TempProfileStorage.tempProfileBitmap = bitmap
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("AccountScreen", "Error loading image: ${e.message}")
+            }
         }
     }
 
+    // --- SAVE LOGIC ---
     val onSaveClick: () -> Unit = {
         if (!isSaving) {
             isSaving = true
             CoroutineScope(Dispatchers.IO).launch {
                 try {
-                    val parsedGender = try {
-                        Gender.valueOf(editableGender.uppercase())
-                    } catch (e: IllegalArgumentException) {
-                        Log.w("AccountScreen", "Invalid gender string: $editableGender. Defaulting to OTHER.")
-                        Gender.OTHER
+                    // FIX: Create local copies for handling bitmaps to avoid Smart Cast Error
+                    val localNewBitmap = newProfileBitmap
+
+                    if (isProfileImageDeleted) {
+                        FirestoreHelper.deleteUserProfileImage()
+                        TempProfileStorage.tempProfileBitmap = null
+                        currentProfileBitmap = null
+                        UserDataCache.profileBitmap = null
+                    } else if (localNewBitmap != null) {
+                        TempProfileStorage.tempProfileBitmap = localNewBitmap
+                        currentProfileBitmap = localNewBitmap
+                        UserDataCache.profileBitmap = localNewBitmap
                     }
 
-                    val updatedUser = user?.copy(
-                        firstname = editableFirstname,
-                        lastname = editableLastname,
-                        dateOfBirth = editableDateOfBirth,
-                        gender = parsedGender,
-                        email = editableEmail,
-                        phoneNumber = editablePhoneNumber,
-                        homeAddress = editableHomeAddress,
-                        city = editableCity
-                    ) ?: User(
-                        firstname = editableFirstname,
-                        lastname = editableLastname,
-                        gender = parsedGender,
-                        email = editableEmail
-                    )
+                    val parsedGender = try { Gender.valueOf(editableGender.uppercase()) } catch (_: Exception) { Gender.OTHER }
+                    val updatedUser = user?.copy(firstname = editableFirstname, lastname = editableLastname, dateOfBirth = editableDateOfBirth, gender = parsedGender, email = editableEmail, phoneNumber = editablePhoneNumber, homeAddress = editableHomeAddress, city = editableCity) ?: User(firstname = editableFirstname, lastname = editableLastname, gender = parsedGender, email = editableEmail)
+                    val updatedHealth = HealthInformation(bloodGroup = editableBloodGroup, allergies = editableAllergies, medication = editableMedication)
 
-                    val updatedHealth = HealthInformation(
-                        bloodGroup = editableBloodGroup,
-                        allergies = editableAllergies,
-                        medication = editableMedication
-                    ).takeIf { it.bloodGroup.isNotBlank() || it.allergies.isNotBlank() || it.medication.isNotBlank() }
+                    // Write to Firestore - FIX: use local variable
+                    if (localNewBitmap != null) {
+                        FirestoreHelper.writeUser(updatedUser, localNewBitmap)
+                    }
 
-                    FirestoreHelper.updateUserData(
-                        userId,
-                        updatedUser,
-                        editableEmergencyContacts.toList(),
-                        updatedHealth
-                    )
+                    FirestoreHelper.updateUserData(userId, updatedUser, editableEmergencyContacts.toList(), updatedHealth)
 
+                    // Update UI & Cache
                     UserDataCache.user = updatedUser
                     UserDataCache.emergencyContacts = editableEmergencyContacts.toList()
                     UserDataCache.healthInfo = updatedHealth
@@ -915,14 +473,12 @@ fun AccountScreen(navController: NavHostController) {
                         user = updatedUser
                         emergencyContacts = editableEmergencyContacts.toList()
                         healthInfo = updatedHealth
-
-                        Toast.makeText(context, "Changes saved successfully", Toast.LENGTH_SHORT).show()
                         isEditing = false
+                        Toast.makeText(context, "Saved successfully", Toast.LENGTH_SHORT).show()
                     }
                 } catch (e: Exception) {
                     withContext(Dispatchers.Main) {
-                        Log.e("AccountScreen", "Save error: ${e.message}")
-                        Toast.makeText(context, "Error saving changes: ${e.message}", Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
                     }
                 } finally {
                     isSaving = false
@@ -931,78 +487,208 @@ fun AccountScreen(navController: NavHostController) {
         }
     }
 
+    // --- UI STRUCTURE ---
+    val gradientBackground = Brush.verticalGradient(listOf(LightBlueBg, White))
+
+    // Image Logic with Safe Calls (?.) to fix Smart Cast Error
+    val displayBitmap = remember(newProfileBitmap, isProfileImageDeleted, currentProfileBitmap) {
+        when {
+            newProfileBitmap != null -> newProfileBitmap?.asImageBitmap() // FIX: Added ?
+            isProfileImageDeleted -> null
+            currentProfileBitmap != null -> currentProfileBitmap?.asImageBitmap() // FIX: Added ?
+            else -> null
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(gradientBackground)
+    ) {
+
+        // --- 1. Top Header Section ---
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 18.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Header Row
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Back Button
+                IconButton(onClick = { navController.navigate("profile") }) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = TextColor)
+                }
+
+                // Title
+                Text(
+                    text = "Account Details",
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, fontSize = 22.sp),
+                    color = PrimaryBlue
+                )
+
+                // Right Options/Edit Button
+                Box {
+                    if (isEditing) {
+                        IconButton(onClick = { expandedEditDropdown = true }) {
+                            Icon(Icons.Default.Check, contentDescription = "Save", tint = PrimaryBlue)
+                        }
+                    } else {
+                        IconButton(onClick = { expandedDropdown = true }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "Options", tint = PrimaryBlue)
+                        }
+                    }
+
+                    DropdownMenu(expanded = expandedDropdown, onDismissRequest = { expandedDropdown = false }, modifier = Modifier.background(White)) {
+                        DropdownMenuItem(
+                            text = { Text("Edit Details") },
+                            onClick = { expandedDropdown = false; initializeEditableStates(user, emergencyContacts, healthInfo); isEditing = true },
+                            leadingIcon = { Icon(Icons.Default.Edit, null, tint = PrimaryBlue) }
+                        )
+                        Divider()
+                        DropdownMenuItem(
+                            text = { Text("Delete Account", color = Color.Red) },
+                            onClick = { expandedDropdown = false; showDeleteDialog = true },
+                            leadingIcon = { Icon(Icons.Default.Delete, null, tint = Color.Red) }
+                        )
+                    }
+
+                    DropdownMenu(expanded = expandedEditDropdown, onDismissRequest = { expandedEditDropdown = false }, modifier = Modifier.background(White)) {
+                        DropdownMenuItem(text = { Text("Save Changes") }, onClick = { expandedEditDropdown = false; onSaveClick() }, enabled = !isLoading)
+                        DropdownMenuItem(text = { Text("Cancel Editing") }, onClick = { expandedEditDropdown = false; isEditing = false; newProfileBitmap = null; isProfileImageDeleted = false })
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Profile Image (Centered with Edit Overlay)
+            Box(
+                modifier = Modifier
+                    .size(110.dp)
+                    .background(LightBlueBg, CircleShape)
+                    .clip(CircleShape)
+                    .border(2.dp, PrimaryBlue.copy(alpha = 0.4f), CircleShape)
+                    .clickable(enabled = isEditing, onClick = { showPhotoOptions = true }),
+                contentAlignment = Alignment.Center
+            ) {
+                if (displayBitmap != null) {
+                    Image(
+                        bitmap = displayBitmap,
+                        contentDescription = "Profile",
+                        modifier = Modifier.matchParentSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    // *** FALLBACK TO R.drawable.profile_picture ***
+                    Image(
+                        painter = painterResource(id = R.drawable.profile_picture),
+                        contentDescription = "Default Profile",
+                        modifier = Modifier.matchParentSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+
+                // Edit Overlay
+                if (isEditing) {
+                    Box(
+                        modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.CameraAlt, contentDescription = "Edit", tint = White, modifier = Modifier.size(28.dp))
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                text = "${user?.firstname ?: "User"} ${user?.lastname ?: ""}",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontSize = 20.sp),
+                color = TextColor
+            )
+        }
+
+        // --- 2. Bottom Content Section ---
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+                .background(LightBlueBg)
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                Column(modifier = Modifier.fillMaxSize().verticalScroll(scrollState)) {
+                    StyledBottomSection(
+                        user, emergencyContacts, healthInfo, isLoading, isEditing,
+                        editableFirstname, { if(it.all{c -> c.isDigit().not()}) editableFirstname = it },
+                        editableLastname, { if(it.all{c -> c.isDigit().not()}) editableLastname = it },
+                        editableDateOfBirth, { editableDateOfBirth = it },
+                        editableGender, { editableGender = it },
+                        editableEmail, { editableEmail = it },
+                        editablePhoneNumber, { if(it.length <= 10 && it.all { c -> c.isDigit() }) editablePhoneNumber = it },
+                        editableHomeAddress, { editableHomeAddress = it },
+                        editableCity, { editableCity = it },
+                        editableEmergencyContacts,
+                        editableBloodGroup, { editableBloodGroup = it },
+                        editableAllergies, { editableAllergies = it },
+                        editableMedication, { editableMedication = it }
+                    )
+                }
+
+                // Overlays
+                if (showPhotoOptions) {
+                    Box(modifier = Modifier.fillMaxSize().clickable { showPhotoOptions = false }, contentAlignment = Alignment.Center) {
+                        PhotoOptionsMenu(
+                            showMenu = true,
+                            onDismiss = { showPhotoOptions = false },
+                            onTakePhoto = { showPhotoOptions = false; if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) cameraLauncher.launch(null) else permissionLauncher.launch(Manifest.permission.CAMERA) },
+                            onUpload = { showPhotoOptions = false; galleryLauncher.launch("image/*") },
+                            onDelete = { isProfileImageDeleted = true; newProfileBitmap = null; showPhotoOptions = false }
+                        )
+                    }
+                }
+
+                if (isLoading || isSaving) {
+                    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.2f)), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = PrimaryBlue)
+                    }
+                }
+            }
+        }
+    }
+
+    // --- DIALOGS ---
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            icon = {
-                Icon(
-                    Icons.Default.Warning,
-                    contentDescription = "Warning",
-                    tint = Color(0xFFFF9800)
-                )
-            },
-            title = { Text(text = "Delete Account?") },
-            text = {
-                Column {
-                    Text(text = "This action cannot be undone. All your data will be permanently deleted including:")
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("• Personal information", style = MaterialTheme.typography.bodySmall)
-                    Text("• Emergency contacts", style = MaterialTheme.typography.bodySmall)
-                    Text("• Health information", style = MaterialTheme.typography.bodySmall)
-                    Text("• Profile pictures", style = MaterialTheme.typography.bodySmall)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Are you absolutely sure?",
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Red
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showDeleteDialog = false; showPasswordDialog = true }) {
-                    Text("Continue", color = Color.Red)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel")
-                }
-            }
+            containerColor = White,
+            icon = { Icon(Icons.Default.Warning, "Warning", tint = Color(0xFFFF9800)) },
+            title = { Text("Delete Account?", color = TextColor) },
+            text = { Text("Are you absolutely sure? This cannot be undone.", color = TextColor.copy(alpha=0.8f)) },
+            confirmButton = { TextButton(onClick = { showDeleteDialog = false; showPasswordDialog = true }) { Text("Continue", color = Color.Red) } },
+            dismissButton = { TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel", color = TextColor) } }
         )
     }
 
     if (showPasswordDialog) {
         AlertDialog(
-            onDismissRequest = {
-                if (!isDeleting) {
-                    showPasswordDialog = false
-                    passwordInput = ""
-                    deleteError = null
-                }
-            },
-            title = { Text(text = "Confirm Password") },
+            onDismissRequest = { if (!isDeleting) { showPasswordDialog = false; passwordInput = ""; deleteError = null } },
+            containerColor = White,
+            title = { Text("Confirm Password", color = TextColor) },
             text = {
                 Column {
-                    Text("Please enter your password to confirm account deletion:")
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Text("Enter password to confirm deletion:", color = TextColor)
                     OutlinedTextField(
-                        value = passwordInput,
-                        onValueChange = { passwordInput = it; deleteError = null },
-                        label = { Text("Password") },
-                        visualTransformation = PasswordVisualTransformation(),
-                        singleLine = true,
-                        enabled = !isDeleting,
-                        isError = deleteError != null,
-                        modifier = Modifier.fillMaxWidth()
+                        value = passwordInput, onValueChange = { passwordInput = it; deleteError = null },
+                        visualTransformation = PasswordVisualTransformation(), isError = deleteError != null,
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryBlue, focusedLabelColor = PrimaryBlue)
                     )
-                    if (deleteError != null) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = deleteError!!,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
+                    if (deleteError != null) Text(deleteError!!, color = MaterialTheme.colorScheme.error)
                 }
             },
             confirmButton = {
@@ -1013,166 +699,58 @@ fun AccountScreen(navController: NavHostController) {
                             val email = user?.email ?: FirebaseAuth.getInstance().currentUser?.email ?: ""
                             CoroutineScope(Dispatchers.IO).launch {
                                 try {
-                                    val currentUser = FirebaseAuth.getInstance().currentUser
-                                    if (currentUser != null) {
-                                        val success = FirestoreHelper.deleteUserAccountWithReauth(email, passwordInput)
-
-                                        withContext(Dispatchers.Main) {
-                                            if (success) {
-                                                Toast.makeText(context, "Account deleted successfully", Toast.LENGTH_LONG).show()
-                                                UserDataCache.clear()
-                                                TempProfileStorage.tempProfileBitmap = null
-                                                navController.navigate("welcome") { popUpTo(0) { inclusive = true } }
-                                            } else {
-                                                deleteError = "Authentication failed or data deletion error."
-                                                isDeleting = false
-                                            }
-                                        }
-                                    } else {
-                                        withContext(Dispatchers.Main) {
-                                            deleteError = "No user found. Please try again."
-                                            isDeleting = false
-                                        }
-                                    }
-                                } catch (e: Exception) {
-                                    withContext(Dispatchers.Main) {
-                                        deleteError = when {
-                                            e.message?.contains("password", ignoreCase = true) == true -> "Incorrect password. Please try again."
-                                            e.message?.contains("network", ignoreCase = true) == true -> "Network error. Please check your connection."
-                                            else -> "Error: ${e.message}"
-                                        }
-                                        isDeleting = false
-                                    }
-                                }
+                                    if(FirestoreHelper.deleteUserAccountWithReauth(email, passwordInput)) {
+                                        withContext(Dispatchers.Main) { UserDataCache.clear(); TempProfileStorage.tempProfileBitmap = null; navController.navigate("welcome") { popUpTo(0) { inclusive = true } } }
+                                    } else { withContext(Dispatchers.Main) { deleteError = "Failed to delete."; isDeleting = false } }
+                                } catch (e: Exception) { withContext(Dispatchers.Main) { deleteError = e.message; isDeleting = false } }
                             }
                         }
                     },
-                    enabled = passwordInput.isNotBlank() && !isDeleting,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red, contentColor = Color.White)
-                ) {
-                    if (isDeleting) {
-                        CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White)
-                    } else {
-                        Text("Delete Account")
-                    }
-                }
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) { Text(if (isDeleting) "Deleting..." else "Delete Account") }
             },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        showPasswordDialog = false
-                        passwordInput = ""
-                        deleteError = null
-                    },
-                    enabled = !isDeleting
-                ) {
-                    Text("Cancel")
-                }
-            }
+            dismissButton = { TextButton(onClick = { showPasswordDialog = false; passwordInput = "" }) { Text("Cancel", color = TextColor) } }
         )
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(ChatGreen)
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            // Top Section with Edit functionality integrated
-            AccountTopSection(
-                navController = navController,
-                user = user,
-                expandedDropdown = expandedDropdown,
-                onOptionsClick = { expandedDropdown = true },
-                onDismissDropdown = { expandedDropdown = false },
-                onDeleteClick = { showDeleteDialog = true },
-                isEditing = isEditing,
-                onEditClick = {
-                    initializeEditableStates(user, emergencyContacts, healthInfo)
-                    isEditing = true
-                },
-                onSaveClick = onSaveClick,
-                onCancelClick = { isEditing = false },
-                isLoading = isSaving
-            )
-
-            // Scrollable Bottom Section
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(scrollState)
-                    .padding(16.dp)
-            ) {
-                Spacer(modifier = Modifier.height(16.dp))
-
-                BottomSection(
-                    user = user,
-                    emergencyContacts = emergencyContacts,
-                    healthInfo = healthInfo,
-                    isLoading = isLoading,
-                    isEditing = isEditing,
-                    editableFirstname = editableFirstname,
-                    editableLastname = editableLastname,
-                    editableDateOfBirth = editableDateOfBirth,
-                    editableGender = editableGender,
-                    editableEmail = editableEmail,
-                    editablePhoneNumber = editablePhoneNumber,
-                    editableHomeAddress = editableHomeAddress,
-                    editableCity = editableCity,
-                    editableEmergencyContacts = editableEmergencyContacts,
-                    editableBloodGroup = editableBloodGroup,
-                    editableAllergies = editableAllergies,
-                    editableMedication = editableMedication,
-                    onFirstnameChange = { newValue ->
-                        if (newValue.isEmpty() || !newValue.all { it.isDigit() }) {
-                            editableFirstname = newValue
-                        }
-                    },
-                    onLastnameChange = { newValue ->
-                        if (newValue.isEmpty() || !newValue.all { it.isDigit() }) {
-                            editableLastname = newValue
-                        }
-                    },
-                    onDateOfBirthChange = { editableDateOfBirth = it },
-                    onGenderChange = { editableGender = it },
-                    onEmailChange = { editableEmail = it },
-                    onPhoneNumberChange = { newValue ->
-                        if (newValue.length <= 10 && newValue.all { it.isDigit() }) {
-                            editablePhoneNumber = newValue
-                        }
-                    },
-                    onHomeAddressChange = { editableHomeAddress = it },
-                    onCityChange = { editableCity = it },
-                    onBloodGroupChange = { editableBloodGroup = it },
-                    onAllergiesChange = { editableAllergies = it },
-                    onMedicationChange = { editableMedication = it }
-                )
-
-                Spacer(modifier = Modifier.height(32.dp))
-            }
-        }
-
-        if (isLoading || isSaving) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clickable(enabled = false) {}
-                    .background(Color.Black.copy(alpha = 0.4f)),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = Color.White)
-            }
-        }
     }
 }
 
-
-
-
-
-
-
-
+// Basic TextField Composable
+@Composable
+fun BasicTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    readOnly: Boolean = false,
+    textStyle: TextStyle = TextStyle.Default,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: androidx.compose.foundation.text.KeyboardActions = androidx.compose.foundation.text.KeyboardActions.Default,
+    singleLine: Boolean = false,
+    maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
+    visualTransformation: androidx.compose.ui.text.input.VisualTransformation = androidx.compose.ui.text.input.VisualTransformation.None,
+    onTextLayout: (androidx.compose.ui.text.TextLayoutResult) -> Unit = {},
+    interactionSource: androidx.compose.foundation.interaction.MutableInteractionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+    cursorBrush: Brush = Brush.verticalGradient(listOf(PrimaryBlue, PrimaryBlue)),
+    decorationBox: @Composable (innerTextField: @Composable () -> Unit) -> Unit = @Composable { innerTextField -> innerTextField() }
+) {
+    androidx.compose.foundation.text.BasicTextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier,
+        enabled = enabled,
+        readOnly = readOnly,
+        textStyle = textStyle,
+        keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
+        singleLine = singleLine,
+        maxLines = maxLines,
+        visualTransformation = visualTransformation,
+        onTextLayout = onTextLayout,
+        interactionSource = interactionSource,
+        cursorBrush = cursorBrush,
+        decorationBox = decorationBox
+    )
+}
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
