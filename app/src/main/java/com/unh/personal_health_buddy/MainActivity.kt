@@ -2,11 +2,9 @@ package com.unh.personal_health_buddy
 
 import TempProfileStorage
 import android.graphics.BitmapFactory
-import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
-import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.LaunchedEffect
@@ -21,22 +19,18 @@ import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.URL
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import com.unh.personal_health_buddy.notifications.RandomTopNudgeHost
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Enable Edge-to-Edge display with light system bars
-        enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.light(
-                /* scrim */ Color.TRANSPARENT,
-                /* darkScrim */ Color.TRANSPARENT
-            ),
-            navigationBarStyle = SystemBarStyle.light(
-                /* scrim */ Color.WHITE,
-                /* darkScrim */ Color.WHITE
-            )
-        )
+        // Edge-to-edge (status/navigation bar) layout
+        enableEdgeToEdge()
 
         Log.d("MainActivity", "onCreate called")
 
@@ -44,10 +38,11 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             val context = LocalContext.current
 
-            // Force Light Mode by passing darkTheme = false
+            // Force light mode for now
             PersonalHealthBuddyTheme(darkTheme = false) {
+
+                // Initialize Firebase + warm up user cache
                 LaunchedEffect(Unit) {
-                    // Initialize Firebase (safe to call multiple times)
                     FirebaseApp.initializeApp(context)
 
                     val uid = FirebaseAuth.getInstance().currentUser?.uid
@@ -55,12 +50,13 @@ class MainActivity : ComponentActivity() {
                         withContext(Dispatchers.IO) {
                             try {
                                 Log.d("MainActivity", "Fetching user data...")
-                                // Cache user-related data
+
+                                // Load user core info
                                 UserDataCache.user = FirestoreHelper.getUser(uid)
                                 UserDataCache.emergencyContacts = FirestoreHelper.readAllEmergencyContacts()
                                 UserDataCache.healthInfo = FirestoreHelper.getHealthInformation()
 
-                                // Prefer temp profile bitmap if present
+                                // Profile image: prefer temporary bitmap if set
                                 val tempBitmap = TempProfileStorage.tempProfileBitmap
                                 if (tempBitmap != null) {
                                     UserDataCache.profileBitmap = tempBitmap
@@ -84,10 +80,19 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                SetupAuthentication(
-                    activity = this@MainActivity,
-                    navController = navController,
-                )
+                // Root layout: app content + random top nudge overlay
+                Box(Modifier.fillMaxSize()) {
+                    SetupAuthentication(
+                        activity = this@MainActivity,
+                        navController = navController,
+                    )
+
+                    // Global random health nudges shown at the top of the app
+                    RandomTopNudgeHost(
+                        modifier = androidx.compose.ui.Modifier
+                            .align(androidx.compose.ui.Alignment.TopCenter)
+                    )
+                }
             }
         }
     }

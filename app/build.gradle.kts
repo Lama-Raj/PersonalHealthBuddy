@@ -126,6 +126,7 @@ dependencies {
     implementation(libs.ui.text)
     implementation(libs.foundation.layout)
     implementation(libs.androidx.tools.core)
+    implementation(libs.ui)
 
 
     // Optional: debugging / tooling
