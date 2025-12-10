@@ -8,7 +8,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -29,6 +31,7 @@ import com.unh.personal_health_buddy.features.generateHealthNotifications
 import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.delay
 
 // Navigation Definitions
 sealed class NavigationItem(val route: String, val icon: ImageVector, val title: String) {
@@ -42,10 +45,8 @@ sealed class NavigationItem(val route: String, val icon: ImageVector, val title:
 @Composable
 fun NotificationScreen(navController: NavController) {
     // STYLING
-    // blue for primary accents
     val activeColor = Color(0xFF1877F2)
 
-    // Soft light-blue to white gradient background
     val gradientBackground = Brush.verticalGradient(
         colors = listOf(
             Color(0xFFE7F0FF), // very light blue
@@ -53,11 +54,17 @@ fun NotificationScreen(navController: NavController) {
         )
     )
 
-    // Persistent notifications fetched from Firestore data
+    // Notifications fetched/generated from data
     var generatedNotifications by remember { mutableStateOf<List<HealthNotification>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
-    // Fetch data and generate notifications
+    // IDs of notifications the user has cleared – they should NOT appear again
+    var dismissedIds by rememberSaveable { mutableStateOf(setOf<String>()) }
+
+    // Notifications that are currently visible on the page (gradually revealed)
+    var visibleNotifications by remember { mutableStateOf<List<HealthNotification>>(emptyList()) }
+
+    // Fetch data and generate notifications once
     LaunchedEffect(Unit) {
         try {
             val info = withContext(Dispatchers.IO) { FirestoreHelper.getHealthInformation() }
@@ -65,14 +72,12 @@ fun NotificationScreen(navController: NavController) {
 
             val hasMeds = prescriptions.isNotEmpty()
 
-            // Always generate notifications, even if health info is null.
-            // generateHealthNotifications will also add a random “nudge” notification.
             generatedNotifications = generateHealthNotifications(
-                bmi = null,               // BMI not persistent in HealthInformation yet
+                bmi = null,
                 bmiCategory = "",
                 bloodType = info?.bloodGroup,
                 hasPrescriptions = hasMeds,
-                lastBmiCheckDays = 0      // keep consistent with other calls
+                lastBmiCheckDays = 0
             )
         } catch (e: Exception) {
             e.printStackTrace()
@@ -81,10 +86,8 @@ fun NotificationScreen(navController: NavController) {
         }
     }
 
-    // Combine generated notifications with In-App Session Notifications
-    // Since InAppNotificationManager is in the same package, no import needed if package matches.
+    // Combine generated notifications with In-App Session notifications
     val allNotifications = remember(generatedNotifications, InAppNotificationManager.notifications.toList()) {
-        // Map InAppNotification (Session) to HealthNotification (Display)
         val sessionNotifications = InAppNotificationManager.notifications.map { inApp ->
             HealthNotification(
                 id = inApp.id.toString(),          // Int -> String
@@ -96,8 +99,26 @@ fun NotificationScreen(navController: NavController) {
             )
         }
 
-        // Combine: Session notifications first, then generated ones
         sessionNotifications + generatedNotifications
+    }
+
+    // Filter out notifications that were cleared by the user
+    val remainingNotifications = allNotifications.filter { it.id !in dismissedIds }
+
+    // Gradually reveal notifications one by one whenever remainingNotifications changes
+    LaunchedEffect(remainingNotifications) {
+        // If nothing remaining, clear visible and stop
+        if (remainingNotifications.isEmpty()) {
+            visibleNotifications = emptyList()
+            return@LaunchedEffect
+        }
+
+        // Reset visible list and show items one by one
+        visibleNotifications = emptyList()
+        for (notification in remainingNotifications) {
+            visibleNotifications = visibleNotifications + notification
+            delay(1000) // 10 second between each → feels "slow but not annoying"
+        }
     }
 
     Scaffold(
@@ -117,10 +138,16 @@ fun NotificationScreen(navController: NavController) {
                     }
                 },
                 actions = {
-                    // Clear notifications button
+                    // Clear notifications button:
+                    // - Marks currently visible as dismissed (they won’t show again)
+                    // - Clears InApp notifications as well
                     IconButton(
                         onClick = {
-                            generatedNotifications = emptyList()
+                            // Mark all currently visible notifications as dismissed
+                            dismissedIds = dismissedIds + visibleNotifications.map { it.id }
+                            // Clear visible list
+                            visibleNotifications = emptyList()
+                            // Clear in-app session notifications
                             InAppNotificationManager.notifications.clear()
                         }
                     ) {
@@ -150,14 +177,19 @@ fun NotificationScreen(navController: NavController) {
                 )
         ) {
             when {
-                isLoading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = activeColor
-                    )
+                // If still loading AND nothing visible yet, just show empty state (no spinner)
+                isLoading && visibleNotifications.isEmpty() && remainingNotifications.isEmpty() -> {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        EmptyState(color = activeColor)
+                    }
                 }
 
-                allNotifications.isEmpty() -> {
+                // After load: nothing remaining at all → No notifications
+                !isLoading && remainingNotifications.isEmpty() -> {
                     Column(
                         modifier = Modifier.fillMaxSize(),
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -168,6 +200,7 @@ fun NotificationScreen(navController: NavController) {
                 }
 
                 else -> {
+                    // Show ONLY notifications that have been gradually revealed so far
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
@@ -175,7 +208,7 @@ fun NotificationScreen(navController: NavController) {
                         verticalArrangement = Arrangement.spacedBy(0.dp),
                         contentPadding = PaddingValues(bottom = 16.dp)
                     ) {
-                        items(allNotifications) { notification ->
+                        items(visibleNotifications, key = { it.id }) { notification ->
                             NotificationListItem(notification = notification)
                         }
                     }
@@ -189,7 +222,7 @@ fun NotificationScreen(navController: NavController) {
 private fun NotificationListItem(
     notification: HealthNotification
 ) {
-    // Bare list look: default surface, no card, no elevation
+    // Bare list look: default surface, no card
     val textColor = MaterialTheme.colorScheme.onSurface
     val secondaryTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
 
@@ -232,12 +265,11 @@ private fun NotificationListItem(
             }
         }
 
-        // Divider between items
-        Divider(
+        HorizontalDivider(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 8.dp),
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+            thickness = DividerDefaults.Thickness, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
         )
     }
 }
