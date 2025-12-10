@@ -29,9 +29,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.unh.personal_health_buddy.Account.ResetPasswordDialog
-import com.unh.personal_health_buddy.Account.SignInScreen
-import com.unh.personal_health_buddy.Account.SignUpScreen
+import com.unh.personal_health_buddy.account.ResetPasswordDialog
+import com.unh.personal_health_buddy.account.SignInScreen
+import com.unh.personal_health_buddy.account.SignUpScreen
 import com.unh.personal_health_buddy.chat.AiChatScreen
 import com.unh.personal_health_buddy.contacts.EmergencyContactScreen
 import com.unh.personal_health_buddy.features.BloodGroupScreen

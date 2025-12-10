@@ -1,13 +1,12 @@
-import TempProfileStorage
+package com.unh.personal_health_buddy.account
+
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -18,10 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -29,7 +25,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.google.firebase.auth.FirebaseAuth
-import com.unh.personal_health_buddy.R
 import com.unh.personal_health_buddy.database.UserDataCache
 import com.unh.personal_health_buddy.ui.theme.ButtonBlue
 import com.unh.personal_health_buddy.ui.theme.White
@@ -56,42 +51,17 @@ fun LogoutConfirmationDialog(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
-                // App logo / icon on top
-                Image(
-                    painter = painterResource(id = R.drawable.profile_picture), // or your app logo drawable
-                    contentDescription = "App Logo",
-                    modifier = Modifier
-                        .height(56.dp)
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Crop
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
                 // Title
                 Text(
-                    text = "Log out?",
+                    text = "Log out of Personal Health Buddy?",
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center,
-                    color = Color(0xFF111827),
+                    color = Color(0xFF111827), // dark neutral
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold
                 )
 
-                Spacer(modifier = Modifier.height(6.dp))
-
-                // Short helper text
-                Text(
-                    text = "You can sign back in anytime.",
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                    color = Color(0xFF6B7280),
-                    fontSize = 14.sp,
-                    lineHeight = 18.sp
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 // Primary: Logout
                 Button(

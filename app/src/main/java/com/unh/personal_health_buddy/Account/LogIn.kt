@@ -1,4 +1,4 @@
-package com.unh.personal_health_buddy.Account
+package com.unh.personal_health_buddy.account
 
 import android.app.Activity
 import android.content.Intent

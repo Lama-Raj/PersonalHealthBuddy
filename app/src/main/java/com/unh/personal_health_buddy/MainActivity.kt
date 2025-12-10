@@ -8,10 +8,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
@@ -28,7 +32,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Edge-to-edge layout
+        // Edge-to-edge
         enableEdgeToEdge()
 
         Log.d("MainActivity", "onCreate called")
@@ -37,10 +41,23 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             val context = LocalContext.current
 
+            // Observe current route from NavController
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val currentRoute = navBackStackEntry?.destination?.route
+
+            // 🔹 All the routes where we DO NOT want the top nudge bar
+            //    Adjust these strings to match your actual auth routes.
+            val authRoutes = setOf(
+                "welcome",
+                "sign-in",
+                "sign-up",
+                "reset-password"
+            )
+
             // Force Light Mode
             PersonalHealthBuddyTheme(darkTheme = false) {
 
-                // One-time Firebase + user data load
+                // Preload user data once
                 LaunchedEffect(Unit) {
                     FirebaseApp.initializeApp(context)
 
@@ -55,7 +72,6 @@ class MainActivity : ComponentActivity() {
                                 UserDataCache.healthInfo =
                                     FirestoreHelper.getHealthInformation()
 
-                                // Prefer temp profile bitmap if available
                                 val tempBitmap = TempProfileStorage.tempProfileBitmap
                                 if (tempBitmap != null) {
                                     UserDataCache.profileBitmap = tempBitmap
@@ -83,18 +99,24 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                // Root overlay: app content + top nudge bar
-                Box {
-                    // Main navigation / screens
+                // Root layout: app content + optional top nudge bar
+                Box(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    // Your navigation graph (welcome, login, home, etc.)
                     SetupAuthentication(
                         activity = this@MainActivity,
                         navController = navController,
                     )
 
-                    // Global top notification bar (random nudges)
-                    RandomTopNudgeHost(
-                        modifier = Modifier.align(Alignment.TopCenter)
-                    )
+                    // 🔹 Show RandomTopNudgeHost ONLY when NOT on auth routes
+                    if (currentRoute != null && currentRoute !in authRoutes) {
+                        RandomTopNudgeHost(
+                            modifier = Modifier
+                                .align(Alignment.TopCenter)
+                                .statusBarsPadding()
+                        )
+                    }
                 }
             }
         }

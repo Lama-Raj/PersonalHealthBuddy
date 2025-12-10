@@ -1,4 +1,4 @@
-package com.unh.personal_health_buddy.Account
+package com.unh.personal_health_buddy.account
 
 import android.util.Log
 import androidx.compose.foundation.layout.Column
