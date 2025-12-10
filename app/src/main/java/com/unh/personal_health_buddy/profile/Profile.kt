@@ -83,6 +83,10 @@ fun ProfileScreen(
     var firstName by remember { mutableStateOf(UserDataCache.user?.firstname ?: "User") }
     var profileBitmap by remember { mutableStateOf(UserDataCache.profileBitmap) }
 
+    // Medicate-style theme colors
+    val primaryBlue = Color(0xFF1877F2)
+    val lightBlueBackground = Color(0xFFF3F6FF)
+
     // Fetch firstname and profile image URL from Firestore
     LaunchedEffect(true) {
         val uid = FirebaseAuth.getInstance().currentUser?.uid
@@ -112,75 +116,116 @@ fun ProfileScreen(
             .background(
                 Brush.verticalGradient(
                     listOf(
-                        LightBlueBackground,
-                        Color(0xFFE6F3FB)
+                        lightBlueBackground,
+                        Color.White
                     )
                 )
             )
     ) {
-        // ---------- Top Profile Card ----------
-        Box(
+
+        // ---------- Top Header + Profile Card ----------
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(0.55f),
-            contentAlignment = Alignment.Center
+                .weight(0.55f)
+                .padding(horizontal = 20.dp, vertical = 18.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(top = 48.dp, bottom = 24.dp)
+            // Header title
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp, bottom = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(120.dp)
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(Color(0xFF5AA9E6), Color(0xFFD6EFFF))
-                            ),
-                            CircleShape
-                        )
-                        .clip(CircleShape)
-                        .border(3.dp, Color.White.copy(alpha = 0.9f), CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (profileBitmap != null) {
-                        Image(
-                            bitmap = profileBitmap!!.asImageBitmap(),
-                            contentDescription = "Profile Image",
-                            modifier = Modifier
-                                .clip(CircleShape)
-                                .size(108.dp),
-                            contentScale = ContentScale.Crop
-                        )
-                    } else {
-                        Image(
-                            painter = painterResource(id = R.drawable.profile_picture),
-                            contentDescription = "Profile Image",
-                            modifier = Modifier
-                                .clip(CircleShape)
-                                .size(108.dp),
-                            contentScale = ContentScale.Crop
-                        )
-                    }
+                Column {
+                    Text(
+                        text = "Profile",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 24.sp
+                        ),
+                        color = primaryBlue
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "Manage your account and preferences",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextColor.copy(alpha = 0.7f)
+                    )
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-                Text(
-                    text = firstName,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
-                    ),
-                    color = TextColor
-                )
+            // Profile "card" – white on blue-ish background (like Medicate cards)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(Color.White)
+                    .padding(vertical = 20.dp, horizontal = 16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(110.dp)
+                            .background(
+                                lightBlueBackground,
+                                CircleShape
+                            )
+                            .clip(CircleShape)
+                            .border(
+                                2.dp,
+                                primaryBlue.copy(alpha = 0.4f),
+                                CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (profileBitmap != null) {
+                            Image(
+                                bitmap = profileBitmap!!.asImageBitmap(),
+                                contentDescription = "Profile Image",
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .size(100.dp),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Image(
+                                painter = painterResource(id = R.drawable.profile_picture),
+                                contentDescription = "Profile Image",
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .size(100.dp),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                    }
 
-                Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                Text(
-                    text = "View and manage your account",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextColor.copy(alpha = 0.7f)
-                )
+                    Text(
+                        text = firstName,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp
+                        ),
+                        color = primaryBlue
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Text(
+                        text = "Signed in to Personal Health Buddy",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextColor.copy(alpha = 0.7f)
+                    )
+                }
             }
         }
 
@@ -189,9 +234,9 @@ fun ProfileScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .offset(y = 24.dp)
+                .offset(y = 16.dp)
                 .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-                .background(Color(0xFFE1F0F7))
+                .background(lightBlueBackground)
         ) {
             Column(
                 modifier = Modifier
@@ -199,11 +244,22 @@ fun ProfileScreen(
                     .padding(
                         start = 16.dp,
                         end = 16.dp,
-                        top = 40.dp,
+                        top = 28.dp,
                         bottom = 32.dp
                     ),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
+
+                Text(
+                    text = "Account & Help",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp
+                    ),
+                    color = TextColor.copy(alpha = 0.75f),
+                    modifier = Modifier.padding(bottom = 4.dp, start = 4.dp)
+                )
+
                 items.forEach { item ->
                     Row(
                         modifier = Modifier
@@ -235,7 +291,7 @@ fun ProfileScreen(
                             modifier = Modifier
                                 .size(46.dp)
                                 .clip(CircleShape)
-                                .background(ButtonBlue.copy(alpha = 0.95f)),
+                                .background(primaryBlue),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -248,14 +304,30 @@ fun ProfileScreen(
 
                         Spacer(modifier = Modifier.width(12.dp))
 
-                        Text(
-                            text = item.title,
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontWeight = FontWeight.Medium
-                            ),
-                            color = TextColor,
+                        Column(
                             modifier = Modifier.weight(1f)
-                        )
+                        ) {
+                            Text(
+                                text = item.title,
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    fontWeight = FontWeight.Medium
+                                ),
+                                color = TextColor
+                            )
+
+                            val subtitle = when (item) {
+                                is ProfileItem.Account -> "Edit personal info and health details"
+                                is ProfileItem.FAQS -> "Get answers and contact support"
+                                is ProfileItem.Logout -> "Sign out of this device"
+                            }
+
+                            Text(
+                                text = subtitle,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextColor.copy(alpha = 0.6f),
+                                fontSize = 12.sp
+                            )
+                        }
 
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
