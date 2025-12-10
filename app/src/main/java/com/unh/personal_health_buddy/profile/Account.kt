@@ -1,3 +1,6 @@
+package com.unh.personal_health_buddy.profile
+
+import BackHeader
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log

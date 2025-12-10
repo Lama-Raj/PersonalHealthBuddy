@@ -1,7 +1,6 @@
 package com.unh.personal_health_buddy.navigation
 
 import AccountFormScreen
-import AccountScreen
 import android.content.Intent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.foundation.layout.padding
@@ -39,6 +38,7 @@ import com.unh.personal_health_buddy.features.BmiScreen
 import com.unh.personal_health_buddy.features.MedicateScreen
 import com.unh.personal_health_buddy.map.GoogleMapScreen
 import com.unh.personal_health_buddy.notifications.NotificationScreen
+import com.unh.personal_health_buddy.profile.AccountScreen
 import com.unh.personal_health_buddy.profile.FAQScreen
 import com.unh.personal_health_buddy.profile.ProfileScreen
 import com.unh.personal_health_buddy.profile.profileItems
