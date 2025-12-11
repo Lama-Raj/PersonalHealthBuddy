@@ -51,15 +51,15 @@ import java.util.Locale
 @Composable
 fun GoogleMapScreen(navController: NavController) {
     val context = LocalContext.current
-    val keyboardController = LocalSoftwareKeyboardController.current // To hide keyboard on search
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     // Initial camera position (New Haven/West Haven area)
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(LatLng(41.29, -72.9615), 15f)
     }
 
-    val defaultQuery = "Health services near me"
-    var searchQuery by remember { mutableStateOf(defaultQuery) }
+    // UPDATED: Start blank so placeholder is visible
+    var searchQuery by remember { mutableStateOf("") }
     var searchedLocation by remember { mutableStateOf<LatLng?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
@@ -67,7 +67,6 @@ fun GoogleMapScreen(navController: NavController) {
         listOf(Color(0xFFE3F2FD), Color.White)
     )
 
-    // Request permissions
     val hasLocationPermission = RequestLocationPermission()
 
     Box(
@@ -90,7 +89,6 @@ fun GoogleMapScreen(navController: NavController) {
             ) {
                 IconButton(
                     onClick = {
-                        // Use popBackStack for simpler back navigation if valid
                         if (!navController.popBackStack()) {
                             navController.navigate("home")
                         }
@@ -119,8 +117,11 @@ fun GoogleMapScreen(navController: NavController) {
                     )
                 }
 
-                // Ensure this resource exists in your drawable folder
-                // Image(painter = painterResource(id = R.drawable.google_map), ...)
+                Image(
+                    painter = painterResource(id = R.drawable.google_map),
+                    contentDescription = "Google Map",
+                    modifier = Modifier.size(40.dp)
+                )
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -142,7 +143,7 @@ fun GoogleMapScreen(navController: NavController) {
                     OutlinedTextField(
                         value = searchQuery,
                         onValueChange = { searchQuery = it },
-                        placeholder = { Text("Search location...", color = MediumGray, fontSize = 14.sp) },
+                        placeholder = { Text("Search hospitals, gyms, etc...", color = MediumGray, fontSize = 14.sp) },
                         leadingIcon = { Icon(Icons.Default.Search, "Search", tint = MediumGray) },
                         modifier = Modifier.fillMaxWidth(),
                         textStyle = LocalTextStyle.current.copy(
@@ -172,7 +173,7 @@ fun GoogleMapScreen(navController: NavController) {
                         ),
                         onClick = {
                             if (searchQuery.isNotBlank()) {
-                                keyboardController?.hide() // Hide keyboard
+                                keyboardController?.hide()
                                 Toast.makeText(context, "Searching...", Toast.LENGTH_SHORT).show()
 
                                 coroutineScope.launch {
@@ -207,6 +208,7 @@ fun GoogleMapScreen(navController: NavController) {
                 elevation = CardDefaults.cardElevation(6.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
+                // REMOVED: The "Tip" overlay box is gone.
                 Box(modifier = Modifier.fillMaxSize()) {
                     GoogleMap(
                         modifier = Modifier.fillMaxSize(),
@@ -280,16 +282,12 @@ fun RequestLocationPermission(): Boolean {
 suspend fun geocodeLocation(context: Context, locationName: String): LatLng? {
     return withContext(Dispatchers.IO) {
         try {
-            // NOTE: Geocoder requires a backend service. It might fail on some Emulators.
-            // It works best on physical devices with Google Play Services.
             val geocoder = Geocoder(context, Locale.getDefault())
-
-            @Suppress("DEPRECATION") // Keep simple for now, though API 33+ has a listener approach
+            @Suppress("DEPRECATION")
             val addresses = geocoder.getFromLocationName(locationName, 1)
 
             if (!addresses.isNullOrEmpty()) {
                 val address = addresses[0]
-                Log.d("Geocode", "Found: ${address.latitude}, ${address.longitude}")
                 LatLng(address.latitude, address.longitude)
             } else {
                 Log.e("Geocode", "No address found for $locationName")
@@ -300,4 +298,11 @@ suspend fun geocodeLocation(context: Context, locationName: String): LatLng? {
             null
         }
     }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun PreviewGoogleMapScreen() {
+    val navController = rememberNavController()
+    GoogleMapScreen(navController = navController)
 }
