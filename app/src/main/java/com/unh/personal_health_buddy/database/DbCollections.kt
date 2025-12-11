@@ -12,7 +12,12 @@ import com.google.firebase.Timestamp
 import okio.Path
 import java.util.UUID
 import kotlin.io.path.moveTo
-
+/*
+* Updated the Code using Chat GTP as there was certain errors in the original code.
+* Reference Code: YouTube & Chat GPT, Gemini and Copilot
+* Reference : Stack Overflow, GitHub, W3Schools
+*
+* */
 
 data class User(
     val firstname: String = "",

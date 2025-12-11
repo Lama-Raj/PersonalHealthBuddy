@@ -1,3 +1,4 @@
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -20,7 +21,12 @@ import kotlinx.coroutines.flow.StateFlow
 import java.text.SimpleDateFormat
 import java.util.*
 
-// ---------------- Notification Manager ----------------
+/*
+* Updated the Code using Chat GTP as there was certain errors in the original code.
+* Reference Code: YouTube & Chat GPT, Gemini and Copilot
+* Reference : Stack Overflow, GitHub, W3Schools
+*
+* */
 object InAppNotificationManager {
     data class Notification(
         val id: String,

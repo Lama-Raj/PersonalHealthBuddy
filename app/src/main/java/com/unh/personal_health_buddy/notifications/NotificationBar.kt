@@ -33,7 +33,12 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlin.random.Random
-
+/*
+* Updated the Code using Chat GTP as there was certain errors in the original code.
+* Reference Code: YouTube & Chat GPT, Gemini and Copilot
+* Reference : Stack Overflow, GitHub, W3Schools
+*
+* */
 /**
  * Simple top-of-app random nudge banner.
  * Also logs each nudge into InAppNotificationManager so it appears

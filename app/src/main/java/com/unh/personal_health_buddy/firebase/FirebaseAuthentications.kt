@@ -25,7 +25,12 @@ import com.unh.personal_health_buddy.R
 import com.unh.personal_health_buddy.navigation.AppNavigation
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-
+/*
+* Updated the Code using Chat GTP as there was certain errors in the original code.
+* Reference Code: YouTube & Chat GPT, Gemini and Copilot
+* Reference : Stack Overflow, GitHub, W3Schools
+*
+* */
 
 // Cached email pattern for better performance
 val EMAIL_PATTERN = Patterns.EMAIL_ADDRESS

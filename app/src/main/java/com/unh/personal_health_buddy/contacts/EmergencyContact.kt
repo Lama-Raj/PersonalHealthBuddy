@@ -93,7 +93,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
+/*
+* Updated the Code using Chat GTP as there was certain errors in the original code.
+* Reference Code: YouTube & Chat GPT, Gemini and Copilot
+* Reference : Stack Overflow, GitHub, W3Schools
+*
+* */
 @Composable
 fun EmergencyContactScreen(navController: NavHostController) {
     val scrollState = rememberScrollState()

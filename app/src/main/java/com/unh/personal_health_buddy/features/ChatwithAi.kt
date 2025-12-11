@@ -1,4 +1,4 @@
-package com.unh.personal_health_buddy.screens
+package com.unh.personal_health_buddy.features
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -44,7 +44,12 @@ import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.R
 import com.unh.personal_health_buddy.ui.theme.LightBlueBackground
 import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
-
+/*
+* Updated the Code using Chat GTP as there was certain errors in the original code.
+* Reference Code: YouTube & Chat GPT, Gemini and Copilot
+* Reference : Stack Overflow, GitHub, W3Schools
+*
+* */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatWithAIScreen(navController: NavController) {

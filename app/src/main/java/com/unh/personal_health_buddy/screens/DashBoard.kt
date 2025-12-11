@@ -77,7 +77,12 @@ import java.util.Date
 import java.util.Locale
 import kotlin.collections.take
 
-
+/*
+* Updated the Code using Chat GTP as there was certain errors in the original code.
+* Reference Code: YouTube & Chat GPT, Gemini and Copilot
+* Reference : Stack Overflow, GitHub, W3Schools
+*
+* */
 /**
  * A simple data class to hold info for our feature cards.
  */

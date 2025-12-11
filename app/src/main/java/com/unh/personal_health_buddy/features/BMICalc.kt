@@ -1,6 +1,6 @@
 package com.unh.personal_health_buddy.features
 
-// Import all the necessary theme colors
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -64,7 +64,12 @@ import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
 import com.unh.personal_health_buddy.ui.theme.PrimaryDarkBlue
 import java.text.DecimalFormat
 
-
+/*
+* Updated the Code using Chat GTP as there was certain errors in the original code.
+* Reference Code: YouTube & Chat GPT, Gemini and Copilot
+* Reference : Stack Overflow, GitHub, W3Schools
+*
+* */
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

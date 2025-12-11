@@ -23,7 +23,12 @@ import com.unh.personal_health_buddy.notifications.InAppNotificationManager
 import com.unh.personal_health_buddy.ui.theme.ButtonBlue
 import com.unh.personal_health_buddy.ui.theme.MediumGray
 
-// -------------------- BottomNavBar --------------------
+/*
+* Updated the Code using Chat GTP as there was certain errors in the original code.
+* Reference Code: YouTube & Chat GPT, Gemini and Copilot
+* Reference : Stack Overflow, GitHub, W3Schools
+*
+* */
 
 
 @Composable

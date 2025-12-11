@@ -60,7 +60,12 @@ import com.unh.personal_health_buddy.ui.theme.LightBlueBackground
 import com.unh.personal_health_buddy.ui.theme.TextColor
 import com.unh.personal_health_buddy.ui.theme.White
 
-// ------------------- Profile Items -------------------
+/*
+* Updated the Code using Chat GTP as there was certain errors in the original code.
+* Reference Code: YouTube & Chat GPT, Gemini and Copilot
+* Reference : Stack Overflow, GitHub, W3Schools
+*
+* */
 sealed class ProfileItem(val title: String, val icon: ImageVector, val route: String) {
     object Account : ProfileItem("Account", Icons.Filled.Person, "account")
     object FAQS : ProfileItem("FAQs & Help", Icons.Filled.Chat, "faqs")

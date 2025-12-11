@@ -34,7 +34,12 @@ import com.unh.personal_health_buddy.R
 import com.unh.personal_health_buddy.ui.theme.ButtonBlue
 import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
 import com.unh.personal_health_buddy.ui.theme.PrimaryDarkBlue
-
+/*
+* Updated the Code using Chat GTP as there was certain errors in the original code.
+* Reference Code: YouTube & Chat GPT, Gemini and Copilot
+* Reference : Stack Overflow, GitHub, W3Schools
+*
+* */
 @Composable
 fun MainWelcomeScreen(navController: NavController) {
 // This arranges things up and down.

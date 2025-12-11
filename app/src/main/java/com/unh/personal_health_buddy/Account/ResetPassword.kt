@@ -25,7 +25,12 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.firebase.performResetPassword
 import kotlinx.coroutines.delay
-
+/*
+* Updated the Code using Chat GTP as there was certain errors in the original code.
+* Reference Code: YouTube & Chat GPT, Gemini and Copilot
+* Reference : Stack Overflow, GitHub, W3Schools
+*
+* */
 @Composable
 fun ResetPasswordDialog(
     navController: NavHostController,

@@ -8,7 +8,12 @@ import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 
-
+/*
+* Updated the Code using Chat GTP as there was certain errors in the original code.
+* Reference Code: YouTube & Chat GPT, Gemini and Copilot
+* Reference : Stack Overflow, GitHub, W3Schools
+*
+* */
 /**
  * Fetches health news articles using the NewsAPI service (https://newsapi.org/).
  * The API key, implementation, and behavior were created with help from

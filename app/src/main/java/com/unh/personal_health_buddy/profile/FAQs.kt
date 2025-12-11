@@ -32,7 +32,12 @@ import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.ui.theme.TextColor
 import com.unh.personal_health_buddy.ui.theme.White
 
-// ---------------- Constants (Matching AccountScreen) ----------------
+/*
+* Updated the Code using Chat GTP as there was certain errors in the original code.
+* Reference Code: YouTube & Chat GPT, Gemini and Copilot
+* Reference : Stack Overflow, GitHub, W3Schools
+*
+* */
 val FAQ_PrimaryBlue = Color(0xFF1877F2)
 val FAQ_LightBlueBg = Color(0xFFF3F6FF)
 

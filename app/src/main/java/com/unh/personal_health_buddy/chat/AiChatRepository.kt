@@ -1,5 +1,12 @@
 package com.unh.personal_health_buddy.chat
 
+/*
+* Updated the Code using Chat GTP as there was certain errors in the original code.
+* Reference Code: YouTube & Chat GPT, Gemini and Copilot
+* Reference : Stack Overflow, GitHub, W3Schools
+*
+* */
+
 // defines how we get a reply text for a user message
 interface ChatRepository {
     suspend fun getBotReply(userText: String): String

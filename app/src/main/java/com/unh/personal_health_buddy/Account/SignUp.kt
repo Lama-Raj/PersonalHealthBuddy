@@ -60,7 +60,12 @@ import com.unh.personal_health_buddy.firebase.isValidPassword
 import com.unh.personal_health_buddy.firebase.performSignUp
 import com.unh.personal_health_buddy.ui.theme.ButtonBlue
 import com.unh.personal_health_buddy.ui.theme.White
-
+/*
+* Updated the Code using Chat GTP as there was certain errors in the original code.
+* Reference Code: YouTube & Chat GPT, Gemini and Copilot
+* Reference : Stack Overflow, GitHub, W3Schools
+*
+* */
 
 @Composable
 fun SignUpScreen(
