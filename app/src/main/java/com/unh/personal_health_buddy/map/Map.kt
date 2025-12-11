@@ -2,50 +2,28 @@ package com.unh.personal_health_buddy.map
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -58,13 +36,7 @@ import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.Circle
-import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.MapProperties
-import com.google.maps.android.compose.MapUiSettings
-import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerState
-import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.*
 import com.unh.personal_health_buddy.R
 import com.unh.personal_health_buddy.ui.theme.ButtonBlue
 import com.unh.personal_health_buddy.ui.theme.MediumGray
@@ -75,43 +47,28 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Locale
 
-@SuppressLint("MissingPermission") // We guard location usage with runtime permission
+@SuppressLint("MissingPermission")
 @Composable
 fun GoogleMapScreen(navController: NavController) {
     val context = LocalContext.current
+    val keyboardController = LocalSoftwareKeyboardController.current // To hide keyboard on search
 
-    // Initial camera position
+    // Initial camera position (New Haven/West Haven area)
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(LatLng(41.29, -72.9615), 15f)
     }
 
-    // DEFAULT QUERY: health services near me
     val defaultQuery = "Health services near me"
     var searchQuery by remember { mutableStateOf(defaultQuery) }
     var searchedLocation by remember { mutableStateOf<LatLng?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
-    // Light blue -> white background
     val backgroundGradient = Brush.verticalGradient(
-        listOf(
-            Color(0xFFE3F2FD), // light blue
-            Color.White        // white
-        )
+        listOf(Color(0xFFE3F2FD), Color.White)
     )
 
-    // Auto-run the default search once when screen opens
-    LaunchedEffect(Unit) {
-        if (searchQuery.isNotBlank()) {
-            val latLng = geocodeLocation(context, searchQuery)
-            latLng?.let {
-                searchedLocation = it
-                cameraPositionState.animate(
-                    update = CameraUpdateFactory.newLatLngZoom(it, 15f),
-                    durationMs = 1000
-                )
-            }
-        }
-    }
+    // Request permissions
+    val hasLocationPermission = RequestLocationPermission()
 
     Box(
         modifier = Modifier
@@ -124,7 +81,7 @@ fun GoogleMapScreen(navController: NavController) {
                 .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
 
-            // ---------- Top Bar (Custom, light) ----------
+            // ---------- Top Bar ----------
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -133,11 +90,9 @@ fun GoogleMapScreen(navController: NavController) {
             ) {
                 IconButton(
                     onClick = {
-                        navController.navigate("home") {
-                            popUpTo("home") {
-                                inclusive = false
-                            }
-                            launchSingleTop = true
+                        // Use popBackStack for simpler back navigation if valid
+                        if (!navController.popBackStack()) {
+                            navController.navigate("home")
                         }
                     }
                 ) {
@@ -150,10 +105,7 @@ fun GoogleMapScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.width(4.dp))
 
-                Column(
-                    modifier = Modifier.weight(1f),
-                    horizontalAlignment = Alignment.Start
-                ) {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "Nearby Map",
                         fontSize = 22.sp,
@@ -167,25 +119,17 @@ fun GoogleMapScreen(navController: NavController) {
                     )
                 }
 
-                Image(
-                    painter = painterResource(id = R.drawable.google_map),
-                    contentDescription = "Google Map",
-                    modifier = Modifier
-                        .height(40.dp)
-                        .padding(start = 8.dp)
-                )
+                // Ensure this resource exists in your drawable folder
+                // Image(painter = painterResource(id = R.drawable.google_map), ...)
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
             // ---------- Search Card ----------
             Card(
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.White
-                ),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
                 elevation = CardDefaults.cardElevation(4.dp)
             ) {
                 Column(
@@ -198,26 +142,11 @@ fun GoogleMapScreen(navController: NavController) {
                     OutlinedTextField(
                         value = searchQuery,
                         onValueChange = { searchQuery = it },
-                        placeholder = {
-                            Text(
-                                "Search location...",
-                                color = MediumGray,
-                                fontSize = 14.sp
-                            )
-                        },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = "Search",
-                                tint = MediumGray
-                            )
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color.Transparent, RoundedCornerShape(8.dp)),
+                        placeholder = { Text("Search location...", color = MediumGray, fontSize = 14.sp) },
+                        leadingIcon = { Icon(Icons.Default.Search, "Search", tint = MediumGray) },
+                        modifier = Modifier.fillMaxWidth(),
                         textStyle = LocalTextStyle.current.copy(
                             color = PrimaryDarkBlue,
-                            textAlign = TextAlign.Start,
                             fontSize = 14.sp
                         ),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -243,23 +172,26 @@ fun GoogleMapScreen(navController: NavController) {
                         ),
                         onClick = {
                             if (searchQuery.isNotBlank()) {
+                                keyboardController?.hide() // Hide keyboard
+                                Toast.makeText(context, "Searching...", Toast.LENGTH_SHORT).show()
+
                                 coroutineScope.launch {
                                     val latLng = geocodeLocation(context, searchQuery)
-                                    latLng?.let {
-                                        searchedLocation = it
+                                    if (latLng != null) {
+                                        searchedLocation = latLng
                                         cameraPositionState.animate(
-                                            update = CameraUpdateFactory.newLatLngZoom(it, 15f),
+                                            update = CameraUpdateFactory.newLatLngZoom(latLng, 15f),
                                             durationMs = 1000
                                         )
+                                        Toast.makeText(context, "Found location!", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        Toast.makeText(context, "Location not found", Toast.LENGTH_SHORT).show()
                                     }
                                 }
                             }
                         }
                     ) {
-                        Text(
-                            "Search",
-                            fontSize = 16.sp
-                        )
+                        Text("Search", fontSize = 16.sp)
                     }
                 }
             }
@@ -267,22 +199,15 @@ fun GoogleMapScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(12.dp))
 
             // ---------- Map Card ----------
-            val hasLocationPermission = RequestLocationPermission()
-
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
                 shape = RoundedCornerShape(20.dp),
                 elevation = CardDefaults.cardElevation(6.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.White
-                )
+                colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                ) {
+                Box(modifier = Modifier.fillMaxSize()) {
                     GoogleMap(
                         modifier = Modifier.fillMaxSize(),
                         cameraPositionState = cameraPositionState,
@@ -296,7 +221,6 @@ fun GoogleMapScreen(navController: NavController) {
                         )
                     ) {
                         searchedLocation?.let { location ->
-                            // Soft highlight circle around searched location
                             Circle(
                                 center = location,
                                 radius = 500.0,
@@ -311,37 +235,14 @@ fun GoogleMapScreen(navController: NavController) {
                             )
                         }
                     }
-
-                    // Little hint overlay at top of map
-                    if (searchedLocation == null) {
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.TopCenter)
-                                .padding(top = 12.dp)
-                                .background(
-                                    color = Color.White.copy(alpha = 0.9f),
-                                    shape = RoundedCornerShape(50)
-                                )
-                                .padding(horizontal = 16.dp, vertical = 6.dp)
-                        ) {
-                            Text(
-                                text = "Tip: Use the search above or tap my-location to center on you.",
-                                color = MediumGray,
-                                fontSize = 12.sp,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
                 }
             }
         }
     }
-
-    Log.d("GoogleMapScreen", "Google Map screen displayed")
 }
 
 /**
- * Requests location permission and returns true when either fine or coarse location is granted.
+ * Handles permission request state
  */
 @Composable
 fun RequestLocationPermission(): Boolean {
@@ -353,21 +254,13 @@ fun RequestLocationPermission(): Boolean {
         onResult = { permissions ->
             permissionGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
                     permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
-
-            if (permissionGranted) Log.d("Permissions", "Location permission granted")
-            else Log.e("Permissions", "Location permission denied")
         }
     )
 
     LaunchedEffect(Unit) {
-        val fineGranted = ContextCompat.checkSelfPermission(
-            context, Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-        val coarseGranted = ContextCompat.checkSelfPermission(
-            context, Manifest.permission.ACCESS_COARSE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-
-        if (fineGranted || coarseGranted) {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        ) {
             permissionGranted = true
         } else {
             permissionLauncher.launch(
@@ -378,31 +271,33 @@ fun RequestLocationPermission(): Boolean {
             )
         }
     }
-
     return permissionGranted
 }
 
 /**
- * Geocode helper
+ * Geocoding helper with error logging
  */
-suspend fun geocodeLocation(context: android.content.Context, locationName: String): LatLng? {
+suspend fun geocodeLocation(context: Context, locationName: String): LatLng? {
     return withContext(Dispatchers.IO) {
         try {
+            // NOTE: Geocoder requires a backend service. It might fail on some Emulators.
+            // It works best on physical devices with Google Play Services.
             val geocoder = Geocoder(context, Locale.getDefault())
+
+            @Suppress("DEPRECATION") // Keep simple for now, though API 33+ has a listener approach
             val addresses = geocoder.getFromLocationName(locationName, 1)
+
             if (!addresses.isNullOrEmpty()) {
-                LatLng(addresses[0].latitude, addresses[0].longitude)
-            } else null
+                val address = addresses[0]
+                Log.d("Geocode", "Found: ${address.latitude}, ${address.longitude}")
+                LatLng(address.latitude, address.longitude)
+            } else {
+                Log.e("Geocode", "No address found for $locationName")
+                null
+            }
         } catch (e: Exception) {
-            Log.e("Geocode", "Error: ${e.message}")
+            Log.e("Geocode", "Geocode Exception: ${e.message}")
             null
         }
     }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun PreviewGoogleMapScreen() {
-    val navController = rememberNavController()
-    GoogleMapScreen(navController = navController)
 }

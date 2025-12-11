@@ -27,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -114,7 +115,7 @@ fun StyledEditableRow(
     isDateField: Boolean = false,
     keyboardType: KeyboardType = KeyboardType.Text
 ) {
-    val displayValue = if (value.isBlank()) "N/A" else value
+    val displayValue = value.ifBlank { "N/A" }
     var expandedDropdown by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
@@ -373,7 +374,11 @@ fun AccountTopSection(
                             onClick = { onDismissDropdown(); onEditClick() },
                             leadingIcon = { Icon(Icons.Default.Edit, null, tint = PrimaryBlue) }
                         )
-                        Divider()
+                        HorizontalDivider(
+                            Modifier,
+                            DividerDefaults.Thickness,
+                            DividerDefaults.color
+                        )
                         DropdownMenuItem(
                             text = { Text("Delete Account", color = Color.Red) },
                             onClick = { onDismissDropdown(); onDeleteClick() },
@@ -431,7 +436,7 @@ fun AccountTopSection(
 
             val displayName = "${user?.firstname ?: "User"} ${user?.lastname ?: ""}".trim()
             Text(
-                text = if (displayName.isBlank()) "User" else displayName,
+                text = displayName.ifBlank { "User" },
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontSize = 20.sp),
                 color = TextColor
             )
@@ -484,7 +489,6 @@ fun AccountScreen(navController: NavHostController) {
     var isDeleting by remember { mutableStateOf(false) }
     var deleteError by remember { mutableStateOf<String?>(null) }
     var expandedDropdown by remember { mutableStateOf(false) }
-    var expandedEditDropdown by remember { mutableStateOf(false) }
 
     // --- LAUNCHERS ---
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
@@ -509,7 +513,7 @@ fun AccountScreen(navController: NavHostController) {
             editableLastname = loadedUser.lastname
             editableDateOfBirth = loadedUser.dateOfBirth
             editableGender = loadedUser.gender.name
-            editableEmail = if (loadedUser.email.isNotBlank()) loadedUser.email else authEmail
+            editableEmail = loadedUser.email.ifBlank { authEmail }
             editablePhoneNumber = loadedUser.phoneNumber
             editableHomeAddress = loadedUser.homeAddress
             editableCity = loadedUser.city
@@ -642,7 +646,7 @@ fun AccountScreen(navController: NavHostController) {
     // --- UI STRUCTURE ---
     val gradientBackground = Brush.verticalGradient(listOf(LightBlueBg, White))
 
-    val displayBitmap = remember(newProfileBitmap, isProfileImageDeleted, currentProfileBitmap) {
+    remember(newProfileBitmap, isProfileImageDeleted, currentProfileBitmap) {
         when {
             newProfileBitmap != null -> newProfileBitmap?.asImageBitmap()
             isProfileImageDeleted -> null
