@@ -20,6 +20,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bloodtype
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -150,31 +151,45 @@ fun BloodGroupScreen(navController: NavController) {
         }
     }
 
-    // Generate health notifications based on blood type (only if present)
-    // - not loading
-    // - blood group is not missing
-    // - user is universal donor (O-)
+// Generate health notifications based on blood type
     LaunchedEffect(userBloodType, isLoading, isBloodGroupMissing) {
         if (!isLoading && !isBloodGroupMissing) {
-            if (userBloodType == "O-") {
-                val type = userBloodType
-                notifications = listOf(
-                    HealthNotification(
-                        id = "blood_universal_donor",
-                        title = "You're a Universal Donor!",
-                        message = "Your blood type $type is the universal donor. Your donation can save lives for anyone! Consider donating blood regularly.",
-                        type = NotificationType.BLOOD_DONATION,
-                        icon = Icons.Default.Bloodtype,
-                        priority = NotificationPriority.MEDIUM
-                    )
+            val type = userBloodType
+            val generatedNotification = when (type) {
+                // Case 1: Universal Donor
+                "O-" -> HealthNotification(
+                    id = "blood_universal_donor",
+                    title = "You're a Universal Donor!",
+                    message = "Your blood type $type is the universal donor. Your donation can save lives for anyone! Consider donating blood regularly.",
+                    type = NotificationType.BLOOD_DONATION,
+                    icon = Icons.Default.Bloodtype,
+                    priority = NotificationPriority.MEDIUM
                 )
-                delay(2000)
-                showNotifications = true
-            } else {
-                // No extra pop notification for other blood types
-                notifications = emptyList()
-                showNotifications = false
+                // Case 2: Universal Receiver
+                "AB+" -> HealthNotification(
+                    id = "blood_universal_receiver",
+                    title = "Universal Receiver",
+                    message = "Your blood type $type can receive from anyone! You can help others with AB+ blood.",
+                    type = NotificationType.BLOOD_DONATION,
+                    icon = Icons.Default.Bloodtype,
+                    priority = NotificationPriority.LOW
+                )
+                // Case 3: All other blood types
+                else -> HealthNotification(
+                    id = "blood_donation_reminder",
+                    title = "Blood Donation Reminder",
+                    message = "Your blood type is $type. Consider donating blood to help those in need. Every donation counts!",
+                    type = NotificationType.BLOOD_DONATION,
+                    icon = Icons.Default.Favorite,
+                    priority = NotificationPriority.LOW
+                )
             }
+
+            notifications = listOf(generatedNotification)
+
+            // Add a small delay so the screen loads before the popup appears
+            delay(2000)
+            showNotifications = true
         }
     }
 
