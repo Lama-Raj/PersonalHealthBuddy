@@ -204,5 +204,5 @@ Gradle plugin setup (high-level):
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/UNH-Android-Fall2025/Personal_Health_Buddy2025.git
-   cd Personal_Health_Buddy2025
+   https://github.com/Lama-Raj/PersonalHealthBuddy.git
+   cd PersonalHealthBuddy
